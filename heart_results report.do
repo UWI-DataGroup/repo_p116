@@ -47,21 +47,205 @@ count //4794
 ** POPULATION
 gen poptot_2020=277814
 
-** REGISTRATIONS
+** REGISTRATIONS (Number of registrations)
 egen hregtot_2020=count(anon_pid) if year==2020
 gen hregtotper_2020=hregtot_2020/poptot_2020*100
 format hregtotper_2020 %04.2f
 
-** HOSPITAL ADMISSIONS
-stop
-egen patienttot_2013=count(pid) if patient==1 & dxyr==2013
-egen patienttot_2014=count(pid) if patient==1 & dxyr==2014
-egen patienttot_2015=count(pid) if patient==1 & dxyr==2015
-** DCOs
-egen dco_2013=count(pid) if basis==0 &  dxyr==2013
-egen dco_2014=count(pid) if basis==0 &  dxyr==2014
-egen dco_2015=count(pid) if basis==0 &  dxyr==2015
-gen dcoper_2013=dco_2013/tumourtot_2013*100
-gen dcoper_2014=dco_2014/tumourtot_2014*100
-gen dcoper_2015=dco_2015/tumourtot_2015*100
-format dcoper_2013 dcoper_2014 dcoper_2015 %2.1f
+** HOSPITAL ADMISSIONS (Hospital admissions (percentage admitted))
+egen hreghosptot_2020=count(anon_pid) if year==2020 & hosp==1
+gen hreghosptotper_2020=hreghosptot_2020/hregtot_2020*100
+format hreghosptotper_2020 %02.0f
+
+** DECEASED AT 28-DAY (% Deceased at 28 day)
+egen hregdeadtot_2020=count(anon_pid) if abstracted==1 & year==2020 & f1vstatus==2
+gen hregdeadtotper_2020=hregdeadtot_2020/hreghosptot_2020*100
+format hregdeadtotper_2020 %02.0f
+
+** DCOs (% Cases who died + Death Certificate Only (DCO))
+egen hdcotot_2020=count(anon_pid) if abstracted==2 & year==2020
+gen hdcototper_2020=hdcotot_2020/hregtot_2020*100
+format hdcototper_2020 %02.0f
+
+** LOS (Median (range) length of hospital stay (days))
+**Median Legthn of stay in hospital (analysis performed in 1.0_heart_cvd_analysis.do)
+append using "`datapath'\version02\2-working\los_heart"
+
+** Re-arrange dataset
+gen id=_n
+keep id hregtot_2020 hregtotper_2020 hreghosptot_2020 hreghosptotper_2020 hregdeadtot_2020 hregdeadtotper_2020 hdcotot_2020 hdcototper_2020 medianlos range_lower range_upper
+
+
+gen title=1 if hregtot_2020!=. & id==1058
+order id title
+
+replace title=2 if hreghosptot_2020!=. & id==1059
+replace title=3 if hreghosptotper_2020!=. & id==1061
+replace title=4 if hregtotper_2020!=. & id==1070
+replace title=5 if hregdeadtotper_2020!=. & id==1144
+replace title=6 if hdcototper_2020!=. & id==1148
+replace title=7 if hdcotot_2020!=. & id==1156
+replace title=8 if medianlos!=. & id==4795
+
+expand=2 in 4795, gen (medianlos_dup1)
+replace id=4796 if medianlos_dup1==1
+replace title=9 if medianlos_dup1==1
+expand=2 in 4795, gen (medianlos_dup2)
+replace id=4797 if medianlos_dup2==1
+replace title=10 if medianlos_dup2==1
+
+label define title_lab 1 "Number of registrations(1)" 2 "Hospital admissions (percentage admitted)(2)" 3 "percentage admitted" 4 "Rate per population(3)" 5 "% Deceased at 28 day(4)" 6 "% Cases who died" 7 "Death Certificate Only (DCO)(5)" 8 "Median (range) length of hospital stay (days)(6)" 9 "Range (lower) length of hospital stay (days)" 10 "Range (upper) length of hospital stay (days)" ,modify
+label values title title_lab
+label var title "Title"
+
+*-------------------------------------------------------------------------------
+
+tab title ,m
+drop if title==. //4797 deleted
+drop hregdeadtot_2020 medianlos_dup1 medianlos_dup2
+sort title
+drop id
+gen id=_n
+order id title hregtot_2020
+
+//tostring poptot_2020 ,replace
+tostring hregtot_2020 ,replace
+tostring hreghosptot_2020 ,replace
+gen hreghosptotper_2020_1=string(hreghosptotper_2020, "%02.0f")
+drop hreghosptotper_2020
+rename hreghosptotper_2020_1 hreghosptotper_2020
+gen hregtotper_2020_1=string(hregtotper_2020, "%04.2f")
+drop hregtotper_2020
+rename hregtotper_2020_1 hregtotper_2020
+gen hregdeadtotper_2020_1=string(hregdeadtotper_2020, "%02.0f")
+drop hregdeadtotper_2020
+rename hregdeadtotper_2020_1 hregdeadtotper_2020
+gen hdcototper_2020_1=string(hdcototper_2020, "%02.0f")
+drop hdcototper_2020
+rename hdcototper_2020_1 hdcototper_2020
+tostring hdcotot_2020 ,replace
+tostring medianlos ,replace
+tostring range_lower ,replace
+tostring range_upper ,replace
+
+replace hregtot_2020=hreghosptot_2020 if id==2
+replace hregtot_2020=hreghosptotper_2020 if id==3
+replace hregtot_2020=hregtotper_2020 if id==4
+replace hregtot_2020=hregdeadtotper_2020 if id==5
+replace hregtot_2020=hdcototper_2020 if id==6
+replace hregtot_2020=hdcotot_2020 if id==7
+replace hregtot_2020=medianlos if id==8
+replace hregtot_2020=range_lower if id==9
+replace hregtot_2020=range_upper if id==10
+
+gen medianrange=medianlos+" "+"("+range_lower+" "+"-"+" "+range_upper+")"
+replace hregtot_2020=medianrange if id==8
+
+gen hospadmpercent=hreghosptot_2020+" "+"("+hreghosptotper_2020+"%"+")"
+replace hregtot_2020=hospadmpercent if id==2
+drop if id==3|id==9|id==10
+drop id
+gen id=_n
+order id title hregtot_2020
+
+keep id title hregtot_2020
+rename hregtot_2020 Myocardial_Infarction
+rename title Title
+ 
+
+
+preserve
+				****************************
+				*	   MS WORD REPORT      *
+				* ANNUAL REPORT STATISTICS *
+				****************************
+putdocx clear
+putdocx begin, footer(foot1)
+putdocx paragraph, tofooter(foot1)
+putdocx text ("Page ")
+putdocx pagenumber
+putdocx paragraph, style(Title)
+putdocx text ("CVD 2020 Annual Report: Stata Results"), bold
+putdocx textblock begin
+Date Prepared: 16-FEB-2022
+putdocx textblock end
+putdocx textblock begin
+Prepared by: JC using Stata
+putdocx textblock end
+putdocx textblock begin
+Data source: REDCap's BNRCVD_CORE database
+putdocx textblock end
+putdocx textblock begin
+Data release date: 29-Oct-2021
+putdocx textblock end
+putdocx textblock begin
+Stata code file: heart_results report.do
+putdocx textblock end
+putdocx textblock begin
+Dataset + dofile path: repo_data/data_p116/version02
+putdocx textblock end
+putdocx paragraph, halign(center)
+putdocx text ("Methods"), bold font(Helvetica,10,"blue")
+putdocx textblock begin
+(1) No.(registrations): Includes standardized case definition, i.e. includes unk residents, non-malignant tumours, IARC non-reportable MPs (dataset used: "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022)"); 
+Dofile: 1.0_heart_cvd_analysis.do.
+putdocx textblock end
+putdocx textblock begin
+(2) % of population: WPP population for 2013, 2014 and 2015 (see p_117\2015AnnualReportV02 branch\0_population.do)
+putdocx textblock end
+putdocx textblock begin
+(3) No.(patients): Includes standardized case definition, i.e. includes unk residents, non-malignant tumours, IARC non-reportable MPs (variable used: patient; dataset used: "`datapath'\version02\3-output\2013_2014_2015_cancer_nonsurvival")
+putdocx textblock end
+putdocx textblock begin
+(4) ASIR: Includes standardized case definition, i.e. includes unk residents, IARC non-reportable MPs but excludes non-malignant tumours; stata command distrate used with pop_wpp_2015-10, pop_wpp_2014-10, pop_wpp_2013-10 for 2015,2014,2013 cancer incidence, respectively, and world population dataset: who2000_10-2; (population datasets used: "`datapath'\version02\2-working\pop_wpp_2015-10;pop_wpp_2014-10;pop_wpp_2013-10"; cancer dataset used: "`datapath'\version02\2-working\2013_2014_2015_cancer_numbers")
+putdocx textblock end
+putdocx textblock begin
+(5) Site Order: These tables show where the order of 2015 top 10 sites in 2015,2014,2013, respectively; site order datasets used: "`datapath'\version02\2-working\siteorder_2015; siteorder_2014; siteorder_2013")
+putdocx textblock end
+putdocx textblock begin
+(6) ASIR by sex: Includes standardized case definition, i.e. includes unk residents, IARC non-reportable MPs but excludes non-malignant tumours; unk/missing ages were included in the median age group; stata command distrate used with pop_wpp_2015-10 for 2015 cancer incidence, ONLY, and world population dataset: who2000_10-2; (population datasets used: "`datapath'\version02\2-working\pop_wpp_2015-10"; cancer dataset used: "`datapath'\version02\2-working\2013_2014_2015_cancer_numbers")
+putdocx textblock end
+putdocx textblock begin
+(7) Population text files (WPP): saved in: "`datapath'\version02\2-working\WPP_population by sex_yyyy"
+putdocx textblock end
+putdocx textblock begin
+(8) Population files (WPP): generated from "https://population.un.org/wpp/Download/Standard/Population/" on 27-Nov-2019.
+putdocx textblock end
+putdocx textblock begin
+(9) No.(DCOs): Includes standardized case definition, i.e. includes unk residents, non-malignant tumours, IARC non-reportable MPs. (variable used: basis. dataset used: "`datapath'\version02\3-output\2013_2014_2015_cancer_nonsurvival")
+putdocx textblock end
+putdocx textblock begin
+(10) % of tumours: Includes standardized case definition, i.e. includes unk residents, non-malignant tumours, IARC non-reportable MPs (variable used: basis; dataset used: "`datapath'\version02\3-output\2013_2014_2015_cancer_nonsurvival")
+putdocx textblock end
+putdocx textblock begin
+(11) 1-yr, 3-yr, 5-yr (%): Excludes dco, unk slc, age 100+, multiple primaries, ineligible case definition, non-residents, REMOVE IF NO unk sex, non-malignant tumours, IARC non-reportable MPs (variable used: surv1yr_2013, surv1yr_2014, surv1yr_2015, surv3yr_2013, surv3yr_2014, surv3yr_2015, surv5yr_2013, surv5yr_2014; dataset used: "`datapath'\version02\3-output\2013_2014_2015_cancer_survival")
+putdocx textblock end
+//putdocx pagebreak
+putdocx paragraph, style(Heading1)
+putdocx text ("Summary Statistics"), bold
+putdocx paragraph, halign(center)
+putdocx text ("Table 1.1 Summary Statistics for BNR-CVD, 2020 (Population=277,814)"), bold font(Helvetica,10,"blue")
+putdocx paragraph
+putdocx table tbl1 = data(Title Myocardial_Infarction), halign(center) varnames
+putdocx table tbl1(1,1), bold shading(lightgray)
+putdocx table tbl1(1,2), bold shading(lightgray)
+
+putdocx textblock begin
+(1) Total numbers of persons who had events registered or entered into the BNR database; (2) Total number of hospital admissions as a proportion of registrations; (3) Total number of registrations as a proportion of the population; (4) Total number of patients as a proportion of hospital admission who were deceased 28 days after their event; (5) Total number of deaths collected from death registry as a proportion of registrations; (6) Median and range of length of hospital stay (in days).
+putdocx textblock end
+
+putdocx paragraph, style(Heading1)
+putdocx text ("AMI: Burden"), bold
+putdocx paragraph, style(Heading2)
+putdocx text ("AMI: Cases and Crude Incidence Rates"), bold
+putdocx paragraph, halign(center)
+putdocx text ("Figure 1.1 Number of men and women with acute MI by year in Barbados. 2010-2020"), bold font(Helvetica,10,"blue")
+putdocx paragraph
+
+putdocx save "`datapath'\version02\3-output\2022-02-16_annual_report_stats.docx", replace
+putdocx clear
+
+save "`datapath'\version02\3-output\2020_summstats_heart" ,replace
+restore
+
+clear

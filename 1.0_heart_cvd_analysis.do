@@ -5,17 +5,17 @@ cls
     //  project:                BNR Heart
     //  analysts:               Ashley HENRY
     //  date first created:     26-Jan-2022
-    //  date last modified:     26-Jan-2022
+    //  date last modified:     16-Feb-2022
 	//  analysis:               Heart 2020 dataset for Annual Report
     //  algorithm task          Performing Heart 2020 Data Analysis
     //  status:                 Pending
     //  objective:              To analyse data to calculate summary statistics and Crude Incidence Rates by year
     //  methods:1:              Run analysis on cleaned 2009-2020 BNR-H data.
 	//  version:                Version01 for weeks 01-52
-	//  support:                Natasha Sobers and Ian R Hambleton  
+	//  support:                Natasha Sobers, Jacqueline Campbell and Ian R Hambleton  
 
     ** General algorithm set-up
-    version 16.0
+    version 17.0
     clear all
     macro drop _all
     set more off
@@ -29,9 +29,9 @@ cls
 
     ** Set working directories: this is for DATASET and LOGFILE import and export
     ** DATASETS to encrypted SharePoint folder
-    local datapath "C:\Users\CVD 03\Desktop\BNR_data\DM\data_analysis\2020\heart\weeks01-52\versions\version01\data"
+    local datapath "X:/The University of the West Indies/DataGroup - repo_data/data_p116"
     ** LOGFILES to unencrypted OneDrive folder (.gitignore set to IGNORE log files on PUSH to GitHub)
-    local logpath C:\Users\CVD 03\Desktop\BNR_data\DM\data_analysis\2020\heart\weeks01-52\versions\version01\logfiles
+    local logpath X:/OneDrive - The University of the West Indies/repo_datagroup/repo_p116
 
     ** Close any open log file and open a new log file
     capture log close
@@ -46,7 +46,7 @@ cls
  *              1f: Case Fatality Rate -Abstracted Cases Only.
 ************************************************************************
 ** Load the dataset  
-use "C:\Users\CVD 03\Desktop\BNR_data\DM\data_analysis\2020\heart\weeks01-52\versions\version01\data\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
+use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022)"
 
 count
 ** 4794 as of 26-Jan-2022
@@ -88,6 +88,8 @@ replace los=los+add_los if add_los!=.
 tab los if record_id!="" & abstracted==1 ,miss
 list record_id if los==. & abstracted==1
 
+** Below code runs in Stata 16 (used by AH) but not in Stata 17 (used by JC)
+/*
 preserve 
 drop if year!=2020
 gen k=1
@@ -101,13 +103,36 @@ table k, c(p50 los p25 los p75 los min los max los)
 ameans los if los!=.
 
 restore
+*/
+preserve 
+drop if year!=2020
+gen k=1
+drop if k!=1
 
+table k, stat(q2 los) stat(min los) stat(max los)
+** med - 5 ( 1 - 145)
+** Now save the p50, min and max for Table 1.1
+sum los
+sum los ,detail
+gen medianlos=r(p50)
+gen range_lower=r(min)
+gen range_upper=r(max)
+
+collapse medianlos range_lower range_upper
+order medianlos range_lower range_upper
+save "`datapath'\version02\2-working\los_heart" ,replace
+
+** Mean stay for calculation of costs (Arithmetic Mean with 95% CI)
+** NOTE: this outoput also reports the "geometric mean". This is useful
+** as the antilog of log(los). A reasonable alternative to median.
+//ameans los if los!=.
+restore
 
 *********************NUMBER OF CASES BY YEAR***************
 ** Figure 1.1 in AR:
 ***********************************************************
 ************************************* MERGING POPULATION TO DATASET *************************************
-merge m:m sex age_10 using "C:\Users\CVD 03\Desktop\BNR_data\DM\data_analysis\2019\heart\weeks01-52\versions\version01\data\population\pop_wpp_2010-2020-10.dta"
+merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2010-2020-10.dta"
 ** 4147 matches; 100 not matched.
 
 
