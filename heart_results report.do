@@ -4,11 +4,12 @@
     //  project:                BNR-Heart
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      15-FEB-2022
-    // 	date last modified      15-FEB-2022
+    // 	date last modified      17-FEB-2022
     //  algorithm task          Creating MS Word document with statistical + figure outputs for 2020 annual report
     //  status                  Pending
     //  objective               To have methods, tables, figures and text in an easy-to-use format for the report writer
     //  methods                 Use putdocx, tabout and Stata memory commands to export results to MS Word
+	//  support:                Natasha Sobers and Ian R Hambleton
 
     ** General algorithm set-up
     version 17.0
@@ -234,6 +235,24 @@ putdocx textblock begin
 (1) Total numbers of persons who had events registered or entered into the BNR database; (2) Total number of hospital admissions as a proportion of registrations; (3) Total number of registrations as a proportion of the population; (4) Total number of patients as a proportion of hospital admission who were deceased 28 days after their event; (5) Total number of deaths collected from death registry as a proportion of registrations; (6) Median and range of length of hospital stay (in days).
 putdocx textblock end
 
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV01_`listdate'.docx", replace
+putdocx clear
+
+restore
+
+clear
+
+preserve
+use "`datapath'\version02\2-working\NumIRs_heart", clear
+
+drop hir*
+sort sex year
+
+putdocx clear
+putdocx begin
+
+putdocx pagebreak
 putdocx paragraph, style(Heading1)
 putdocx text ("AMI: Burden"), bold
 putdocx paragraph, style(Heading2)
@@ -242,10 +261,48 @@ putdocx paragraph, halign(center)
 putdocx text ("Figure 1.1 Number of men and women with acute MI by year in Barbados. 2010-2020"), bold font(Helvetica,10,"blue")
 putdocx paragraph
 
-putdocx save "`datapath'\version02\3-output\2022-02-16_annual_report_stats.docx", replace
-putdocx clear
+rename totnum total
+putdocx table tbl1 = data(year sex number total), halign(center) varnames
+putdocx table tbl1(1,1), bold shading(lightgray)
+putdocx table tbl1(1,2), bold shading(lightgray)
+putdocx table tbl1(1,3), bold shading(lightgray)
+putdocx table tbl1(1,4), bold shading(lightgray)
 
-save "`datapath'\version02\3-output\2020_summstats_heart" ,replace
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV01_`listdate'.docx", append
+putdocx clear
 restore
 
 clear
+
+preserve
+use "`datapath'\version02\2-working\NumIRs_heart", clear
+
+drop number
+sort sex year
+
+putdocx clear
+putdocx begin
+
+putdocx pagebreak
+putdocx paragraph, halign(center)
+putdocx text ("Figure 1.2 Crude incidence rate of men and women per 100,000 population with acute MI by year in Barbados. 2010-2020"), bold font(Helvetica,10,"blue")
+putdocx paragraph
+
+rename tothir total
+rename hir crude_incidence_rate
+putdocx table tbl1 = data(year sex crude_incidence_rate total), halign(center) varnames
+putdocx table tbl1(1,1), bold shading(lightgray)
+putdocx table tbl1(1,2), bold shading(lightgray)
+putdocx table tbl1(1,3), bold shading(lightgray)
+putdocx table tbl1(1,4), bold shading(lightgray)
+
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV01_`listdate'.docx", append
+putdocx clear
+restore
+stop
+
+save "`datapath'\version02\2-working\2015_cases_parish+site.dta" ,replace
+label data "BNR-Cancer 2015 Cases by Parish"
+notes _dta :These data prepared for Natasha Sobers - 2015 annual report

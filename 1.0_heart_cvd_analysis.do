@@ -5,7 +5,7 @@ cls
     //  project:                BNR Heart
     //  analysts:               Ashley HENRY
     //  date first created:     26-Jan-2022
-    //  date last modified:     16-Feb-2022
+    //  date last modified:     17-Feb-2022
 	//  analysis:               Heart 2020 dataset for Annual Report
     //  algorithm task          Performing Heart 2020 Data Analysis
     //  status:                 Pending
@@ -50,6 +50,9 @@ use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean
 
 count
 ** 4794 as of 26-Jan-2022
+
+** JC 17feb2022: Sex updated for 2018 pid that has sex=99 using MedData
+replace sex=1 if anon_pid==596 & record_id=="20181197" //1 change
 
 *****************************************************************************Table 1.1 AR: # of - Registrations; Hosp Admissions; DCOs; Rate per pop
 **************************************************************************
@@ -129,7 +132,7 @@ save "`datapath'\version02\2-working\los_heart" ,replace
 restore
 
 *********************NUMBER OF CASES BY YEAR***************
-** Figure 1.1 in AR:
+** Figures 1.1 + 1.2 in AR:
 ***********************************************************
 ************************************* MERGING POPULATION TO DATASET *************************************
 merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2010-2020-10.dta"
@@ -208,7 +211,23 @@ preserve
 			format `var' %8.2f
 			}
 	list sex case2010 pop_wpp2010 ir se lower upper , noobs table
-	
+
+** JC update: Save these results as a dataset for reporting figures 1.1. and 1.2
+drop if case2010==.|case2010==0 //3 deleted
+gen year=1
+keep year sex case2010 ir
+rename case2010 number
+rename ir hir 
+egen totnum=total(number)
+egen tothir=total(hir)
+replace hir=round(hir,0.1)
+replace tothir=round(tothir,0.1)
+
+label define year_lab 1 "2010" 2 "2011" 3 "2012" 4 "2013" 5 "2014" 6 "2015" 7 "2016" 8 "2017" 9 "2018" 10 "2019" 11 "2020" ,modify
+label values year year_lab
+order year sex number totnum hir tothir
+sort sex
+save "`datapath'\version02\2-working\NumIRs_heart" ,replace	
 restore
 
 
@@ -259,6 +278,21 @@ preserve
 			}
 	list sex case2011 pop_wpp2011 ir se lower upper , noobs table
 	
+** JC update: Save these results as a dataset for reporting figures 1.1. and 1.2
+drop if case2011==.|case2011==0 // deleted
+keep sex case2011 ir
+rename case2011 number
+rename ir hir 
+egen totnum=total(number)
+egen tothir=total(hir)
+replace hir=round(hir,0.1)
+replace tothir=round(tothir,0.1)
+
+append using "`datapath'\version02\2-working\NumIRs_heart" 
+replace year=2 if year==.
+order year sex number totnum hir tothir
+sort sex year
+save "`datapath'\version02\2-working\NumIRs_heart" ,replace	
 restore
 
 
@@ -309,6 +343,21 @@ preserve
 			}
 	list sex case2012 pop_wpp2012 ir se lower upper , noobs table
 	
+** JC update: Save these results as a dataset for reporting figures 1.1. and 1.2
+drop if case2012==.|case2012==0 // deleted
+keep sex case2012 ir
+rename case2012 number
+rename ir hir 
+egen totnum=total(number)
+egen tothir=total(hir)
+replace hir=round(hir,0.1)
+replace tothir=round(tothir,0.1)
+
+append using "`datapath'\version02\2-working\NumIRs_heart" 
+replace year=3 if year==.
+order year sex number totnum hir tothir
+sort sex year
+save "`datapath'\version02\2-working\NumIRs_heart" ,replace	
 restore
 
 ******************** 2013 CRUDE INCIDENCE RATE by sex****************************
@@ -358,6 +407,21 @@ preserve
 			}
 	list sex case2013 pop_wpp2013 ir se lower upper , noobs table
 	
+** JC update: Save these results as a dataset for reporting figures 1.1. and 1.2
+drop if case2013==.|case2013==0 // deleted
+keep sex case2013 ir
+rename case2013 number
+rename ir hir 
+egen totnum=total(number)
+egen tothir=total(hir)
+replace hir=round(hir,0.1)
+replace tothir=round(tothir,0.1)
+
+append using "`datapath'\version02\2-working\NumIRs_heart" 
+replace year=4 if year==.
+order year sex number totnum hir tothir
+sort sex year
+save "`datapath'\version02\2-working\NumIRs_heart" ,replace	
 restore
 
 ******************** 2014 CRUDE INCIDENCE RATE by sex****************************
@@ -406,6 +470,22 @@ preserve
 			format `var' %8.2f
 			}
 	list sex case2014 pop_wpp2014 ir se lower upper , noobs table
+	
+** JC update: Save these results as a dataset for reporting figures 1.1. and 1.2
+drop if case2014==.|case2014==0 // deleted
+keep sex case2014 ir
+rename case2014 number
+rename ir hir 
+egen totnum=total(number)
+egen tothir=total(hir)
+replace hir=round(hir,0.1)
+replace tothir=round(tothir,0.1)
+
+append using "`datapath'\version02\2-working\NumIRs_heart" 
+replace year=5 if year==.
+order year sex number totnum hir tothir
+sort sex year
+save "`datapath'\version02\2-working\NumIRs_heart" ,replace
 	
 restore
 
@@ -456,6 +536,21 @@ preserve
 			}
 	list sex case2015 pop_wpp2015 ir se lower upper , noobs table
 	
+** JC update: Save these results as a dataset for reporting figures 1.1. and 1.2
+drop if case2015==.|case2015==0 // deleted
+keep sex case2015 ir
+rename case2015 number
+rename ir hir 
+egen totnum=total(number)
+egen tothir=total(hir)
+replace hir=round(hir,0.1)
+replace tothir=round(tothir,0.1)
+
+append using "`datapath'\version02\2-working\NumIRs_heart" 
+replace year=6 if year==.
+order year sex number totnum hir tothir
+sort sex year
+save "`datapath'\version02\2-working\NumIRs_heart" ,replace
 restore
 
 
@@ -506,6 +601,21 @@ preserve
 			}
 	list sex case2016 pop_wpp2016 ir se lower upper , noobs table
 	
+** JC update: Save these results as a dataset for reporting figures 1.1. and 1.2
+drop if case2016==.|case2016==0 // deleted
+keep sex case2016 ir
+rename case2016 number
+rename ir hir 
+egen totnum=total(number)
+egen tothir=total(hir)
+replace hir=round(hir,0.1)
+replace tothir=round(tothir,0.1)
+
+append using "`datapath'\version02\2-working\NumIRs_heart" 
+replace year=7 if year==.
+order year sex number totnum hir tothir
+sort sex year
+save "`datapath'\version02\2-working\NumIRs_heart" ,replace	
 restore
 
 ******************** 2017 CRUDE INCIDENCE RATE by sex****************************
@@ -555,6 +665,21 @@ preserve
 			}
 	list sex case2017 pop_wpp2017 ir se lower upper , noobs table
 	
+** JC update: Save these results as a dataset for reporting figures 1.1. and 1.2
+drop if case2017==.|case2017==0 // deleted
+keep sex case2017 ir
+rename case2017 number
+rename ir hir 
+egen totnum=total(number)
+egen tothir=total(hir)
+replace hir=round(hir,0.1)
+replace tothir=round(tothir,0.1)
+
+append using "`datapath'\version02\2-working\NumIRs_heart" 
+replace year=8 if year==.
+order year sex number totnum hir tothir
+sort sex year
+save "`datapath'\version02\2-working\NumIRs_heart" ,replace	
 restore
 
 ******************** 2018 CRUDE INCIDENCE RATE by sex****************************
@@ -604,6 +729,21 @@ preserve
 			}
 	list sex case2018 pop_wpp2018 ir se lower upper , noobs table
 	
+** JC update: Save these results as a dataset for reporting figures 1.1. and 1.2
+drop if case2018==.|case2018==0 // deleted
+keep sex case2018 ir
+rename case2018 number
+rename ir hir 
+egen totnum=total(number)
+egen tothir=total(hir)
+replace hir=round(hir,0.1)
+replace tothir=round(tothir,0.1)
+
+append using "`datapath'\version02\2-working\NumIRs_heart" 
+replace year=9 if year==.
+order year sex number totnum hir tothir
+sort sex year
+save "`datapath'\version02\2-working\NumIRs_heart" ,replace	
 restore
 
 
@@ -654,6 +794,21 @@ preserve
 			}
 	list sex case2019 pop_wpp2019 ir se lower upper , noobs table
 	
+** JC update: Save these results as a dataset for reporting figures 1.1. and 1.2
+drop if case2019==.|case2019==0 // deleted
+keep sex case2019 ir
+rename case2019 number
+rename ir hir 
+egen totnum=total(number)
+egen tothir=total(hir)
+replace hir=round(hir,0.1)
+replace tothir=round(tothir,0.1)
+
+append using "`datapath'\version02\2-working\NumIRs_heart" 
+replace year=10 if year==.
+order year sex number totnum hir tothir
+sort sex year
+save "`datapath'\version02\2-working\NumIRs_heart" ,replace	
 restore
 
 
@@ -703,5 +858,21 @@ preserve
 			format `var' %8.2f
 			}
 	list sex case2020 pop_wpp2020 ir se lower upper , noobs table
+	
+** JC update: Save these results as a dataset for reporting figures 1.1. and 1.2
+drop if case2020==.|case2020==0 // deleted
+keep sex case2020 ir
+rename case2020 number
+rename ir hir 
+egen totnum=total(number)
+egen tothir=total(hir)
+replace hir=round(hir,0.1)
+replace tothir=round(tothir,0.1)
+
+append using "`datapath'\version02\2-working\NumIRs_heart" 
+replace year=11 if year==.
+order year sex number totnum hir tothir
+sort sex year
+save "`datapath'\version02\2-working\NumIRs_heart" ,replace
 	
 restore
