@@ -5,7 +5,7 @@ cls
     //  project:                BNR Heart
     //  analysts:               Ashley HENRY
     //  date first created:     26-Jan-2022
-    //  date last modified:     17-Feb-2022
+    //  date last modified:     22-Feb-2022
 	//  analysis:               Heart 2020 dataset for Annual Report
     //  algorithm task          Performing Heart 2020 Data Analysis
     //  status:                 Pending
@@ -174,6 +174,7 @@ label var pfu "Proportion of year in which acute MI cases occurred"
 replace case = 0 if case==. 
 gen case2010= 1 if case==2
 replace case2010 = 0 if case2010==.
+
 **     With SE and 95% Confidence Interval
 preserve
 	* crude rate: point estimate
@@ -217,17 +218,27 @@ drop if case2010==.|case2010==0 //3 deleted
 gen year=1
 keep year sex case2010 ir
 rename case2010 number
-rename ir hir 
+rename ir hir
+expand=2 in 2, gen (dup)
+replace sex=3 if dup==1
+replace number=0 if dup==1
 egen totnum=total(number)
+replace number=totnum if dup==1
 egen tothir=total(hir)
+replace hir=tothir if dup==1
 replace hir=round(hir,0.1)
 replace tothir=round(tothir,0.1)
 
+drop dup totnum tothir
+
 label define year_lab 1 "2010" 2 "2011" 3 "2012" 4 "2013" 5 "2014" 6 "2015" 7 "2016" 8 "2017" 9 "2018" 10 "2019" 11 "2020" ,modify
 label values year year_lab
-order year sex number totnum hir tothir
-sort sex
+label drop sex_
+label define sex_ 1 "Female" 2 "Male" 3 "Total"
+order year sex number hir
+sort year sex
 save "`datapath'\version02\2-working\NumIRs_heart" ,replace	
+
 restore
 
 
@@ -283,15 +294,24 @@ drop if case2011==.|case2011==0 // deleted
 keep sex case2011 ir
 rename case2011 number
 rename ir hir 
+expand=2 in 2, gen (dup)
+replace sex=3 if dup==1
+replace number=0 if dup==1
 egen totnum=total(number)
+replace number=totnum if dup==1
 egen tothir=total(hir)
+replace hir=tothir if dup==1
 replace hir=round(hir,0.1)
 replace tothir=round(tothir,0.1)
 
+drop dup totnum tothir
+
 append using "`datapath'\version02\2-working\NumIRs_heart" 
 replace year=2 if year==.
-order year sex number totnum hir tothir
-sort sex year
+label drop sex_
+label define sex_ 1 "Female" 2 "Male" 3 "Total"
+order year sex number hir
+sort year sex
 save "`datapath'\version02\2-working\NumIRs_heart" ,replace	
 restore
 
@@ -348,15 +368,24 @@ drop if case2012==.|case2012==0 // deleted
 keep sex case2012 ir
 rename case2012 number
 rename ir hir 
+expand=2 in 2, gen (dup)
+replace sex=3 if dup==1
+replace number=0 if dup==1
 egen totnum=total(number)
+replace number=totnum if dup==1
 egen tothir=total(hir)
+replace hir=tothir if dup==1
 replace hir=round(hir,0.1)
 replace tothir=round(tothir,0.1)
 
+drop dup totnum tothir
+
 append using "`datapath'\version02\2-working\NumIRs_heart" 
 replace year=3 if year==.
-order year sex number totnum hir tothir
-sort sex year
+label drop sex_
+label define sex_ 1 "Female" 2 "Male" 3 "Total"
+order year sex number hir
+sort year sex
 save "`datapath'\version02\2-working\NumIRs_heart" ,replace	
 restore
 
@@ -412,15 +441,24 @@ drop if case2013==.|case2013==0 // deleted
 keep sex case2013 ir
 rename case2013 number
 rename ir hir 
+expand=2 in 2, gen (dup)
+replace sex=3 if dup==1
+replace number=0 if dup==1
 egen totnum=total(number)
+replace number=totnum if dup==1
 egen tothir=total(hir)
+replace hir=tothir if dup==1
 replace hir=round(hir,0.1)
 replace tothir=round(tothir,0.1)
 
+drop dup totnum tothir
+
 append using "`datapath'\version02\2-working\NumIRs_heart" 
 replace year=4 if year==.
-order year sex number totnum hir tothir
-sort sex year
+label drop sex_
+label define sex_ 1 "Female" 2 "Male" 3 "Total"
+order year sex number hir
+sort year sex
 save "`datapath'\version02\2-working\NumIRs_heart" ,replace	
 restore
 
@@ -476,15 +514,24 @@ drop if case2014==.|case2014==0 // deleted
 keep sex case2014 ir
 rename case2014 number
 rename ir hir 
+expand=2 in 2, gen (dup)
+replace sex=3 if dup==1
+replace number=0 if dup==1
 egen totnum=total(number)
+replace number=totnum if dup==1
 egen tothir=total(hir)
+replace hir=tothir if dup==1
 replace hir=round(hir,0.1)
 replace tothir=round(tothir,0.1)
 
+drop dup totnum tothir
+
 append using "`datapath'\version02\2-working\NumIRs_heart" 
 replace year=5 if year==.
-order year sex number totnum hir tothir
-sort sex year
+label drop sex_
+label define sex_ 1 "Female" 2 "Male" 3 "Total"
+order year sex number hir
+sort year sex
 save "`datapath'\version02\2-working\NumIRs_heart" ,replace
 	
 restore
@@ -541,15 +588,24 @@ drop if case2015==.|case2015==0 // deleted
 keep sex case2015 ir
 rename case2015 number
 rename ir hir 
+expand=2 in 2, gen (dup)
+replace sex=3 if dup==1
+replace number=0 if dup==1
 egen totnum=total(number)
+replace number=totnum if dup==1
 egen tothir=total(hir)
+replace hir=tothir if dup==1
 replace hir=round(hir,0.1)
 replace tothir=round(tothir,0.1)
 
+drop dup totnum tothir
+
 append using "`datapath'\version02\2-working\NumIRs_heart" 
 replace year=6 if year==.
-order year sex number totnum hir tothir
-sort sex year
+label drop sex_
+label define sex_ 1 "Female" 2 "Male" 3 "Total"
+order year sex number hir
+sort year sex
 save "`datapath'\version02\2-working\NumIRs_heart" ,replace
 restore
 
@@ -606,15 +662,24 @@ drop if case2016==.|case2016==0 // deleted
 keep sex case2016 ir
 rename case2016 number
 rename ir hir 
+expand=2 in 2, gen (dup)
+replace sex=3 if dup==1
+replace number=0 if dup==1
 egen totnum=total(number)
+replace number=totnum if dup==1
 egen tothir=total(hir)
+replace hir=tothir if dup==1
 replace hir=round(hir,0.1)
 replace tothir=round(tothir,0.1)
 
+drop dup totnum tothir
+
 append using "`datapath'\version02\2-working\NumIRs_heart" 
 replace year=7 if year==.
-order year sex number totnum hir tothir
-sort sex year
+label drop sex_
+label define sex_ 1 "Female" 2 "Male" 3 "Total"
+order year sex number hir
+sort year sex
 save "`datapath'\version02\2-working\NumIRs_heart" ,replace	
 restore
 
@@ -670,15 +735,24 @@ drop if case2017==.|case2017==0 // deleted
 keep sex case2017 ir
 rename case2017 number
 rename ir hir 
+expand=2 in 2, gen (dup)
+replace sex=3 if dup==1
+replace number=0 if dup==1
 egen totnum=total(number)
+replace number=totnum if dup==1
 egen tothir=total(hir)
+replace hir=tothir if dup==1
 replace hir=round(hir,0.1)
 replace tothir=round(tothir,0.1)
 
+drop dup totnum tothir
+
 append using "`datapath'\version02\2-working\NumIRs_heart" 
 replace year=8 if year==.
-order year sex number totnum hir tothir
-sort sex year
+label drop sex_
+label define sex_ 1 "Female" 2 "Male" 3 "Total"
+order year sex number hir
+sort year sex
 save "`datapath'\version02\2-working\NumIRs_heart" ,replace	
 restore
 
@@ -734,15 +808,24 @@ drop if case2018==.|case2018==0 // deleted
 keep sex case2018 ir
 rename case2018 number
 rename ir hir 
+expand=2 in 2, gen (dup)
+replace sex=3 if dup==1
+replace number=0 if dup==1
 egen totnum=total(number)
+replace number=totnum if dup==1
 egen tothir=total(hir)
+replace hir=tothir if dup==1
 replace hir=round(hir,0.1)
 replace tothir=round(tothir,0.1)
 
+drop dup totnum tothir
+
 append using "`datapath'\version02\2-working\NumIRs_heart" 
 replace year=9 if year==.
-order year sex number totnum hir tothir
-sort sex year
+label drop sex_
+label define sex_ 1 "Female" 2 "Male" 3 "Total"
+order year sex number hir
+sort year sex
 save "`datapath'\version02\2-working\NumIRs_heart" ,replace	
 restore
 
@@ -799,15 +882,24 @@ drop if case2019==.|case2019==0 // deleted
 keep sex case2019 ir
 rename case2019 number
 rename ir hir 
+expand=2 in 2, gen (dup)
+replace sex=3 if dup==1
+replace number=0 if dup==1
 egen totnum=total(number)
+replace number=totnum if dup==1
 egen tothir=total(hir)
+replace hir=tothir if dup==1
 replace hir=round(hir,0.1)
 replace tothir=round(tothir,0.1)
 
+drop dup totnum tothir
+
 append using "`datapath'\version02\2-working\NumIRs_heart" 
 replace year=10 if year==.
-order year sex number totnum hir tothir
-sort sex year
+label drop sex_
+label define sex_ 1 "Female" 2 "Male" 3 "Total"
+order year sex number hir
+sort year sex
 save "`datapath'\version02\2-working\NumIRs_heart" ,replace	
 restore
 
@@ -864,15 +956,24 @@ drop if case2020==.|case2020==0 // deleted
 keep sex case2020 ir
 rename case2020 number
 rename ir hir 
+expand=2 in 2, gen (dup)
+replace sex=3 if dup==1
+replace number=0 if dup==1
 egen totnum=total(number)
+replace number=totnum if dup==1
 egen tothir=total(hir)
+replace hir=tothir if dup==1
 replace hir=round(hir,0.1)
 replace tothir=round(tothir,0.1)
 
+drop dup totnum tothir
+
 append using "`datapath'\version02\2-working\NumIRs_heart" 
 replace year=11 if year==.
-order year sex number totnum hir tothir
-sort sex year
+label drop sex_
+label define sex_ 1 "Female" 2 "Male" 3 "Total"
+order year sex number hir
+sort year sex
 save "`datapath'\version02\2-working\NumIRs_heart" ,replace
 	
 restore

@@ -4,7 +4,7 @@
     //  project:                BNR-Heart
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      15-FEB-2022
-    // 	date last modified      17-FEB-2022
+    // 	date last modified      22-FEB-2022
     //  algorithm task          Creating MS Word document with statistical + figure outputs for 2020 annual report
     //  status                  Pending
     //  objective               To have methods, tables, figures and text in an easy-to-use format for the report writer
@@ -236,7 +236,7 @@ putdocx textblock begin
 putdocx textblock end
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV01_`listdate'.docx", replace
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV02_`listdate'.docx", replace
 putdocx clear
 
 restore
@@ -247,7 +247,7 @@ preserve
 use "`datapath'\version02\2-working\NumIRs_heart", clear
 
 drop hir*
-sort sex year
+sort year sex
 
 putdocx clear
 putdocx begin
@@ -261,15 +261,15 @@ putdocx paragraph, halign(center)
 putdocx text ("Figure 1.1 Number of men and women with acute MI by year in Barbados. 2010-2020"), bold font(Helvetica,10,"blue")
 putdocx paragraph
 
-rename totnum total
-putdocx table tbl1 = data(year sex number total), halign(center) varnames
+//rename totnum total
+putdocx table tbl1 = data(year sex number), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
 putdocx table tbl1(1,2), bold shading(lightgray)
 putdocx table tbl1(1,3), bold shading(lightgray)
 putdocx table tbl1(1,4), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV01_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV02_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -279,7 +279,7 @@ preserve
 use "`datapath'\version02\2-working\NumIRs_heart", clear
 
 drop number
-sort sex year
+sort year sex
 
 putdocx clear
 putdocx begin
@@ -289,16 +289,16 @@ putdocx paragraph, halign(center)
 putdocx text ("Figure 1.2 Crude incidence rate of men and women per 100,000 population with acute MI by year in Barbados. 2010-2020"), bold font(Helvetica,10,"blue")
 putdocx paragraph
 
-rename tothir total
+//rename tothir total
 rename hir crude_incidence_rate
-putdocx table tbl1 = data(year sex crude_incidence_rate total), halign(center) varnames
+putdocx table tbl1 = data(year sex crude_incidence_rate), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
 putdocx table tbl1(1,2), bold shading(lightgray)
 putdocx table tbl1(1,3), bold shading(lightgray)
 putdocx table tbl1(1,4), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV01_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV02_`listdate'.docx", append
 putdocx clear
 restore
 stop
