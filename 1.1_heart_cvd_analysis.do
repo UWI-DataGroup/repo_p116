@@ -5,14 +5,14 @@ cls
     //  project:                BNR Heart
     //  analysts:               Ashley HENRY
     //  date first created:     26-Jan-2022
-    //  date last modified:     26-Jan-2022
+    //  date last modified:     22-Feb-2022
 	//  analysis:               Heart 2020 dataset for Annual Report
     //  algorithm task          Performing Heart 2020 Data Analysis
     //  status:                 Pending
     //  objective:              To analyse data to calculate Age standardised and Age stratified Incidence Rate.
     //  methods:1:              Run analysis on cleaned 2009-2020 BNR-H data.
 	//  version:                Version01 for weeks 01-52
-	//  support:                Natasha Sobers and Ian R Hambleton  
+	//  support:                Natasha Sobers, Jacqueline Campbell and Ian R Hambleton  
 
     ** General algorithm set-up
     version 16.0
@@ -29,9 +29,9 @@ cls
 
     ** Set working directories: this is for DATASET and LOGFILE import and export
     ** DATASETS to encrypted SharePoint folder
-    local datapath "C:\Users\CVD 03\Desktop\BNR_data\DM\data_analysis\2020\heart\weeks01-52\versions\version01\data"
+    local datapath "X:/The University of the West Indies/DataGroup - repo_data/data_p116"
     ** LOGFILES to unencrypted OneDrive folder (.gitignore set to IGNORE log files on PUSH to GitHub)
-    local logpath C:\Users\CVD 03\Desktop\BNR_data\DM\data_analysis\2020\heart\weeks01-52\versions\version01\logfiles
+    local logpath X:/The University of the West Indies/DataGroup - repo_data/data_p116
 
     ** Close any open log file and open a new log file
     capture log close
@@ -42,15 +42,19 @@ cls
  *              Table 1.2 ASMR 2010-202
  *              Figure 1.3 ASIR Graphs
 ************************************************************************
+
 ** Load the dataset  
-use "`datapath'\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
+use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
 
 count
 ** 4794 as of 26-Jan-2022
 
+** JC 17feb2022: Sex updated for 2018 pid that has sex=99 using MedData
+replace sex=1 if anon_pid==596 & record_id=="20181197" //1 change
+
 sort sex age_10
 
-merge m:m sex age_10 using "`datapath'\population\pop_wpp_2010-10.dta"
+merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2010-10.dta"
 
 ** Young ages (10-19 female) have no acute MI cases and so merge with error (_merge==2)
 ** Zero cases in any age group/sex combination are set to ZERO from MISSING
@@ -118,15 +122,68 @@ preserve
 
 sort age_10
 
-distrate case2010 pop_wpp2010 using "`datapath'\population\who2000_10-2", 	///	
+distrate case2010 pop_wpp2010 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
 *************************************************
 ** 2010 AGE-STANDARDIZED BY SEX TO UNWPP
 ** Using WHO World Standard Population
 *****************************************************
 
-distrate case2010 pop_wpp2010 using "`datapath'\population\who2000_10-2", 	///	
+distrate case2010 pop_wpp2010 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
+
+/*
+  +---------------------------------------------------------------------------------------------------+
+  |    sex   case2010        N    crude   rateadj   lb_gam   ub_gam   se_gam    srr   lb_srr   ub_srr |
+  |---------------------------------------------------------------------------------------------------|
+  | Female        180   146745   122.66     64.27    54.45    75.57     5.26   1.00        .        . |
+  |   Male        165   135386   121.87     87.07    73.91   102.01     7.02   1.35     1.07     1.71 |
+  +---------------------------------------------------------------------------------------------------+
+*/
+** JC update: Save these results as a dataset for reporting Table 1.2
+gen year=1
+matrix list r(adj)
+matrix number = r(NDeath)
+matrix asir = r(adj)
+matrix ui_lower = r(lb_G)
+matrix ui_upper = r(ub_G)
+svmat number
+svmat asir
+svmat ui_lower
+svmat ui_upper
+
+fillmissing number* asir* ui_*
+drop if age_10!=1
+replace number1=number2 if sex==2
+replace asir1=asir2 if sex==2
+replace ui_lower1=ui_lower2 if sex==2
+replace ui_upper1=ui_upper2 if sex==2
+drop age_10 pfu case2010 pop_* *2
+
+rename number1 number
+rename asir1 asir 
+rename ui_lower1 ui_lower
+rename ui_upper1 ui_upper
+
+replace asir=round(asir,0.1)
+replace ui_lower=round(ui_lower,0.1)
+replace ui_upper=round(ui_upper,0.1)
+
+egen totnum=total(number)
+gen percent=number/totnum*100
+replace percent=round(percent,0.1)
+
+gen ui_lower1=string(ui_lower, "%02.1f")
+gen ui_upper1=string(ui_upper, "%02.1f")
+gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
+drop totnum ui_lower* ui_upper*
+
+label define year_lab 1 "2010" 2 "2011" 3 "2012" 4 "2013" 5 "2014" 6 "2015" 7 "2016" 8 "2017" 9 "2018" 10 "2019" 11 "2020" ,modify
+label values year year_lab
+order year sex number percent asir ui_range
+sort sex year
+save "`datapath'\version02\2-working\ASIRs_heart" ,replace
+
 restore
 
 
@@ -145,7 +202,7 @@ preserve
 
 sort age_10
 
-distrate case2010 pop_wpp using "`datapath'\population\who2000_10-2", 	///	
+distrate case2010 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
 
 *************************************************
@@ -153,8 +210,58 @@ distrate case2010 pop_wpp using "`datapath'\population\who2000_10-2", 	///
 ** Using WHO World Standard Population
 *****************************************************
 
-distrate case2010 pop_wpp using "`datapath'\population\who2000_10-2", 	///	
-		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
+distrate case2010 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
+		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)				 
+/*
+  +--------------------------------------------------------------------------------------------------+
+  |    sex   case2010        N   crude   rateadj   lb_gam   ub_gam   se_gam    srr   lb_srr   ub_srr |
+  |--------------------------------------------------------------------------------------------------|
+  | Female        124   146745   84.50     42.13    34.38    51.35     4.21   1.00        .        . |
+  |   Male        100   135386   73.86     51.72    41.73    63.50     5.41   1.23     0.91     1.64 |
+  +--------------------------------------------------------------------------------------------------+
+*/
+** JC update: Save these results as a dataset for reporting Table 1.2
+gen year=1
+matrix list r(adj)
+matrix number = r(NDeath)
+matrix asmr = r(adj)
+matrix ui_lower = r(lb_G)
+matrix ui_upper = r(ub_G)
+svmat number
+svmat asmr
+svmat ui_lower
+svmat ui_upper
+
+fillmissing number* asmr* ui_*
+drop if age_10!=1
+replace number1=number2 if sex==2
+replace asmr1=asmr2 if sex==2
+replace ui_lower1=ui_lower2 if sex==2
+replace ui_upper1=ui_upper2 if sex==2
+drop age_10 pfu case2010 pop_* *2
+
+rename number1 number
+rename asmr1 asmr 
+rename ui_lower1 ui_lower
+rename ui_upper1 ui_upper
+
+replace asmr=round(asmr,0.1)
+replace ui_lower=round(ui_lower,0.1)
+replace ui_upper=round(ui_upper,0.1)
+
+egen totnum=total(number)
+gen percent=number/totnum*100
+replace percent=round(percent,0.1)
+
+gen ui_lower1=string(ui_lower, "%02.1f")
+gen ui_upper1=string(ui_upper, "%02.1f")
+gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
+drop totnum ui_lower* ui_upper*
+
+order year sex number percent asmr ui_range
+sort sex year
+save "`datapath'\version02\2-working\ASMRs_heart" ,replace
+
 restore
 *****
 
@@ -164,14 +271,14 @@ restore
 clear
 ************************************** 2011 *****************************
 ** Load the dataset  
-use "`datapath'\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
+use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
 
 count
 ** 4794 as of 26-Jan-2022
 
 sort sex age_10
 
-merge m:m sex age_10 using "`datapath'\population\pop_wpp_2011-10.dta"
+merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2011-10.dta"
 
 ** Young ages (10-19 female) have no acute MI cases and so merge with error (_merge==2)
 ** Zero cases in any age group/sex combination are set to ZERO from MISSING
@@ -235,7 +342,7 @@ preserve
 
 sort age_10
 
-distrate case2011 pop_wpp2011 using "`datapath'\population\who2000_10-2", 	///	
+distrate case2011 pop_wpp2011 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
 
 				 
@@ -244,8 +351,61 @@ distrate case2011 pop_wpp2011 using "`datapath'\population\who2000_10-2", 	///
 ** Using WHO World Standard Population
 *****************************************************
 
-distrate case2011 pop_wpp2011 using "`datapath'\population\who2000_10-2", 	///	
+distrate case2011 pop_wpp2011 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
+
+/*
+  +---------------------------------------------------------------------------------------------------+
+  |    sex   case2011        N    crude   rateadj   lb_gam   ub_gam   se_gam    srr   lb_srr   ub_srr |
+  |---------------------------------------------------------------------------------------------------|
+  | Female        126   147110    85.65     43.23    35.31    52.62     4.29   1.00        .        . |
+  |   Male        168   135877   123.64     88.16    74.98   103.11     7.03   2.04     1.58     2.64 |
+  +---------------------------------------------------------------------------------------------------+
+*/
+** JC update: Save these results as a dataset for reporting Table 1.2
+gen year=2
+matrix list r(adj)
+matrix number = r(NDeath)
+matrix asir = r(adj)
+matrix ui_lower = r(lb_G)
+matrix ui_upper = r(ub_G)
+svmat number
+svmat asir
+svmat ui_lower
+svmat ui_upper
+
+fillmissing number* asir* ui_*
+drop if age_10!=1
+replace number1=number2 if sex==2
+replace asir1=asir2 if sex==2
+replace ui_lower1=ui_lower2 if sex==2
+replace ui_upper1=ui_upper2 if sex==2
+drop age_10 pfu case2011 pop_* *2
+
+rename number1 number
+rename asir1 asir 
+rename ui_lower1 ui_lower
+rename ui_upper1 ui_upper
+
+replace asir=round(asir,0.1)
+replace ui_lower=round(ui_lower,0.1)
+replace ui_upper=round(ui_upper,0.1)
+
+egen totnum=total(number)
+gen percent=number/totnum*100
+replace percent=round(percent,0.1)
+
+gen ui_lower1=string(ui_lower, "%02.1f")
+gen ui_upper1=string(ui_upper, "%02.1f")
+gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
+drop totnum ui_lower* ui_upper*
+
+append using "`datapath'\version02\2-working\ASIRs_heart" 
+
+order year sex number percent asir ui_range
+sort sex year
+save "`datapath'\version02\2-working\ASIRs_heart" ,replace
+
 restore
 
 
@@ -264,7 +424,7 @@ preserve
 
 sort age_10
 
-distrate case2011 pop_wpp using "`datapath'\population\who2000_10-2", 	///	
+distrate case2011 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
 
 *************************************************
@@ -272,8 +432,53 @@ distrate case2011 pop_wpp using "`datapath'\population\who2000_10-2", 	///
 ** Using WHO World Standard Population
 *****************************************************
 
-distrate case2011 pop_wpp using "`datapath'\population\who2000_10-2", 	///	
+distrate case2011 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
+
+** JC update: Save these results as a dataset for reporting Table 1.2
+gen year=2
+matrix list r(adj)
+matrix number = r(NDeath)
+matrix asmr = r(adj)
+matrix ui_lower = r(lb_G)
+matrix ui_upper = r(ub_G)
+svmat number
+svmat asmr
+svmat ui_lower
+svmat ui_upper
+
+fillmissing number* asmr* ui_*
+drop if age_10!=1
+replace number1=number2 if sex==2
+replace asmr1=asmr2 if sex==2
+replace ui_lower1=ui_lower2 if sex==2
+replace ui_upper1=ui_upper2 if sex==2
+drop age_10 pfu case2011 pop_* *2
+
+rename number1 number
+rename asmr1 asmr 
+rename ui_lower1 ui_lower
+rename ui_upper1 ui_upper
+
+replace asmr=round(asmr,0.1)
+replace ui_lower=round(ui_lower,0.1)
+replace ui_upper=round(ui_upper,0.1)
+
+egen totnum=total(number)
+gen percent=number/totnum*100
+replace percent=round(percent,0.1)
+
+gen ui_lower1=string(ui_lower, "%02.1f")
+gen ui_upper1=string(ui_upper, "%02.1f")
+gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
+drop totnum ui_lower* ui_upper*
+
+append using "`datapath'\version02\2-working\ASMRs_heart"
+
+order year sex number percent asmr ui_range
+sort sex year
+save "`datapath'\version02\2-working\ASMRs_heart" ,replace
+
 restore
 *****
 
@@ -284,14 +489,14 @@ restore
 clear
 ************************************** 2012 *****************************
 ** Load the dataset  
-use "`datapath'\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
+use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
 
 count
 ** 4794 as of 26-Jan-2022
 
 sort sex age_10
 
-merge m:m sex age_10 using "`datapath'\population\pop_wpp_2012-10.dta"
+merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2012-10.dta"
 
 ** Young ages (10-19 female) have no acute MI cases and so merge with error (_merge==2)
 ** Zero cases in any age group/sex combination are set to ZERO from MISSING
@@ -354,15 +559,59 @@ preserve
 
 sort age_10
 
-distrate case2012 pop_wpp2012 using "`datapath'\population\who2000_10-2", 	///	
+distrate case2012 pop_wpp2012 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
 *************************************************
 ** 2012 AGE-STANDARDIZED BY SEX TO UNWPP
 ** Using WHO World Standard Population
 *****************************************************
 
-distrate case2012 pop_wpp2012 using "`datapath'\population\who2000_10-2", 	///	
+distrate case2012 pop_wpp2012 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
+
+** JC update: Save these results as a dataset for reporting Table 1.2
+gen year=3
+matrix list r(adj)
+matrix number = r(NDeath)
+matrix asir = r(adj)
+matrix ui_lower = r(lb_G)
+matrix ui_upper = r(ub_G)
+svmat number
+svmat asir
+svmat ui_lower
+svmat ui_upper
+
+fillmissing number* asir* ui_*
+drop if age_10!=1
+replace number1=number2 if sex==2
+replace asir1=asir2 if sex==2
+replace ui_lower1=ui_lower2 if sex==2
+replace ui_upper1=ui_upper2 if sex==2
+drop age_10 pfu case2012 pop_* *2
+
+rename number1 number
+rename asir1 asir 
+rename ui_lower1 ui_lower
+rename ui_upper1 ui_upper
+
+replace asir=round(asir,0.1)
+replace ui_lower=round(ui_lower,0.1)
+replace ui_upper=round(ui_upper,0.1)
+
+egen totnum=total(number)
+gen percent=number/totnum*100
+replace percent=round(percent,0.1)
+
+gen ui_lower1=string(ui_lower, "%02.1f")
+gen ui_upper1=string(ui_upper, "%02.1f")
+gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
+drop totnum ui_lower* ui_upper*
+
+append using "`datapath'\version02\2-working\ASIRs_heart" 
+
+order year sex number percent asir ui_range
+sort sex year
+save "`datapath'\version02\2-working\ASIRs_heart" ,replace
 restore
 
 
@@ -381,7 +630,7 @@ preserve
 
 sort age_10
 
-distrate case2012 pop_wpp using "`datapath'\population\who2000_10-2", 	///	
+distrate case2012 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
 
 *************************************************
@@ -389,8 +638,52 @@ distrate case2012 pop_wpp using "`datapath'\population\who2000_10-2", 	///
 ** Using WHO World Standard Population
 *****************************************************
 
-distrate case2012 pop_wpp using "`datapath'\population\who2000_10-2", 	///	
+distrate case2012 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
+
+** JC update: Save these results as a dataset for reporting Table 1.2
+gen year=3
+matrix list r(adj)
+matrix number = r(NDeath)
+matrix asmr = r(adj)
+matrix ui_lower = r(lb_G)
+matrix ui_upper = r(ub_G)
+svmat number
+svmat asmr
+svmat ui_lower
+svmat ui_upper
+
+fillmissing number* asmr* ui_*
+drop if age_10!=1
+replace number1=number2 if sex==2
+replace asmr1=asmr2 if sex==2
+replace ui_lower1=ui_lower2 if sex==2
+replace ui_upper1=ui_upper2 if sex==2
+drop age_10 pfu case2012 pop_* *2
+
+rename number1 number
+rename asmr1 asmr 
+rename ui_lower1 ui_lower
+rename ui_upper1 ui_upper
+
+replace asmr=round(asmr,0.1)
+replace ui_lower=round(ui_lower,0.1)
+replace ui_upper=round(ui_upper,0.1)
+
+egen totnum=total(number)
+gen percent=number/totnum*100
+replace percent=round(percent,0.1)
+
+gen ui_lower1=string(ui_lower, "%02.1f")
+gen ui_upper1=string(ui_upper, "%02.1f")
+gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
+drop totnum ui_lower* ui_upper*
+
+append using "`datapath'\version02\2-working\ASMRs_heart"
+
+order year sex number percent asmr ui_range
+sort sex year
+save "`datapath'\version02\2-working\ASMRs_heart" ,replace
 restore
 *****
 
@@ -401,14 +694,14 @@ restore
 clear
 ************************************** 2013 *****************************
 ** Load the dataset  
-use "`datapath'\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
+use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
 
 count
 ** 4794 as of 26-Jan-2022
 
 sort sex age_10
 
-merge m:m sex age_10 using "`datapath'\population\pop_wpp_2013-10.dta"
+merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2013-10.dta"
 
 ** Young ages (10-19 female) have no acute MI cases and so merge with error (_merge==2)
 ** Zero cases in any age group/sex combination are set to ZERO from MISSING
@@ -472,15 +765,59 @@ preserve
 
 sort age_10
 
-distrate case2013 pop_wpp2013 using "`datapath'\population\who2000_10-2", 	///	
+distrate case2013 pop_wpp2013 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
 
 *************************************************
 ** 2013 AGE-STANDARDIZED BY SEX TO UNWPP
 ** Using WHO World Standard Population
 *****************************************************
-distrate case2013 pop_wpp2013 using "`datapath'\population\who2000_10-2", 	///	
+distrate case2013 pop_wpp2013 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
+
+** JC update: Save these results as a dataset for reporting Table 1.2
+gen year=4
+matrix list r(adj)
+matrix number = r(NDeath)
+matrix asir = r(adj)
+matrix ui_lower = r(lb_G)
+matrix ui_upper = r(ub_G)
+svmat number
+svmat asir
+svmat ui_lower
+svmat ui_upper
+
+fillmissing number* asir* ui_*
+drop if age_10!=1
+replace number1=number2 if sex==2
+replace asir1=asir2 if sex==2
+replace ui_lower1=ui_lower2 if sex==2
+replace ui_upper1=ui_upper2 if sex==2
+drop age_10 pfu case2013 pop_* *2
+
+rename number1 number
+rename asir1 asir 
+rename ui_lower1 ui_lower
+rename ui_upper1 ui_upper
+
+replace asir=round(asir,0.1)
+replace ui_lower=round(ui_lower,0.1)
+replace ui_upper=round(ui_upper,0.1)
+
+egen totnum=total(number)
+gen percent=number/totnum*100
+replace percent=round(percent,0.1)
+
+gen ui_lower1=string(ui_lower, "%02.1f")
+gen ui_upper1=string(ui_upper, "%02.1f")
+gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
+drop totnum ui_lower* ui_upper*
+
+append using "`datapath'\version02\2-working\ASIRs_heart" 
+
+order year sex number percent asir ui_range
+sort sex year
+save "`datapath'\version02\2-working\ASIRs_heart" ,replace
 restore
 
 
@@ -499,7 +836,7 @@ preserve
 
 sort age_10
 
-distrate case2013 pop_wpp using "`datapath'\population\who2000_10-2", 	///	
+distrate case2013 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
 
 *************************************************
@@ -507,8 +844,52 @@ distrate case2013 pop_wpp using "`datapath'\population\who2000_10-2", 	///
 ** Using WHO World Standard Population
 *****************************************************
 
-distrate case2013 pop_wpp using "`datapath'\population\who2000_10-2", 	///	
+distrate case2013 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
+
+** JC update: Save these results as a dataset for reporting Table 1.2
+gen year=4
+matrix list r(adj)
+matrix number = r(NDeath)
+matrix asmr = r(adj)
+matrix ui_lower = r(lb_G)
+matrix ui_upper = r(ub_G)
+svmat number
+svmat asmr
+svmat ui_lower
+svmat ui_upper
+
+fillmissing number* asmr* ui_*
+drop if age_10!=1
+replace number1=number2 if sex==2
+replace asmr1=asmr2 if sex==2
+replace ui_lower1=ui_lower2 if sex==2
+replace ui_upper1=ui_upper2 if sex==2
+drop age_10 pfu case2013 pop_* *2
+
+rename number1 number
+rename asmr1 asmr 
+rename ui_lower1 ui_lower
+rename ui_upper1 ui_upper
+
+replace asmr=round(asmr,0.1)
+replace ui_lower=round(ui_lower,0.1)
+replace ui_upper=round(ui_upper,0.1)
+
+egen totnum=total(number)
+gen percent=number/totnum*100
+replace percent=round(percent,0.1)
+
+gen ui_lower1=string(ui_lower, "%02.1f")
+gen ui_upper1=string(ui_upper, "%02.1f")
+gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
+drop totnum ui_lower* ui_upper*
+
+append using "`datapath'\version02\2-working\ASMRs_heart"
+
+order year sex number percent asmr ui_range
+sort sex year
+save "`datapath'\version02\2-working\ASMRs_heart" ,replace
 restore
 *****
 
@@ -518,14 +899,14 @@ restore
 clear
 ************************************** 2014 *****************************
 ** Load the dataset  
-use "`datapath'\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
+use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
 
 count
 ** 4794 as of 26-Jan-2022
 
 sort sex age_10
 
-merge m:m sex age_10 using "`datapath'\population\pop_wpp_2014-10.dta"
+merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2014-10.dta"
 
 ** Young ages (10-19 female) have no acute MI cases and so merge with error (_merge==2)
 ** Zero cases in any age group/sex combination are set to ZERO from MISSING
@@ -587,15 +968,59 @@ preserve
 
 sort age_10
 
-distrate case2014 pop_wpp2014 using "`datapath'\population\who2000_10-2", 	///	
+distrate case2014 pop_wpp2014 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
 *************************************************
 ** 2014 AGE-STANDARDIZED BY SEX TO UNWPP
 ** Using WHO World Standard Population
 *****************************************************
 
-distrate case2014 pop_wpp2014 using "`datapath'\population\who2000_10-2", 	///	
+distrate case2014 pop_wpp2014 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
+
+** JC update: Save these results as a dataset for reporting Table 1.2
+gen year=5
+matrix list r(adj)
+matrix number = r(NDeath)
+matrix asir = r(adj)
+matrix ui_lower = r(lb_G)
+matrix ui_upper = r(ub_G)
+svmat number
+svmat asir
+svmat ui_lower
+svmat ui_upper
+
+fillmissing number* asir* ui_*
+drop if age_10!=1
+replace number1=number2 if sex==2
+replace asir1=asir2 if sex==2
+replace ui_lower1=ui_lower2 if sex==2
+replace ui_upper1=ui_upper2 if sex==2
+drop age_10 pfu case2014 pop_* *2
+
+rename number1 number
+rename asir1 asir 
+rename ui_lower1 ui_lower
+rename ui_upper1 ui_upper
+
+replace asir=round(asir,0.1)
+replace ui_lower=round(ui_lower,0.1)
+replace ui_upper=round(ui_upper,0.1)
+
+egen totnum=total(number)
+gen percent=number/totnum*100
+replace percent=round(percent,0.1)
+
+gen ui_lower1=string(ui_lower, "%02.1f")
+gen ui_upper1=string(ui_upper, "%02.1f")
+gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
+drop totnum ui_lower* ui_upper*
+
+append using "`datapath'\version02\2-working\ASIRs_heart" 
+
+order year sex number percent asir ui_range
+sort sex year
+save "`datapath'\version02\2-working\ASIRs_heart" ,replace
 restore
 
 
@@ -614,7 +1039,7 @@ preserve
 
 sort age_10
 
-distrate case2014 pop_wpp using "`datapath'\population\who2000_10-2", 	///	
+distrate case2014 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
 
 *************************************************
@@ -622,8 +1047,52 @@ distrate case2014 pop_wpp using "`datapath'\population\who2000_10-2", 	///
 ** Using WHO World Standard Population
 *****************************************************
 
-distrate case2014 pop_wpp using "`datapath'\population\who2000_10-2", 	///	
+distrate case2014 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
+
+** JC update: Save these results as a dataset for reporting Table 1.2
+gen year=5
+matrix list r(adj)
+matrix number = r(NDeath)
+matrix asmr = r(adj)
+matrix ui_lower = r(lb_G)
+matrix ui_upper = r(ub_G)
+svmat number
+svmat asmr
+svmat ui_lower
+svmat ui_upper
+
+fillmissing number* asmr* ui_*
+drop if age_10!=1
+replace number1=number2 if sex==2
+replace asmr1=asmr2 if sex==2
+replace ui_lower1=ui_lower2 if sex==2
+replace ui_upper1=ui_upper2 if sex==2
+drop age_10 pfu case2014 pop_* *2
+
+rename number1 number
+rename asmr1 asmr 
+rename ui_lower1 ui_lower
+rename ui_upper1 ui_upper
+
+replace asmr=round(asmr,0.1)
+replace ui_lower=round(ui_lower,0.1)
+replace ui_upper=round(ui_upper,0.1)
+
+egen totnum=total(number)
+gen percent=number/totnum*100
+replace percent=round(percent,0.1)
+
+gen ui_lower1=string(ui_lower, "%02.1f")
+gen ui_upper1=string(ui_upper, "%02.1f")
+gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
+drop totnum ui_lower* ui_upper*
+
+append using "`datapath'\version02\2-working\ASMRs_heart"
+
+order year sex number percent asmr ui_range
+sort sex year
+save "`datapath'\version02\2-working\ASMRs_heart" ,replace
 restore
 *****
 
@@ -635,14 +1104,14 @@ restore
 clear
 ************************************** 2015 *****************************
 ** Load the dataset  
-use "`datapath'\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
+use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
 
 count
 ** 4794 as of 26-Jan-2022
 
 sort sex age_10
 
-merge m:m sex age_10 using "`datapath'\population\pop_wpp_2015-10.dta"
+merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2015-10.dta"
 
 ** Young ages (10-19 female) have no acute MI cases and so merge with error (_merge==2)
 ** Zero cases in any age group/sex combination are set to ZERO from MISSING
@@ -704,15 +1173,59 @@ preserve
 
 sort age_10
 
-distrate case2015 pop_wpp2015 using "`datapath'\population\who2000_10-2", 	///	
+distrate case2015 pop_wpp2015 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
 
 *************************************************
 ** 2015 AGE-STANDARDIZED BY SEX TO UNWPP
 ** Using WHO World Standard Population
 *****************************************************
-distrate case2015 pop_wpp2015 using "`datapath'\population\who2000_10-2", 	///	
+distrate case2015 pop_wpp2015 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
+
+** JC update: Save these results as a dataset for reporting Table 1.2
+gen year=6
+matrix list r(adj)
+matrix number = r(NDeath)
+matrix asir = r(adj)
+matrix ui_lower = r(lb_G)
+matrix ui_upper = r(ub_G)
+svmat number
+svmat asir
+svmat ui_lower
+svmat ui_upper
+
+fillmissing number* asir* ui_*
+drop if age_10!=1
+replace number1=number2 if sex==2
+replace asir1=asir2 if sex==2
+replace ui_lower1=ui_lower2 if sex==2
+replace ui_upper1=ui_upper2 if sex==2
+drop age_10 pfu case2015 pop_* *2
+
+rename number1 number
+rename asir1 asir 
+rename ui_lower1 ui_lower
+rename ui_upper1 ui_upper
+
+replace asir=round(asir,0.1)
+replace ui_lower=round(ui_lower,0.1)
+replace ui_upper=round(ui_upper,0.1)
+
+egen totnum=total(number)
+gen percent=number/totnum*100
+replace percent=round(percent,0.1)
+
+gen ui_lower1=string(ui_lower, "%02.1f")
+gen ui_upper1=string(ui_upper, "%02.1f")
+gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
+drop totnum ui_lower* ui_upper*
+
+append using "`datapath'\version02\2-working\ASIRs_heart" 
+
+order year sex number percent asir ui_range
+sort sex year
+save "`datapath'\version02\2-working\ASIRs_heart" ,replace
 restore
 
 
@@ -731,7 +1244,7 @@ preserve
 
 sort age_10
 
-distrate case2015 pop_wpp using "`datapath'\population\who2000_10-2", 	///	
+distrate case2015 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
 
 *************************************************
@@ -739,8 +1252,52 @@ distrate case2015 pop_wpp using "`datapath'\population\who2000_10-2", 	///
 ** Using WHO World Standard Population
 *****************************************************
 
-distrate case2015 pop_wpp using "`datapath'\population\who2000_10-2", 	///	
+distrate case2015 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
+
+** JC update: Save these results as a dataset for reporting Table 1.2
+gen year=6
+matrix list r(adj)
+matrix number = r(NDeath)
+matrix asmr = r(adj)
+matrix ui_lower = r(lb_G)
+matrix ui_upper = r(ub_G)
+svmat number
+svmat asmr
+svmat ui_lower
+svmat ui_upper
+
+fillmissing number* asmr* ui_*
+drop if age_10!=1
+replace number1=number2 if sex==2
+replace asmr1=asmr2 if sex==2
+replace ui_lower1=ui_lower2 if sex==2
+replace ui_upper1=ui_upper2 if sex==2
+drop age_10 pfu case2015 pop_* *2
+
+rename number1 number
+rename asmr1 asmr 
+rename ui_lower1 ui_lower
+rename ui_upper1 ui_upper
+
+replace asmr=round(asmr,0.1)
+replace ui_lower=round(ui_lower,0.1)
+replace ui_upper=round(ui_upper,0.1)
+
+egen totnum=total(number)
+gen percent=number/totnum*100
+replace percent=round(percent,0.1)
+
+gen ui_lower1=string(ui_lower, "%02.1f")
+gen ui_upper1=string(ui_upper, "%02.1f")
+gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
+drop totnum ui_lower* ui_upper*
+
+append using "`datapath'\version02\2-working\ASMRs_heart"
+
+order year sex number percent asmr ui_range
+sort sex year
+save "`datapath'\version02\2-working\ASMRs_heart" ,replace
 restore
 *****
 
@@ -750,14 +1307,14 @@ restore
 clear
 ************************************** 2016 *****************************
 ** Load the dataset  
-use "`datapath'\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
+use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
 
 count
 ** 4794 as of 26-Jan-2022
 
 sort sex age_10
 
-merge m:m sex age_10 using "`datapath'\population\pop_wpp_2016-10.dta"
+merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2016-10.dta"
 
 ** Young ages (10-19 female) have no acute MI cases and so merge with error (_merge==2)
 ** Zero cases in any age group/sex combination are set to ZERO from MISSING
@@ -823,7 +1380,7 @@ preserve
 
 sort age_10
 
-distrate case2016 pop_wpp2016 using "`datapath'\population\who2000_10-2", 	///	
+distrate case2016 pop_wpp2016 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
 
 *************************************************
@@ -831,8 +1388,52 @@ distrate case2016 pop_wpp2016 using "`datapath'\population\who2000_10-2", 	///
 ** Using WHO World Standard Population
 *****************************************************
 
-distrate case2016 pop_wpp2016 using "`datapath'\population\who2000_10-2", 	///	
+distrate case2016 pop_wpp2016 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex) mult(100000) format(%8.2f)
+
+** JC update: Save these results as a dataset for reporting Table 1.2
+gen year=7
+matrix list r(adj)
+matrix number = r(NDeath)
+matrix asir = r(adj)
+matrix ui_lower = r(lb_G)
+matrix ui_upper = r(ub_G)
+svmat number
+svmat asir
+svmat ui_lower
+svmat ui_upper
+
+fillmissing number* asir* ui_*
+drop if age_10!=1
+replace number1=number2 if sex==2
+replace asir1=asir2 if sex==2
+replace ui_lower1=ui_lower2 if sex==2
+replace ui_upper1=ui_upper2 if sex==2
+drop age_10 pfu case2016 pop_* *2
+
+rename number1 number
+rename asir1 asir 
+rename ui_lower1 ui_lower
+rename ui_upper1 ui_upper
+
+replace asir=round(asir,0.1)
+replace ui_lower=round(ui_lower,0.1)
+replace ui_upper=round(ui_upper,0.1)
+
+egen totnum=total(number)
+gen percent=number/totnum*100
+replace percent=round(percent,0.1)
+
+gen ui_lower1=string(ui_lower, "%02.1f")
+gen ui_upper1=string(ui_upper, "%02.1f")
+gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
+drop totnum ui_lower* ui_upper*
+
+append using "`datapath'\version02\2-working\ASIRs_heart" 
+
+order year sex number percent asir ui_range
+sort sex year
+save "`datapath'\version02\2-working\ASIRs_heart" ,replace
 restore
 
 
@@ -851,7 +1452,7 @@ preserve
 
 sort age_10
 
-distrate case2016 pop_wpp using "`datapath'\population\who2000_10-2", 	///	
+distrate case2016 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
 
 *************************************************
@@ -859,8 +1460,52 @@ distrate case2016 pop_wpp using "`datapath'\population\who2000_10-2", 	///
 ** Using WHO World Standard Population
 *****************************************************
 
-distrate case2016 pop_wpp using "`datapath'\population\who2000_10-2", 	///	
+distrate case2016 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
+
+** JC update: Save these results as a dataset for reporting Table 1.2
+gen year=7
+matrix list r(adj)
+matrix number = r(NDeath)
+matrix asmr = r(adj)
+matrix ui_lower = r(lb_G)
+matrix ui_upper = r(ub_G)
+svmat number
+svmat asmr
+svmat ui_lower
+svmat ui_upper
+
+fillmissing number* asmr* ui_*
+drop if age_10!=1
+replace number1=number2 if sex==2
+replace asmr1=asmr2 if sex==2
+replace ui_lower1=ui_lower2 if sex==2
+replace ui_upper1=ui_upper2 if sex==2
+drop age_10 pfu case2016 pop_* *2
+
+rename number1 number
+rename asmr1 asmr 
+rename ui_lower1 ui_lower
+rename ui_upper1 ui_upper
+
+replace asmr=round(asmr,0.1)
+replace ui_lower=round(ui_lower,0.1)
+replace ui_upper=round(ui_upper,0.1)
+
+egen totnum=total(number)
+gen percent=number/totnum*100
+replace percent=round(percent,0.1)
+
+gen ui_lower1=string(ui_lower, "%02.1f")
+gen ui_upper1=string(ui_upper, "%02.1f")
+gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
+drop totnum ui_lower* ui_upper*
+
+append using "`datapath'\version02\2-working\ASMRs_heart"
+
+order year sex number percent asmr ui_range
+sort sex year
+save "`datapath'\version02\2-working\ASMRs_heart" ,replace
 restore
 *****
 
@@ -871,14 +1516,14 @@ restore
 clear
 ************************************** 2017 *****************************
 ** Load the dataset  
-use "`datapath'\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
+use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
 
 count
 ** 4794 as of 26-Jan-2022
 
 sort sex age_10
 
-merge m:m sex age_10 using "`datapath'\population\pop_wpp_2017-10.dta"
+merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2017-10.dta"
 
 ** Young ages (10-19 female) have no acute MI cases and so merge with error (_merge==2)
 ** Zero cases in any age group/sex combination are set to ZERO from MISSING
@@ -942,7 +1587,7 @@ preserve
 
 sort age_10
 
-distrate case2017 pop_wpp2017 using "`datapath'\population\who2000_10-2", 	///	
+distrate case2017 pop_wpp2017 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
 
 *************************************************
@@ -950,8 +1595,52 @@ distrate case2017 pop_wpp2017 using "`datapath'\population\who2000_10-2", 	///
 ** Using WHO World Standard Population
 *****************************************************
 
-distrate case2017 pop_wpp2017 using "`datapath'\population\who2000_10-2", 	///	
+distrate case2017 pop_wpp2017 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
+
+** JC update: Save these results as a dataset for reporting Table 1.2
+gen year=8
+matrix list r(adj)
+matrix number = r(NDeath)
+matrix asir = r(adj)
+matrix ui_lower = r(lb_G)
+matrix ui_upper = r(ub_G)
+svmat number
+svmat asir
+svmat ui_lower
+svmat ui_upper
+
+fillmissing number* asir* ui_*
+drop if age_10!=1
+replace number1=number2 if sex==2
+replace asir1=asir2 if sex==2
+replace ui_lower1=ui_lower2 if sex==2
+replace ui_upper1=ui_upper2 if sex==2
+drop age_10 pfu case2017 pop_* *2
+
+rename number1 number
+rename asir1 asir 
+rename ui_lower1 ui_lower
+rename ui_upper1 ui_upper
+
+replace asir=round(asir,0.1)
+replace ui_lower=round(ui_lower,0.1)
+replace ui_upper=round(ui_upper,0.1)
+
+egen totnum=total(number)
+gen percent=number/totnum*100
+replace percent=round(percent,0.1)
+
+gen ui_lower1=string(ui_lower, "%02.1f")
+gen ui_upper1=string(ui_upper, "%02.1f")
+gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
+drop totnum ui_lower* ui_upper*
+
+append using "`datapath'\version02\2-working\ASIRs_heart" 
+
+order year sex number percent asir ui_range
+sort sex year
+save "`datapath'\version02\2-working\ASIRs_heart" ,replace
 restore
 
 
@@ -970,7 +1659,7 @@ preserve
 
 sort age_10
 
-distrate case2017 pop_wpp using "`datapath'\population\who2000_10-2", 	///	
+distrate case2017 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
 
 *************************************************
@@ -978,8 +1667,52 @@ distrate case2017 pop_wpp using "`datapath'\population\who2000_10-2", 	///
 ** Using WHO World Standard Population
 *****************************************************
 
-distrate case2017 pop_wpp using "`datapath'\population\who2000_10-2", 	///	
+distrate case2017 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
+
+** JC update: Save these results as a dataset for reporting Table 1.2
+gen year=8
+matrix list r(adj)
+matrix number = r(NDeath)
+matrix asmr = r(adj)
+matrix ui_lower = r(lb_G)
+matrix ui_upper = r(ub_G)
+svmat number
+svmat asmr
+svmat ui_lower
+svmat ui_upper
+
+fillmissing number* asmr* ui_*
+drop if age_10!=1
+replace number1=number2 if sex==2
+replace asmr1=asmr2 if sex==2
+replace ui_lower1=ui_lower2 if sex==2
+replace ui_upper1=ui_upper2 if sex==2
+drop age_10 pfu case2017 pop_* *2
+
+rename number1 number
+rename asmr1 asmr 
+rename ui_lower1 ui_lower
+rename ui_upper1 ui_upper
+
+replace asmr=round(asmr,0.1)
+replace ui_lower=round(ui_lower,0.1)
+replace ui_upper=round(ui_upper,0.1)
+
+egen totnum=total(number)
+gen percent=number/totnum*100
+replace percent=round(percent,0.1)
+
+gen ui_lower1=string(ui_lower, "%02.1f")
+gen ui_upper1=string(ui_upper, "%02.1f")
+gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
+drop totnum ui_lower* ui_upper*
+
+append using "`datapath'\version02\2-working\ASMRs_heart"
+
+order year sex number percent asmr ui_range
+sort sex year
+save "`datapath'\version02\2-working\ASMRs_heart" ,replace
 restore
 *****
 
@@ -990,14 +1723,14 @@ restore
 clear
 ************************************** 2018 *****************************
 ** Load the dataset  
-use "`datapath'\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
+use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
 
 count
 ** 4794 as of 26-Jan-2022
 
 sort sex age_10
 
-merge m:m sex age_10 using "`datapath'\population\pop_wpp_2018-10.dta"
+merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2018-10.dta"
 
 ** Young ages (10-19 female) have no acute MI cases and so merge with error (_merge==2)
 ** Zero cases in any age group/sex combination are set to ZERO from MISSING
@@ -1062,15 +1795,59 @@ preserve
 
 sort age_10
 
-distrate case2018 pop_wpp2018 using "`datapath'\population\who2000_10-2", 	///	
+distrate case2018 pop_wpp2018 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
 *************************************************
 ** 2018 AGE-STANDARDIZED BY SEX TO UNWPP
 ** Using WHO World Standard Population
 *****************************************************
 
-distrate case2018 pop_wpp2018 using "`datapath'\population\who2000_10-2", 	///	
+distrate case2018 pop_wpp2018 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
+
+** JC update: Save these results as a dataset for reporting Table 1.2
+gen year=9
+matrix list r(adj)
+matrix number = r(NDeath)
+matrix asir = r(adj)
+matrix ui_lower = r(lb_G)
+matrix ui_upper = r(ub_G)
+svmat number
+svmat asir
+svmat ui_lower
+svmat ui_upper
+
+fillmissing number* asir* ui_*
+drop if age_10!=1
+replace number1=number2 if sex==2
+replace asir1=asir2 if sex==2
+replace ui_lower1=ui_lower2 if sex==2
+replace ui_upper1=ui_upper2 if sex==2
+drop age_10 pfu case2018 pop_* *2
+
+rename number1 number
+rename asir1 asir 
+rename ui_lower1 ui_lower
+rename ui_upper1 ui_upper
+
+replace asir=round(asir,0.1)
+replace ui_lower=round(ui_lower,0.1)
+replace ui_upper=round(ui_upper,0.1)
+
+egen totnum=total(number)
+gen percent=number/totnum*100
+replace percent=round(percent,0.1)
+
+gen ui_lower1=string(ui_lower, "%02.1f")
+gen ui_upper1=string(ui_upper, "%02.1f")
+gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
+drop totnum ui_lower* ui_upper*
+
+append using "`datapath'\version02\2-working\ASIRs_heart" 
+
+order year sex number percent asir ui_range
+sort sex year
+save "`datapath'\version02\2-working\ASIRs_heart" ,replace
 restore
 
 
@@ -1089,7 +1866,7 @@ preserve
 
 sort age_10
 
-distrate case2018 pop_wpp using "`datapath'\population\who2000_10-2", 	///	
+distrate case2018 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
 
 *************************************************
@@ -1097,8 +1874,52 @@ distrate case2018 pop_wpp using "`datapath'\population\who2000_10-2", 	///
 ** Using WHO World Standard Population
 *****************************************************
 
-distrate case2018 pop_wpp using "`datapath'\population\who2000_10-2", 	///	
+distrate case2018 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
+
+** JC update: Save these results as a dataset for reporting Table 1.2
+gen year=9
+matrix list r(adj)
+matrix number = r(NDeath)
+matrix asmr = r(adj)
+matrix ui_lower = r(lb_G)
+matrix ui_upper = r(ub_G)
+svmat number
+svmat asmr
+svmat ui_lower
+svmat ui_upper
+
+fillmissing number* asmr* ui_*
+drop if age_10!=1
+replace number1=number2 if sex==2
+replace asmr1=asmr2 if sex==2
+replace ui_lower1=ui_lower2 if sex==2
+replace ui_upper1=ui_upper2 if sex==2
+drop age_10 pfu case2018 pop_* *2
+
+rename number1 number
+rename asmr1 asmr 
+rename ui_lower1 ui_lower
+rename ui_upper1 ui_upper
+
+replace asmr=round(asmr,0.1)
+replace ui_lower=round(ui_lower,0.1)
+replace ui_upper=round(ui_upper,0.1)
+
+egen totnum=total(number)
+gen percent=number/totnum*100
+replace percent=round(percent,0.1)
+
+gen ui_lower1=string(ui_lower, "%02.1f")
+gen ui_upper1=string(ui_upper, "%02.1f")
+gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
+drop totnum ui_lower* ui_upper*
+
+append using "`datapath'\version02\2-working\ASMRs_heart"
+
+order year sex number percent asmr ui_range
+sort sex year
+save "`datapath'\version02\2-working\ASMRs_heart" ,replace
 restore
 *****
 
@@ -1108,14 +1929,14 @@ restore
 clear
 ************************************** 2019 *****************************
 ** Load the dataset  
-use "`datapath'\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
+use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
 
 count
 ** 4794 as of 26-Jan-2022
 
 sort sex age_10
 
-merge m:m sex age_10 using "`datapath'\population\pop_wpp_2019-10.dta"
+merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2019-10.dta"
 
 ** Young ages (10-19 female) have no acute MI cases and so merge with error (_merge==2)
 ** Zero cases in any age group/sex combination are set to ZERO from MISSING
@@ -1180,15 +2001,59 @@ preserve
 
 sort age_10
 
-distrate case2019 pop_wpp using "`datapath'\population\who2000_10-2", 	///	
+distrate case2019 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
 *************************************************
 ** 2019 AGE-STANDARDIZED BY SEX TO UNWPP
 ** Using WHO World Standard Population
 *****************************************************
 
-distrate case2019 pop_wpp using "`datapath'\population\who2000_10-2", 	///	
+distrate case2019 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
+
+** JC update: Save these results as a dataset for reporting Table 1.2
+gen year=10
+matrix list r(adj)
+matrix number = r(NDeath)
+matrix asir = r(adj)
+matrix ui_lower = r(lb_G)
+matrix ui_upper = r(ub_G)
+svmat number
+svmat asir
+svmat ui_lower
+svmat ui_upper
+
+fillmissing number* asir* ui_*
+drop if age_10!=1
+replace number1=number2 if sex==2
+replace asir1=asir2 if sex==2
+replace ui_lower1=ui_lower2 if sex==2
+replace ui_upper1=ui_upper2 if sex==2
+drop age_10 pfu case2019 pop_* *2
+
+rename number1 number
+rename asir1 asir 
+rename ui_lower1 ui_lower
+rename ui_upper1 ui_upper
+
+replace asir=round(asir,0.1)
+replace ui_lower=round(ui_lower,0.1)
+replace ui_upper=round(ui_upper,0.1)
+
+egen totnum=total(number)
+gen percent=number/totnum*100
+replace percent=round(percent,0.1)
+
+gen ui_lower1=string(ui_lower, "%02.1f")
+gen ui_upper1=string(ui_upper, "%02.1f")
+gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
+drop totnum ui_lower* ui_upper*
+
+append using "`datapath'\version02\2-working\ASIRs_heart" 
+
+order year sex number percent asir ui_range
+sort sex year
+save "`datapath'\version02\2-working\ASIRs_heart" ,replace
 restore
 
 
@@ -1207,7 +2072,7 @@ preserve
 
 sort age_10
 
-distrate case2019 pop_wpp using "`datapath'\population\who2000_10-2", 	///	
+distrate case2019 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
 
 *************************************************
@@ -1215,8 +2080,52 @@ distrate case2019 pop_wpp using "`datapath'\population\who2000_10-2", 	///
 ** Using WHO World Standard Population
 *****************************************************
 
-distrate case2019 pop_wpp using "`datapath'\population\who2000_10-2", 	///	
+distrate case2019 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
+
+** JC update: Save these results as a dataset for reporting Table 1.2
+gen year=10
+matrix list r(adj)
+matrix number = r(NDeath)
+matrix asmr = r(adj)
+matrix ui_lower = r(lb_G)
+matrix ui_upper = r(ub_G)
+svmat number
+svmat asmr
+svmat ui_lower
+svmat ui_upper
+
+fillmissing number* asmr* ui_*
+drop if age_10!=1
+replace number1=number2 if sex==2
+replace asmr1=asmr2 if sex==2
+replace ui_lower1=ui_lower2 if sex==2
+replace ui_upper1=ui_upper2 if sex==2
+drop age_10 pfu case2019 pop_* *2
+
+rename number1 number
+rename asmr1 asmr 
+rename ui_lower1 ui_lower
+rename ui_upper1 ui_upper
+
+replace asmr=round(asmr,0.1)
+replace ui_lower=round(ui_lower,0.1)
+replace ui_upper=round(ui_upper,0.1)
+
+egen totnum=total(number)
+gen percent=number/totnum*100
+replace percent=round(percent,0.1)
+
+gen ui_lower1=string(ui_lower, "%02.1f")
+gen ui_upper1=string(ui_upper, "%02.1f")
+gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
+drop totnum ui_lower* ui_upper*
+
+append using "`datapath'\version02\2-working\ASMRs_heart"
+
+order year sex number percent asmr ui_range
+sort sex year
+save "`datapath'\version02\2-working\ASMRs_heart" ,replace
 restore
 *****
 
@@ -1224,14 +2133,14 @@ restore
 clear
 ************************************** 2020 *****************************
 ** Load the dataset  
-use "`datapath'\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
+use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
 
 count
 ** 4794 as of 26-Jan-2022
 
 sort sex age_10
 
-merge m:m sex age_10 using "`datapath'\population\pop_wpp_2020-10.dta"
+merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2020-10.dta"
 
 ** Young ages (10-19 female) have no acute MI cases and so merge with error (_merge==2)
 ** Zero cases in any age group/sex combination are set to ZERO from MISSING
@@ -1294,15 +2203,62 @@ preserve
 
 sort age_10
 
-distrate case2020 pop_wpp2020 using "`datapath'\population\who2000_10-2", 	///	
+distrate case2020 pop_wpp2020 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
 *************************************************
 ** 2020 AGE-STANDARDIZED BY SEX TO UNWPP
 ** Using WHO World Standard Population
 *****************************************************
 
-distrate case2020 pop_wpp2020 using "`datapath'\population\who2000_10-2", 	///	
+distrate case2020 pop_wpp2020 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
+
+** JC update: Save these results as a dataset for reporting Table 1.2
+gen year=11
+matrix list r(adj)
+matrix number = r(NDeath)
+matrix asir = r(adj)
+matrix ui_lower = r(lb_G)
+matrix ui_upper = r(ub_G)
+svmat number
+svmat asir
+svmat ui_lower
+svmat ui_upper
+
+fillmissing number* asir* ui_*
+drop if age_10!=1
+replace number1=number2 if sex==2
+replace asir1=asir2 if sex==2
+replace ui_lower1=ui_lower2 if sex==2
+replace ui_upper1=ui_upper2 if sex==2
+drop age_10 pfu case2020 pop_* *2
+
+rename number1 number
+rename asir1 asir 
+rename ui_lower1 ui_lower
+rename ui_upper1 ui_upper
+
+replace asir=round(asir,0.1)
+replace ui_lower=round(ui_lower,0.1)
+replace ui_upper=round(ui_upper,0.1)
+
+egen totnum=total(number)
+gen percent=number/totnum*100
+replace percent=round(percent,0.1)
+
+gen ui_lower1=string(ui_lower, "%02.1f")
+gen ui_upper1=string(ui_upper, "%02.1f")
+gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
+drop totnum ui_lower* ui_upper*
+
+append using "`datapath'\version02\2-working\ASIRs_heart" 
+
+label define year_lab 1 "2010" 2 "2011" 3 "2012" 4 "2013" 5 "2014" 6 "2015" 7 "2016" 8 "2017" 9 "2018" 10 "2019" 11 "2020" ,modify
+label values year year_lab
+order year sex number percent asir ui_range
+sort sex year
+save "`datapath'\version02\2-working\ASIRs_heart" ,replace
+
 restore
 
 
@@ -1321,7 +2277,7 @@ preserve
 
 sort age_10
 
-distrate case2020 pop_wpp using "`datapath'\population\who2000_10-2", 	///	
+distrate case2020 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
 
 *************************************************
@@ -1329,10 +2285,57 @@ distrate case2020 pop_wpp using "`datapath'\population\who2000_10-2", 	///
 ** Using WHO World Standard Population
 *****************************************************
 
-distrate case2020 pop_wpp using "`datapath'\population\who2000_10-2", 	///	
+distrate case2020 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
+
+** JC update: Save these results as a dataset for reporting Table 1.2
+gen year=11
+matrix list r(adj)
+matrix number = r(NDeath)
+matrix asmr = r(adj)
+matrix ui_lower = r(lb_G)
+matrix ui_upper = r(ub_G)
+svmat number
+svmat asmr
+svmat ui_lower
+svmat ui_upper
+
+fillmissing number* asmr* ui_*
+drop if age_10!=1
+replace number1=number2 if sex==2
+replace asmr1=asmr2 if sex==2
+replace ui_lower1=ui_lower2 if sex==2
+replace ui_upper1=ui_upper2 if sex==2
+drop age_10 pfu case2020 pop_* *2
+
+rename number1 number
+rename asmr1 asmr 
+rename ui_lower1 ui_lower
+rename ui_upper1 ui_upper
+
+replace asmr=round(asmr,0.1)
+replace ui_lower=round(ui_lower,0.1)
+replace ui_upper=round(ui_upper,0.1)
+
+egen totnum=total(number)
+gen percent=number/totnum*100
+replace percent=round(percent,0.1)
+
+gen ui_lower1=string(ui_lower, "%02.1f")
+gen ui_upper1=string(ui_upper, "%02.1f")
+gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
+drop totnum ui_lower* ui_upper*
+
+append using "`datapath'\version02\2-working\ASMRs_heart"
+
+label define year_lab 1 "2010" 2 "2011" 3 "2012" 4 "2013" 5 "2014" 6 "2015" 7 "2016" 8 "2017" 9 "2018" 10 "2019" 11 "2020" ,modify
+label values year year_lab
+order year sex number percent asmr ui_range
+sort sex year
+save "`datapath'\version02\2-working\ASMRs_heart" ,replace
 restore
 *****
+
 
 
 
@@ -1340,7 +2343,7 @@ restore
 *** 2018- Fig. 1.3: AGE- and SEX-STRATIFIED INCIDENCE RATE ***********
 ****************************************************************
 ** For this chart, we need the population dataset
-use "`datapath'\2018_heart_dataset_popn.dta", clear
+use "`datapath'\version02\3-output\2018_heart_dataset_popn.dta", clear
 keep case pop_bb pfu age_10 sex
 collapse (sum) case (mean) pop_bb , by(pfu age_10 sex)
 
@@ -1420,13 +2423,14 @@ graph twoway 	(bar case ageg if sex==2, yaxis(1) col(blue*1.5) barw(0.5) )
 			lab(4 "Incidence per 100,000 (women)")
 			);
 #delimit cr
+graph export "`datapath'\version02\3-output\2018_age-sex graph_heart.png" ,replace
 
 *************************************************************
 ****************************************************************
 *** 2019 - Fig. 1.3: AGE- and SEX-STRATIFIED INCIDENCE RATE ***********
 ****************************************************************
 ** For this chart, we need the population dataset
-use "`datapath'\2019_heart_dataset_popn.dta", clear
+use "`datapath'\version02\3-output\2019_heart_dataset_popn.dta", clear
 keep case pop_bb pfu age_10 sex
 collapse (sum) case (mean) pop_bb , by(pfu age_10 sex)
 
@@ -1506,6 +2510,7 @@ graph twoway 	(bar case ageg if sex==2, yaxis(1) col(blue*1.5) barw(0.5) )
 			lab(4 "Incidence per 100,000 (women)")
 			);
 #delimit cr
+graph export "`datapath'\version02\3-output\2019_age-sex graph_heart.png" ,replace
 
 
 *************************************************************
@@ -1513,7 +2518,7 @@ graph twoway 	(bar case ageg if sex==2, yaxis(1) col(blue*1.5) barw(0.5) )
 *** 2020 - Fig. 1.3: AGE- and SEX-STRATIFIED INCIDENCE RATE ***********
 ****************************************************************
 ** For this chart, we need the population dataset
-use "`datapath'\2020_heart_dataset_popn.dta", clear
+use "`datapath'\version02\3-output\2020_heart_dataset_popn.dta", clear
 keep case pop_wpp pfu age_10 sex
 collapse (sum) case (mean) pop_wpp , by(pfu age_10 sex)
 
@@ -1593,3 +2598,5 @@ graph twoway 	(bar case ageg if sex==2, yaxis(1) col(blue*1.5) barw(0.5) )
 			lab(4 "Incidence per 100,000 (women)")
 			);
 #delimit cr
+graph export "`datapath'\version02\3-output\2020_age-sex graph_heart.png" ,replace
+

@@ -261,7 +261,6 @@ putdocx paragraph, halign(center)
 putdocx text ("Figure 1.1 Number of men and women with acute MI by year in Barbados. 2010-2020"), bold font(Helvetica,10,"blue")
 putdocx paragraph
 
-//rename totnum total
 putdocx table tbl1 = data(year sex number), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
 putdocx table tbl1(1,2), bold shading(lightgray)
@@ -289,7 +288,6 @@ putdocx paragraph, halign(center)
 putdocx text ("Figure 1.2 Crude incidence rate of men and women per 100,000 population with acute MI by year in Barbados. 2010-2020"), bold font(Helvetica,10,"blue")
 putdocx paragraph
 
-//rename tothir total
 rename hir crude_incidence_rate
 putdocx table tbl1 = data(year sex crude_incidence_rate), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
@@ -301,8 +299,121 @@ local listdate = string( d(`c(current_date)'), "%dCYND" )
 putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV02_`listdate'.docx", append
 putdocx clear
 restore
-stop
 
+
+preserve
+use "`datapath'\version02\2-working\ASIRs_heart", clear
+
+sort sex year
+
+putdocx clear
+putdocx begin
+
+putdocx pagebreak
+putdocx paragraph, style(Heading1)
+putdocx text ("AMI: Burden"), bold
+putdocx paragraph, style(Heading2)
+putdocx text ("AMI: Age-standardised Incidence + Mortality Rates"), bold
+putdocx paragraph, halign(center)
+putdocx text ("Table 1.2 ASIRs (INCIDENCE) of men and women with acute MI or sudden cardiac death by year in Barbados. 2010-2020"), bold font(Helvetica,10,"blue")
+putdocx paragraph
+
+putdocx table tbl1 = data(year sex number percent asir ui_range), halign(center) varnames
+putdocx table tbl1(1,1), bold shading(lightgray)
+putdocx table tbl1(1,2), bold shading(lightgray)
+putdocx table tbl1(1,3), bold shading(lightgray)
+putdocx table tbl1(1,4), bold shading(lightgray)
+putdocx table tbl1(1,5), bold shading(lightgray)
+putdocx table tbl1(1,6), bold shading(lightgray)
+
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV02_`listdate'.docx", append
+putdocx clear
+restore
+
+clear
+
+preserve
+use "`datapath'\version02\2-working\ASMRs_heart", clear
+
+sort sex year
+
+putdocx clear
+putdocx begin
+
+putdocx pagebreak
+putdocx paragraph, halign(center)
+putdocx text ("Table 1.2 ASMRs (MORATLITY) of men and women with acute MI or sudden cardiac death by year in Barbados. 2010-2020"), bold font(Helvetica,10,"blue")
+putdocx paragraph
+
+putdocx table tbl1 = data(year sex number percent asmr ui_range), halign(center) varnames
+putdocx table tbl1(1,1), bold shading(lightgray)
+putdocx table tbl1(1,2), bold shading(lightgray)
+putdocx table tbl1(1,3), bold shading(lightgray)
+putdocx table tbl1(1,4), bold shading(lightgray)
+putdocx table tbl1(1,5), bold shading(lightgray)
+putdocx table tbl1(1,6), bold shading(lightgray)
+
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV02_`listdate'.docx", append
+putdocx clear
+restore
+
+preserve
+putdocx clear
+putdocx begin
+
+putdocx pagebreak
+putdocx paragraph, style(Heading1)
+putdocx text ("AMI: Burden"), bold
+putdocx paragraph, style(Heading2)
+putdocx text ("AMI: Age and Gender Stratified Incidence Rates"), bold
+putdocx paragraph, halign(center)
+putdocx text ("Figure 1.3a Age and gender stratified incidence rate per 100,000 population of AMI, Barbados, 2020 (N=547)"), bold font(Helvetica,10,"blue")
+putdocx paragraph
+
+putdocx image "`datapath'\version02\3-output\2020_age-sex graph_heart.png", width(5.5) height(2.0)
+
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV02_`listdate'.docx", append
+putdocx clear
+restore
+
+clear
+
+preserve
+putdocx clear
+putdocx begin
+
+//putdocx pagebreak
+putdocx paragraph, halign(center)
+putdocx text ("Figure 1.3b Age and gender stratified incidence rate per 100,000 population of AMI, Barbados, 2019 (N=547)"), bold font(Helvetica,10,"blue")
+putdocx paragraph
+
+putdocx image "`datapath'\version02\3-output\2019_age-sex graph_heart.png", width(5.5) height(2.0)
+
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV02_`listdate'.docx", append
+putdocx clear
+restore
+
+preserve
+putdocx clear
+putdocx begin
+
+//putdocx pagebreak
+putdocx paragraph, halign(center)
+putdocx text ("Figure 1.3c Age and gender stratified incidence rate per 100,000 population of AMI, Barbados, 2018 (N=483)"), bold font(Helvetica,10,"blue")
+putdocx paragraph
+
+putdocx image "`datapath'\version02\3-output\2018_age-sex graph_heart.png", width(5.5) height(2.0)
+
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV02_`listdate'.docx", append
+putdocx clear
+restore
+
+stop
 save "`datapath'\version02\2-working\2015_cases_parish+site.dta" ,replace
 label data "BNR-Cancer 2015 Cases by Parish"
 notes _dta :These data prepared for Natasha Sobers - 2015 annual report
