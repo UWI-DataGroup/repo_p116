@@ -3,16 +3,16 @@ cls
 **  DO-FILE METADATA
     //  algorithm name          1.1_heart_analysis.do
     //  project:                BNR Heart
-    //  analysts:               Ashley HENRY
+    //  analysts:               Ashley HENRY and Jacqueline CAMPBELL
     //  date first created:     26-Jan-2022
-    //  date last modified:     22-Feb-2022
+    //  date last modified:     23-Feb-2022
 	//  analysis:               Heart 2020 dataset for Annual Report
     //  algorithm task          Performing Heart 2020 Data Analysis
     //  status:                 Pending
     //  objective:              To analyse data to calculate Age standardised and Age stratified Incidence Rate.
     //  methods:1:              Run analysis on cleaned 2009-2020 BNR-H data.
 	//  version:                Version01 for weeks 01-52
-	//  support:                Natasha Sobers, Jacqueline Campbell and Ian R Hambleton  
+	//  support:                Natasha Sobers and Ian R Hambleton  
 
     ** General algorithm set-up
     version 16.0
@@ -121,13 +121,40 @@ preserve
 	** type -search distrate,net- at the Stata prompt to find and install this command
 
 sort age_10
+save "`datapath'\version02\2-working\tempdistrate_heart" ,replace
 
 distrate case2010 pop_wpp2010 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
+/*
+  +-----------------------------------------------------------------+
+  | case2010        N    crude   rateadj   lb_gam   ub_gam   se_gam |
+  |-----------------------------------------------------------------|
+  |      345   282131   122.28     74.96    66.81    83.91     4.29 |
+  +-----------------------------------------------------------------+
+*/
+** JC update: Save these results as a dataset for reporting Figures 1.1 and 1.2
+gen year=1
+matrix list r(adj)
+matrix totnumber = r(NDeath)
+matrix cir = r(crude)
+svmat totnumber
+svmat cir
+
+collapse year totnumber cir
+replace cir=round(cir,0.1)
+rename totnumber1 totnumber
+rename cir1 cir
+
+save "`datapath'\version02\2-working\CIRs_total_heart" ,replace
+
+clear
+
 *************************************************
 ** 2010 AGE-STANDARDIZED BY SEX TO UNWPP
 ** Using WHO World Standard Population
 *****************************************************
+
+use "`datapath'\version02\2-working\tempdistrate_heart" ,clear
 
 distrate case2010 pop_wpp2010 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
@@ -144,27 +171,32 @@ distrate case2010 pop_wpp2010 using "`datapath'\version02\3-output\who2000_10-2"
 gen year=1
 matrix list r(adj)
 matrix number = r(NDeath)
+matrix cir = r(crude)
 matrix asir = r(adj)
 matrix ui_lower = r(lb_G)
 matrix ui_upper = r(ub_G)
 svmat number
+svmat cir
 svmat asir
 svmat ui_lower
 svmat ui_upper
 
-fillmissing number* asir* ui_*
+fillmissing number* asir* ui_* cir*
 drop if age_10!=1
 replace number1=number2 if sex==2
+replace cir1=cir2 if sex==2
 replace asir1=asir2 if sex==2
 replace ui_lower1=ui_lower2 if sex==2
 replace ui_upper1=ui_upper2 if sex==2
 drop age_10 pfu case2010 pop_* *2
 
 rename number1 number
+rename cir1 cir
 rename asir1 asir 
 rename ui_lower1 ui_lower
 rename ui_upper1 ui_upper
 
+replace cir=round(cir,0.1)
 replace asir=round(asir,0.1)
 replace ui_lower=round(ui_lower,0.1)
 replace ui_upper=round(ui_upper,0.1)
@@ -178,12 +210,9 @@ gen ui_upper1=string(ui_upper, "%02.1f")
 gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
 drop totnum ui_lower* ui_upper*
 
-label define year_lab 1 "2010" 2 "2011" 3 "2012" 4 "2013" 5 "2014" 6 "2015" 7 "2016" 8 "2017" 9 "2018" 10 "2019" 11 "2020" ,modify
-label values year year_lab
-order year sex number percent asir ui_range
+order year sex number percent asir ui_range cir
 sort sex year
 save "`datapath'\version02\2-working\ASIRs_heart" ,replace
-
 restore
 
 
@@ -341,15 +370,34 @@ preserve
 	** type -search distrate,net- at the Stata prompt to find and install this command
 
 sort age_10
+save "`datapath'\version02\2-working\tempdistrate_heart" ,replace
 
 distrate case2011 pop_wpp2011 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
 
-				 
+** JC update: Save these results as a dataset for reporting Figures 1.1 and 1.2
+gen year=2
+matrix list r(adj)
+matrix totnumber = r(NDeath)
+matrix cir = r(crude)
+svmat totnumber
+svmat cir
+
+collapse year totnumber cir
+replace cir=round(cir,0.1)
+rename totnumber1 totnumber
+rename cir1 cir
+
+append using "`datapath'\version02\2-working\CIRs_total_heart" 
+save "`datapath'\version02\2-working\CIRs_total_heart" ,replace
+
+clear
+		 
 *************************************************
 ** 2011 AGE-STANDARDIZED BY SEX TO UNWPP
 ** Using WHO World Standard Population
 *****************************************************
+use "`datapath'\version02\2-working\tempdistrate_heart" ,clear
 
 distrate case2011 pop_wpp2011 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
@@ -366,27 +414,32 @@ distrate case2011 pop_wpp2011 using "`datapath'\version02\3-output\who2000_10-2"
 gen year=2
 matrix list r(adj)
 matrix number = r(NDeath)
+matrix cir = r(crude)
 matrix asir = r(adj)
 matrix ui_lower = r(lb_G)
 matrix ui_upper = r(ub_G)
 svmat number
+svmat cir
 svmat asir
 svmat ui_lower
 svmat ui_upper
 
-fillmissing number* asir* ui_*
+fillmissing number* asir* ui_* cir*
 drop if age_10!=1
 replace number1=number2 if sex==2
+replace cir1=cir2 if sex==2
 replace asir1=asir2 if sex==2
 replace ui_lower1=ui_lower2 if sex==2
 replace ui_upper1=ui_upper2 if sex==2
 drop age_10 pfu case2011 pop_* *2
 
 rename number1 number
+rename cir1 cir
 rename asir1 asir 
 rename ui_lower1 ui_lower
 rename ui_upper1 ui_upper
 
+replace cir=round(cir,0.1)
 replace asir=round(asir,0.1)
 replace ui_lower=round(ui_lower,0.1)
 replace ui_upper=round(ui_upper,0.1)
@@ -402,7 +455,7 @@ drop totnum ui_lower* ui_upper*
 
 append using "`datapath'\version02\2-working\ASIRs_heart" 
 
-order year sex number percent asir ui_range
+order year sex number percent asir ui_range cir
 sort sex year
 save "`datapath'\version02\2-working\ASIRs_heart" ,replace
 
@@ -558,13 +611,34 @@ preserve
 	** type -search distrate,net- at the Stata prompt to find and install this command
 
 sort age_10
+save "`datapath'\version02\2-working\tempdistrate_heart" ,replace
 
 distrate case2012 pop_wpp2012 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
+
+** JC update: Save these results as a dataset for reporting Figures 1.1 and 1.2
+gen year=3
+matrix list r(adj)
+matrix totnumber = r(NDeath)
+matrix cir = r(crude)
+svmat totnumber
+svmat cir
+
+collapse year totnumber cir
+replace cir=round(cir,0.1)
+rename totnumber1 totnumber
+rename cir1 cir
+
+append using "`datapath'\version02\2-working\CIRs_total_heart" 
+save "`datapath'\version02\2-working\CIRs_total_heart" ,replace
+
+clear
+
 *************************************************
 ** 2012 AGE-STANDARDIZED BY SEX TO UNWPP
 ** Using WHO World Standard Population
 *****************************************************
+use "`datapath'\version02\2-working\tempdistrate_heart" ,clear
 
 distrate case2012 pop_wpp2012 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
@@ -573,27 +647,32 @@ distrate case2012 pop_wpp2012 using "`datapath'\version02\3-output\who2000_10-2"
 gen year=3
 matrix list r(adj)
 matrix number = r(NDeath)
+matrix cir = r(crude)
 matrix asir = r(adj)
 matrix ui_lower = r(lb_G)
 matrix ui_upper = r(ub_G)
 svmat number
+svmat cir
 svmat asir
 svmat ui_lower
 svmat ui_upper
 
-fillmissing number* asir* ui_*
+fillmissing number* asir* ui_* cir*
 drop if age_10!=1
 replace number1=number2 if sex==2
+replace cir1=cir2 if sex==2
 replace asir1=asir2 if sex==2
 replace ui_lower1=ui_lower2 if sex==2
 replace ui_upper1=ui_upper2 if sex==2
 drop age_10 pfu case2012 pop_* *2
 
 rename number1 number
+rename cir1 cir
 rename asir1 asir 
 rename ui_lower1 ui_lower
 rename ui_upper1 ui_upper
 
+replace cir=round(cir,0.1)
 replace asir=round(asir,0.1)
 replace ui_lower=round(ui_lower,0.1)
 replace ui_upper=round(ui_upper,0.1)
@@ -609,7 +688,7 @@ drop totnum ui_lower* ui_upper*
 
 append using "`datapath'\version02\2-working\ASIRs_heart" 
 
-order year sex number percent asir ui_range
+order year sex number percent asir ui_range cir
 sort sex year
 save "`datapath'\version02\2-working\ASIRs_heart" ,replace
 restore
@@ -764,14 +843,35 @@ preserve
 	** type -search distrate,net- at the Stata prompt to find and install this command
 
 sort age_10
+save "`datapath'\version02\2-working\tempdistrate_heart" ,replace
 
 distrate case2013 pop_wpp2013 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
+
+** JC update: Save these results as a dataset for reporting Figures 1.1 and 1.2
+gen year=4
+matrix list r(adj)
+matrix totnumber = r(NDeath)
+matrix cir = r(crude)
+svmat totnumber
+svmat cir
+
+collapse year totnumber cir
+replace cir=round(cir,0.1)
+rename totnumber1 totnumber
+rename cir1 cir
+
+append using "`datapath'\version02\2-working\CIRs_total_heart" 
+save "`datapath'\version02\2-working\CIRs_total_heart" ,replace
+
+clear
 
 *************************************************
 ** 2013 AGE-STANDARDIZED BY SEX TO UNWPP
 ** Using WHO World Standard Population
 *****************************************************
+use "`datapath'\version02\2-working\tempdistrate_heart" ,clear
+
 distrate case2013 pop_wpp2013 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
 
@@ -779,27 +879,32 @@ distrate case2013 pop_wpp2013 using "`datapath'\version02\3-output\who2000_10-2"
 gen year=4
 matrix list r(adj)
 matrix number = r(NDeath)
+matrix cir = r(crude)
 matrix asir = r(adj)
 matrix ui_lower = r(lb_G)
 matrix ui_upper = r(ub_G)
 svmat number
+svmat cir
 svmat asir
 svmat ui_lower
 svmat ui_upper
 
-fillmissing number* asir* ui_*
+fillmissing number* asir* ui_* cir*
 drop if age_10!=1
 replace number1=number2 if sex==2
+replace cir1=cir2 if sex==2
 replace asir1=asir2 if sex==2
 replace ui_lower1=ui_lower2 if sex==2
 replace ui_upper1=ui_upper2 if sex==2
 drop age_10 pfu case2013 pop_* *2
 
 rename number1 number
+rename cir1 cir
 rename asir1 asir 
 rename ui_lower1 ui_lower
 rename ui_upper1 ui_upper
 
+replace cir=round(cir,0.1)
 replace asir=round(asir,0.1)
 replace ui_lower=round(ui_lower,0.1)
 replace ui_upper=round(ui_upper,0.1)
@@ -815,7 +920,7 @@ drop totnum ui_lower* ui_upper*
 
 append using "`datapath'\version02\2-working\ASIRs_heart" 
 
-order year sex number percent asir ui_range
+order year sex number percent asir ui_range cir
 sort sex year
 save "`datapath'\version02\2-working\ASIRs_heart" ,replace
 restore
@@ -967,13 +1072,34 @@ preserve
 	** type -search distrate,net- at the Stata prompt to find and install this command
 
 sort age_10
+save "`datapath'\version02\2-working\tempdistrate_heart" ,replace
 
 distrate case2014 pop_wpp2014 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
+
+** JC update: Save these results as a dataset for reporting Figures 1.1 and 1.2
+gen year=5
+matrix list r(adj)
+matrix totnumber = r(NDeath)
+matrix cir = r(crude)
+svmat totnumber
+svmat cir
+
+collapse year totnumber cir
+replace cir=round(cir,0.1)
+rename totnumber1 totnumber
+rename cir1 cir
+
+append using "`datapath'\version02\2-working\CIRs_total_heart" 
+save "`datapath'\version02\2-working\CIRs_total_heart" ,replace
+
+clear
+
 *************************************************
 ** 2014 AGE-STANDARDIZED BY SEX TO UNWPP
 ** Using WHO World Standard Population
 *****************************************************
+use "`datapath'\version02\2-working\tempdistrate_heart" ,clear
 
 distrate case2014 pop_wpp2014 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
@@ -982,27 +1108,32 @@ distrate case2014 pop_wpp2014 using "`datapath'\version02\3-output\who2000_10-2"
 gen year=5
 matrix list r(adj)
 matrix number = r(NDeath)
+matrix cir = r(crude)
 matrix asir = r(adj)
 matrix ui_lower = r(lb_G)
 matrix ui_upper = r(ub_G)
 svmat number
+svmat cir
 svmat asir
 svmat ui_lower
 svmat ui_upper
 
-fillmissing number* asir* ui_*
+fillmissing number* asir* ui_* cir*
 drop if age_10!=1
 replace number1=number2 if sex==2
+replace cir1=cir2 if sex==2
 replace asir1=asir2 if sex==2
 replace ui_lower1=ui_lower2 if sex==2
 replace ui_upper1=ui_upper2 if sex==2
 drop age_10 pfu case2014 pop_* *2
 
 rename number1 number
+rename cir1 cir
 rename asir1 asir 
 rename ui_lower1 ui_lower
 rename ui_upper1 ui_upper
 
+replace cir=round(cir,0.1)
 replace asir=round(asir,0.1)
 replace ui_lower=round(ui_lower,0.1)
 replace ui_upper=round(ui_upper,0.1)
@@ -1018,7 +1149,7 @@ drop totnum ui_lower* ui_upper*
 
 append using "`datapath'\version02\2-working\ASIRs_heart" 
 
-order year sex number percent asir ui_range
+order year sex number percent asir ui_range cir
 sort sex year
 save "`datapath'\version02\2-working\ASIRs_heart" ,replace
 restore
@@ -1172,14 +1303,35 @@ preserve
 	** type -search distrate,net- at the Stata prompt to find and install this command
 
 sort age_10
+save "`datapath'\version02\2-working\tempdistrate_heart" ,replace
 
 distrate case2015 pop_wpp2015 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
+
+** JC update: Save these results as a dataset for reporting Figures 1.1 and 1.2
+gen year=6
+matrix list r(adj)
+matrix totnumber = r(NDeath)
+matrix cir = r(crude)
+svmat totnumber
+svmat cir
+
+collapse year totnumber cir
+replace cir=round(cir,0.1)
+rename totnumber1 totnumber
+rename cir1 cir
+
+append using "`datapath'\version02\2-working\CIRs_total_heart" 
+save "`datapath'\version02\2-working\CIRs_total_heart" ,replace
+
+clear
 
 *************************************************
 ** 2015 AGE-STANDARDIZED BY SEX TO UNWPP
 ** Using WHO World Standard Population
 *****************************************************
+use "`datapath'\version02\2-working\tempdistrate_heart" ,clear
+
 distrate case2015 pop_wpp2015 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
 
@@ -1187,27 +1339,32 @@ distrate case2015 pop_wpp2015 using "`datapath'\version02\3-output\who2000_10-2"
 gen year=6
 matrix list r(adj)
 matrix number = r(NDeath)
+matrix cir = r(crude)
 matrix asir = r(adj)
 matrix ui_lower = r(lb_G)
 matrix ui_upper = r(ub_G)
 svmat number
+svmat cir
 svmat asir
 svmat ui_lower
 svmat ui_upper
 
-fillmissing number* asir* ui_*
+fillmissing number* asir* ui_* cir*
 drop if age_10!=1
 replace number1=number2 if sex==2
+replace cir1=cir2 if sex==2
 replace asir1=asir2 if sex==2
 replace ui_lower1=ui_lower2 if sex==2
 replace ui_upper1=ui_upper2 if sex==2
 drop age_10 pfu case2015 pop_* *2
 
 rename number1 number
+rename cir1 cir
 rename asir1 asir 
 rename ui_lower1 ui_lower
 rename ui_upper1 ui_upper
 
+replace cir=round(cir,0.1)
 replace asir=round(asir,0.1)
 replace ui_lower=round(ui_lower,0.1)
 replace ui_upper=round(ui_upper,0.1)
@@ -1223,7 +1380,7 @@ drop totnum ui_lower* ui_upper*
 
 append using "`datapath'\version02\2-working\ASIRs_heart" 
 
-order year sex number percent asir ui_range
+order year sex number percent asir ui_range cir
 sort sex year
 save "`datapath'\version02\2-working\ASIRs_heart" ,replace
 restore
@@ -1379,14 +1536,34 @@ preserve
 	** type -search distrate,net- at the Stata prompt to find and install this command
 
 sort age_10
+save "`datapath'\version02\2-working\tempdistrate_heart" ,replace
 
 distrate case2016 pop_wpp2016 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
+
+** JC update: Save these results as a dataset for reporting Figures 1.1 and 1.2
+gen year=7
+matrix list r(adj)
+matrix totnumber = r(NDeath)
+matrix cir = r(crude)
+svmat totnumber
+svmat cir
+
+collapse year totnumber cir
+replace cir=round(cir,0.1)
+rename totnumber1 totnumber
+rename cir1 cir
+
+append using "`datapath'\version02\2-working\CIRs_total_heart" 
+save "`datapath'\version02\2-working\CIRs_total_heart" ,replace
+
+clear
 
 *************************************************
 ** 2016 AGE-STANDARDIZED BY SEX TO UNWPP
 ** Using WHO World Standard Population
 *****************************************************
+use "`datapath'\version02\2-working\tempdistrate_heart" ,clear
 
 distrate case2016 pop_wpp2016 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex) mult(100000) format(%8.2f)
@@ -1395,27 +1572,32 @@ distrate case2016 pop_wpp2016 using "`datapath'\version02\3-output\who2000_10-2"
 gen year=7
 matrix list r(adj)
 matrix number = r(NDeath)
+matrix cir = r(crude)
 matrix asir = r(adj)
 matrix ui_lower = r(lb_G)
 matrix ui_upper = r(ub_G)
 svmat number
+svmat cir
 svmat asir
 svmat ui_lower
 svmat ui_upper
 
-fillmissing number* asir* ui_*
+fillmissing number* asir* ui_* cir*
 drop if age_10!=1
 replace number1=number2 if sex==2
+replace cir1=cir2 if sex==2
 replace asir1=asir2 if sex==2
 replace ui_lower1=ui_lower2 if sex==2
 replace ui_upper1=ui_upper2 if sex==2
 drop age_10 pfu case2016 pop_* *2
 
 rename number1 number
+rename cir1 cir
 rename asir1 asir 
 rename ui_lower1 ui_lower
 rename ui_upper1 ui_upper
 
+replace cir=round(cir,0.1)
 replace asir=round(asir,0.1)
 replace ui_lower=round(ui_lower,0.1)
 replace ui_upper=round(ui_upper,0.1)
@@ -1431,7 +1613,7 @@ drop totnum ui_lower* ui_upper*
 
 append using "`datapath'\version02\2-working\ASIRs_heart" 
 
-order year sex number percent asir ui_range
+order year sex number percent asir ui_range cir
 sort sex year
 save "`datapath'\version02\2-working\ASIRs_heart" ,replace
 restore
@@ -1586,14 +1768,34 @@ preserve
 	** type -search distrate,net- at the Stata prompt to find and install this command
 
 sort age_10
+save "`datapath'\version02\2-working\tempdistrate_heart" ,replace
 
 distrate case2017 pop_wpp2017 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
+
+** JC update: Save these results as a dataset for reporting Figures 1.1 and 1.2
+gen year=8
+matrix list r(adj)
+matrix totnumber = r(NDeath)
+matrix cir = r(crude)
+svmat totnumber
+svmat cir
+
+collapse year totnumber cir
+replace cir=round(cir,0.1)
+rename totnumber1 totnumber
+rename cir1 cir
+
+append using "`datapath'\version02\2-working\CIRs_total_heart" 
+save "`datapath'\version02\2-working\CIRs_total_heart" ,replace
+
+clear
 
 *************************************************
 ** 2017 AGE-STANDARDIZED BY SEX TO UNWPP
 ** Using WHO World Standard Population
 *****************************************************
+use "`datapath'\version02\2-working\tempdistrate_heart" ,clear
 
 distrate case2017 pop_wpp2017 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
@@ -1602,27 +1804,32 @@ distrate case2017 pop_wpp2017 using "`datapath'\version02\3-output\who2000_10-2"
 gen year=8
 matrix list r(adj)
 matrix number = r(NDeath)
+matrix cir = r(crude)
 matrix asir = r(adj)
 matrix ui_lower = r(lb_G)
 matrix ui_upper = r(ub_G)
 svmat number
+svmat cir
 svmat asir
 svmat ui_lower
 svmat ui_upper
 
-fillmissing number* asir* ui_*
+fillmissing number* asir* ui_* cir*
 drop if age_10!=1
 replace number1=number2 if sex==2
+replace cir1=cir2 if sex==2
 replace asir1=asir2 if sex==2
 replace ui_lower1=ui_lower2 if sex==2
 replace ui_upper1=ui_upper2 if sex==2
 drop age_10 pfu case2017 pop_* *2
 
 rename number1 number
+rename cir1 cir
 rename asir1 asir 
 rename ui_lower1 ui_lower
 rename ui_upper1 ui_upper
 
+replace cir=round(cir,0.1)
 replace asir=round(asir,0.1)
 replace ui_lower=round(ui_lower,0.1)
 replace ui_upper=round(ui_upper,0.1)
@@ -1638,7 +1845,7 @@ drop totnum ui_lower* ui_upper*
 
 append using "`datapath'\version02\2-working\ASIRs_heart" 
 
-order year sex number percent asir ui_range
+order year sex number percent asir ui_range cir
 sort sex year
 save "`datapath'\version02\2-working\ASIRs_heart" ,replace
 restore
@@ -1794,13 +2001,34 @@ preserve
 	** type -search distrate,net- at the Stata prompt to find and install this command
 
 sort age_10
+save "`datapath'\version02\2-working\tempdistrate_heart" ,replace
 
 distrate case2018 pop_wpp2018 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
+
+** JC update: Save these results as a dataset for reporting Figures 1.1 and 1.2
+gen year=9
+matrix list r(adj)
+matrix totnumber = r(NDeath)
+matrix cir = r(crude)
+svmat totnumber
+svmat cir
+
+collapse year totnumber cir
+replace cir=round(cir,0.1)
+rename totnumber1 totnumber
+rename cir1 cir
+
+append using "`datapath'\version02\2-working\CIRs_total_heart" 
+save "`datapath'\version02\2-working\CIRs_total_heart" ,replace
+
+clear
+
 *************************************************
 ** 2018 AGE-STANDARDIZED BY SEX TO UNWPP
 ** Using WHO World Standard Population
 *****************************************************
+use "`datapath'\version02\2-working\tempdistrate_heart" ,clear
 
 distrate case2018 pop_wpp2018 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
@@ -1809,27 +2037,32 @@ distrate case2018 pop_wpp2018 using "`datapath'\version02\3-output\who2000_10-2"
 gen year=9
 matrix list r(adj)
 matrix number = r(NDeath)
+matrix cir = r(crude)
 matrix asir = r(adj)
 matrix ui_lower = r(lb_G)
 matrix ui_upper = r(ub_G)
 svmat number
+svmat cir
 svmat asir
 svmat ui_lower
 svmat ui_upper
 
-fillmissing number* asir* ui_*
+fillmissing number* asir* ui_* cir*
 drop if age_10!=1
 replace number1=number2 if sex==2
+replace cir1=cir2 if sex==2
 replace asir1=asir2 if sex==2
 replace ui_lower1=ui_lower2 if sex==2
 replace ui_upper1=ui_upper2 if sex==2
 drop age_10 pfu case2018 pop_* *2
 
 rename number1 number
+rename cir1 cir
 rename asir1 asir 
 rename ui_lower1 ui_lower
 rename ui_upper1 ui_upper
 
+replace cir=round(cir,0.1)
 replace asir=round(asir,0.1)
 replace ui_lower=round(ui_lower,0.1)
 replace ui_upper=round(ui_upper,0.1)
@@ -1845,7 +2078,7 @@ drop totnum ui_lower* ui_upper*
 
 append using "`datapath'\version02\2-working\ASIRs_heart" 
 
-order year sex number percent asir ui_range
+order year sex number percent asir ui_range cir
 sort sex year
 save "`datapath'\version02\2-working\ASIRs_heart" ,replace
 restore
@@ -2000,13 +2233,34 @@ preserve
 	** type -search distrate,net- at the Stata prompt to find and install this command
 
 sort age_10
+save "`datapath'\version02\2-working\tempdistrate_heart" ,replace
 
 distrate case2019 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
+
+** JC update: Save these results as a dataset for reporting Figures 1.1 and 1.2
+gen year=10
+matrix list r(adj)
+matrix totnumber = r(NDeath)
+matrix cir = r(crude)
+svmat totnumber
+svmat cir
+
+collapse year totnumber cir
+replace cir=round(cir,0.1)
+rename totnumber1 totnumber
+rename cir1 cir
+
+append using "`datapath'\version02\2-working\CIRs_total_heart" 
+save "`datapath'\version02\2-working\CIRs_total_heart" ,replace
+
+clear
+
 *************************************************
 ** 2019 AGE-STANDARDIZED BY SEX TO UNWPP
 ** Using WHO World Standard Population
 *****************************************************
+use "`datapath'\version02\2-working\tempdistrate_heart" ,clear
 
 distrate case2019 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
@@ -2015,27 +2269,32 @@ distrate case2019 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	/
 gen year=10
 matrix list r(adj)
 matrix number = r(NDeath)
+matrix cir = r(crude)
 matrix asir = r(adj)
 matrix ui_lower = r(lb_G)
 matrix ui_upper = r(ub_G)
 svmat number
+svmat cir
 svmat asir
 svmat ui_lower
 svmat ui_upper
 
-fillmissing number* asir* ui_*
+fillmissing number* asir* ui_* cir*
 drop if age_10!=1
 replace number1=number2 if sex==2
+replace cir1=cir2 if sex==2
 replace asir1=asir2 if sex==2
 replace ui_lower1=ui_lower2 if sex==2
 replace ui_upper1=ui_upper2 if sex==2
 drop age_10 pfu case2019 pop_* *2
 
 rename number1 number
+rename cir1 cir
 rename asir1 asir 
 rename ui_lower1 ui_lower
 rename ui_upper1 ui_upper
 
+replace cir=round(cir,0.1)
 replace asir=round(asir,0.1)
 replace ui_lower=round(ui_lower,0.1)
 replace ui_upper=round(ui_upper,0.1)
@@ -2051,7 +2310,7 @@ drop totnum ui_lower* ui_upper*
 
 append using "`datapath'\version02\2-working\ASIRs_heart" 
 
-order year sex number percent asir ui_range
+order year sex number percent asir ui_range cir
 sort sex year
 save "`datapath'\version02\2-working\ASIRs_heart" ,replace
 restore
@@ -2202,13 +2461,34 @@ preserve
 	** type -search distrate,net- at the Stata prompt to find and install this command
 
 sort age_10
+save "`datapath'\version02\2-working\tempdistrate_heart" ,replace
 
 distrate case2020 pop_wpp2020 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
+
+** JC update: Save these results as a dataset for reporting Figures 1.1 and 1.2
+gen year=11
+matrix list r(adj)
+matrix totnumber = r(NDeath)
+matrix cir = r(crude)
+svmat totnumber
+svmat cir
+
+collapse year totnumber cir
+replace cir=round(cir,0.1)
+rename totnumber1 totnumber
+rename cir1 cir
+
+append using "`datapath'\version02\2-working\CIRs_total_heart" 
+save "`datapath'\version02\2-working\CIRs_total_heart" ,replace
+
+clear
+
 *************************************************
 ** 2020 AGE-STANDARDIZED BY SEX TO UNWPP
 ** Using WHO World Standard Population
 *****************************************************
+use "`datapath'\version02\2-working\tempdistrate_heart" ,clear
 
 distrate case2020 pop_wpp2020 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
@@ -2217,27 +2497,32 @@ distrate case2020 pop_wpp2020 using "`datapath'\version02\3-output\who2000_10-2"
 gen year=11
 matrix list r(adj)
 matrix number = r(NDeath)
+matrix cir = r(crude)
 matrix asir = r(adj)
 matrix ui_lower = r(lb_G)
 matrix ui_upper = r(ub_G)
 svmat number
+svmat cir
 svmat asir
 svmat ui_lower
 svmat ui_upper
 
-fillmissing number* asir* ui_*
+fillmissing number* asir* ui_* cir*
 drop if age_10!=1
 replace number1=number2 if sex==2
+replace cir1=cir2 if sex==2
 replace asir1=asir2 if sex==2
 replace ui_lower1=ui_lower2 if sex==2
 replace ui_upper1=ui_upper2 if sex==2
 drop age_10 pfu case2020 pop_* *2
 
 rename number1 number
+rename cir1 cir
 rename asir1 asir 
 rename ui_lower1 ui_lower
 rename ui_upper1 ui_upper
 
+replace cir=round(cir,0.1)
 replace asir=round(asir,0.1)
 replace ui_lower=round(ui_lower,0.1)
 replace ui_upper=round(ui_upper,0.1)
@@ -2255,7 +2540,7 @@ append using "`datapath'\version02\2-working\ASIRs_heart"
 
 label define year_lab 1 "2010" 2 "2011" 3 "2012" 4 "2013" 5 "2014" 6 "2015" 7 "2016" 8 "2017" 9 "2018" 10 "2019" 11 "2020" ,modify
 label values year year_lab
-order year sex number percent asir ui_range
+order year sex number percent asir ui_range cir
 sort sex year
 save "`datapath'\version02\2-working\ASIRs_heart" ,replace
 
