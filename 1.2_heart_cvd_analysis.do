@@ -5,7 +5,7 @@ cls
     //  project:                BNR Heart
     //  analysts:               Ashley HENRY and Jacqueline CAMPBELL
     //  date first created:     27-Jan-2022
-    //  date last modified:     23-Feb-2022
+    //  date last modified:     24-Feb-2022
 	//  analysis:               Heart 2020 dataset for Annual Report
     //  algorithm task          Performing Heart 2020 Data Analysis
     //  status:                 Pending
@@ -76,7 +76,7 @@ list ohsym1 ohsym2 ohsym3 if org_id!=. &( ohsym1!="" | ohsym2!="" | ohsym3!="")
 **COUGH****
 count if (regexm(ohsym1, "COUGH") | regexm(ohsym2, "COUGH") | regexm(ohsym3, "COUGH")) ///
                 & abstracted==1 & year==2020 & (ohsym1!="" |ohsym2!="" | ohsym3!="") 
-**************** // 19
+// 19
 dis 19/290
 ******************* NAUSEA ***********************
 count if (regexm(ohsym1, "NAUSEA") | regexm(ohsym2, "NAUSEA") | regexm(ohsym3, "NAUSEA") | ///
@@ -89,7 +89,7 @@ count if (regexm(ohsym1, "NAUSEA") | regexm(ohsym2, "NAUSEA") | regexm(ohsym3, "
 			   | regexm(ohsym1, "NOT FEELING WELL") | regexm(ohsym2, "NOT FEELING WELL") ///
 			   | regexm(ohsym3, "NOT FEELING WELL") ) & abstracted==1 & year==2020 & ///
 			   ( ohsym1!="" |  ohsym2!=""| ohsym3!="")	
-******* // 65	 
+// 65	 
 dis 65/290
 
 *********** NAUSEA BY SEX
@@ -104,7 +104,7 @@ count if (regexm(ohsym1, "NAUSEA") | regexm(ohsym2, "NAUSEA") | regexm(ohsym3, "
 			   | regexm(ohsym1, "NOT FEELING WELL") | regexm(ohsym2, "NOT FEELING WELL") ///
 			   | regexm(ohsym3, "NOT FEELING WELL") ) & sex==1 & abstracted==1 & year==2020 & ///
 			   ( ohsym1!="" |  ohsym2!=""| ohsym3!="")	
-*****// 29
+// 29
 ********MALES		   
 count if (regexm(ohsym1, "NAUSEA") | regexm(ohsym2, "NAUSEA") | regexm(ohsym3, "NAUSEA") | ///
                regexm(ohsym1, "MALAISE") | regexm(ohsym2, "MALAISE") | ///
@@ -116,34 +116,34 @@ count if (regexm(ohsym1, "NAUSEA") | regexm(ohsym2, "NAUSEA") | regexm(ohsym3, "
 			   | regexm(ohsym1, "NOT FEELING WELL") | regexm(ohsym2, "NOT FEELING WELL") ///
 			   | regexm(ohsym3, "NOT FEELING WELL") ) & sex==2 & abstracted==1 & year==2020 & ///
 			   ( ohsym1!="" |  ohsym2!=""| ohsym3!="")	
-********// 36
+// 36
 
 ************ DIARRHEA		   
 count if (regexm(ohsym1, "DIAR") |regexm(ohsym2, "DIAR") | regexm(ohsym3, "DIAR")) ///
           & abstracted==1 & year==2020 & ( ohsym1!="" |  ohsym2!=""| ohsym3!="") 
-********// 2
+// 2
 
 *************** DECREASED RESPONSIVENESS**********************	  
 count if (regexm(ohsym1, "DECREASED RESPO") | regexm(ohsym2, "DECREASED RESPO") | ///
          regexm(ohsym3, "DECREASED RESPO") ) & abstracted==1 & year==2020 & ( ohsym1!="" |  ohsym2!=""| ///
 		 ohsym3!="")
-***********// 8
+// 8
 
 ************* HEADACHE ************************
 count if (regexm(ohsym1, "HEADACHE") | regexm(ohsym2, "HEADACHE") | ///
          regexm(ohsym3, "HEADACHE")) & abstracted==1 & year==2020 & ( ohsym1!="" |  ohsym2!=""| ///
 		 ohsym3!="")
-*******// 13
+// 13
 
 ****************** NUMBNESS ***********************
 count if (regexm(ohsym1, "NUMBNESS") | regexm(ohsym1, "NUMBNESS") | ///
           regexm(ohsym1, "NUMBNESS")) & abstracted==1 & year==2020 & ( ohsym1!="" | ohsym2!="" | ohsym3!="") 
-****// 2
+// 2
 
 *********WEAK******** 
 count if (regexm(ohsym1, "WEAK") | regexm(ohsym2, "WEAK") | regexm(ohsym3, "WEAK")) ///
            & abstracted==1 & year==2020 & ( ohsym1!="" |  ohsym2!=""| ohsym3!="")
-**********// 11
+// 11
 
 ***************DECREASED APPETITE
 count if (regexm(ohsym1, "DECR APPETITE") | regexm(ohsym2, "DECR APPETITE") | ///
@@ -152,25 +152,25 @@ count if (regexm(ohsym1, "DECR APPETITE") | regexm(ohsym2, "DECR APPETITE") | //
 		 | regexm(ohsym1, "REDUCED APPETITE") | regexm(ohsym2, "REDUCED APPETITE") | ///
 		 regexm(ohsym3, "REDUCED APPETITE") ) & abstracted==1 & year==2020 & ( ohsym1!="" | ohsym2!=""| ///
 		  ohsym3!="") 
-******** //6
+//6
 		 
 *********************** ABDOMINAL PAIN ***********
 count if (regexm(ohsym1, "ABDOMINAL PAIN") | regexm(ohsym2, "ABDOMINAL PAIN") | ///
          regexm(ohsym3, "ABDOMINAL PAIN") |regexm(ohsym1, "ABDOMINALPAIN") | ///
 		 regexm(ohsym2, "ABDOMINALPAIN") | regexm(ohsym3, "ABDOMINALPAIN")) ///
 		 & abstracted==1 & year==2020 & ( ohsym1!="" |  ohsym2!=""| ohsym3!="")
-**********// 6
+// 6
 
 ***************** BURPING / BELCHING * ******************
 count if (regexm(ohsym1, "BURPING") | regexm(ohsym2, "BURPING") | regexm(ohsym3, "BURPING") | ///
          regexm(ohsym1, "BELCHING") | regexm(ohsym2, "BELCHING") | regexm(ohsym3, "BELCHING")) ///
            & abstracted==1 & year==2020 & ( ohsym1!="" |  ohsym2!=""| ohsym3!="") 
-*******************// 5 
+// 5 
 
 *********************** UNRESPONSIVENESS ********************
  count if (regexm(ohsym1, "UNRESPONSIVE") | regexm(ohsym2, "UNRESPONSIVE") | regexm(ohsym3, "UNRESPONSIVE")) ///
            & abstracted==1 & year==2020 & ( ohsym1!="" |  ohsym2!=""| ohsym3!="") 
-*********// 12
+// 12
 ** most common are nausea/bad feelings, cough and headache
 
 ** No of hsyms and signs by vital status
@@ -392,7 +392,7 @@ label var percent_total "Total %"
 erase "`datapath'\version02\2-working\symptoms_heart_ar.dta"
 save "`datapath'\version02\2-working\symptoms_heart" ,replace
 restore
-stop
+
 
 *********************************************************
 ** TABLE 1.3 : RISK FACTORS *****************************
@@ -413,6 +413,8 @@ label var pr_ami "Prior AMI"
 label define pr_ami_lab 1 "Yes,orig records" 2 "Yes, in notes" 3 "No" 99 "Not documented", modify
 label values pr_ami pr_ami_lab
 
+** JC 24feb2022: Not sure I understand purpose of below code since all previous years are removed above
+
 ** AR to AH: pstroke is not a yes/no field - need to combine 1 and 2 as both mean "yes"
 ** updating coding so all years matching
 ** year 2018& 2019 had 3 options (1 Yes, 2 No, 3Nd )
@@ -422,15 +424,19 @@ replace pstroke=1 if pstroke<3 & (year==2016 | year==2017)
 replace pstroke=2 if pstroke==3 & (year==2016 | year==2017)
 codebook pstroke
 
+/* JC 24feb2022: 257 missing from pstroke so checked this using below code
+tab event abstracted if pstroke==. //all are DCOs
+*/
+** JC 24feb2022: NS indicated that we shouldn't report anything under 50% of the total cases with info
 tab pami if year==2020, miss
 tab pr_ami if org_id!=. & year==2020, miss
 ** Next, the standard risk factors
 local i=1
 foreach var in pami pihd pstroke pcabg pcorangio htn hld diab smoker obese alco drugs {
 	gen risk`i' = 1 if `var'==1
-	replace risk`i' = 0 if `var'==2
-	replace risk`i' = 0 if `var'==3
-	label define risk`i'_lab 1 "yes" 0 "no", modify
+	replace risk`i' = 2 if `var'==2
+	replace risk`i' = 2 if `var'==3
+	label define risk`i'_lab 1 "yes" 2 "no", modify //JC 24feb2022 changed to match other yes/no labels
 	label values risk`i' risk`i'_lab	
 	local i = `i'+1
 	}
@@ -470,8 +476,164 @@ foreach var in risk1 risk2 risk3 risk4 risk5 risk6 risk7 risk8 risk9 risk10 risk
 ** Alcohol Use 
 ** Drug Use 
 
+** JC update: Save these results as a dataset for reporting Table 1.4
+save "`datapath'\version02\2-working\riskfactors_heart_ar" ,replace
 
-	egen crisk2020 = rsum(risk1 risk2 risk3 risk4 risk5 risk6 risk7 risk8 risk9 risk10 risk11 risk12 ) if year==2019
+** JC 24feb2022: 
+
+//Prior AMI
+tab risk1 if year==2020 & abstracted==1 ,m
+contract risk1 if year==2020 & abstracted==1 & risk1!=.
+sort risk*
+gen id=_n
+gen rftype_ar=1
+gen rf_ar=1
+rename _freq number
+gen denominator=sum(number)
+replace denominator=. if id!=3
+replace denominator=denominator[_n+2] if denominator==.
+drop if id!=1
+gen rf_percent=number/denominator*100
+save "`datapath'\version02\2-working\riskfactors_heart" ,replace
+
+clear
+
+//Prior stroke
+use "`datapath'\version02\2-working\riskfactors_heart_ar" ,clear
+tab risk3 if year==2020 & abstracted==1 ,m
+contract risk3 if year==2020 & abstracted==1 & risk3!=.
+gen id=_n
+gen rftype_ar=1
+gen rf_ar=2
+rename _freq number
+gen denominator=sum(number)
+replace denominator=. if id!=2
+replace denominator=denominator[_n+1] if denominator==.
+drop if id!=1
+replace id=2
+gen rf_percent=number/denominator*100
+append using "`datapath'\version02\2-working\riskfactors_heart"
+save "`datapath'\version02\2-working\riskfactors_heart" ,replace
+
+clear
+
+//Hypertension
+use "`datapath'\version02\2-working\riskfactors_heart_ar" ,clear
+tab risk6 if year==2020 & abstracted==1 ,m
+contract risk6 if year==2020 & abstracted==1 & risk6!=.
+gen id=_n
+gen rftype_ar=2
+gen rf_ar=3
+rename _freq number
+gen denominator=sum(number)
+replace denominator=. if id!=2
+replace denominator=denominator[_n+1] if denominator==.
+drop if id!=1
+replace id=3
+gen rf_percent=number/denominator*100
+
+append using "`datapath'\version02\2-working\riskfactors_heart"
+save "`datapath'\version02\2-working\riskfactors_heart" ,replace
+
+clear
+
+//Diabetes
+use "`datapath'\version02\2-working\riskfactors_heart_ar" ,clear
+tab risk8 if year==2020 & abstracted==1 ,m
+contract risk8 if year==2020 & abstracted==1 & risk8!=.
+gen id=_n
+gen rftype_ar=2
+gen rf_ar=4
+rename _freq number
+gen denominator=sum(number)
+replace denominator=. if id!=2
+replace denominator=denominator[_n+1] if denominator==.
+drop if id!=1
+replace id=4
+gen rf_percent=number/denominator*100
+
+append using "`datapath'\version02\2-working\riskfactors_heart"
+save "`datapath'\version02\2-working\riskfactors_heart" ,replace
+
+clear
+
+//Obesity - JC 24feb2022: NS indciated that after discussion during re-engineer process this should be collected as an enhanced var since it's poorly collected so can exclude in 2020 annual rpt
+/*
+** Create variable with combined risk factors from the other risk factor fields
+replace ovrf1 = upper(rtrim(ltrim(itrim(ovrf1)))) //51 changes
+replace ovrf2 = upper(rtrim(ltrim(itrim(ovrf2)))) //13 changes
+replace ovrf3 = upper(rtrim(ltrim(itrim(ovrf3)))) //3 changes
+replace ovrf4 = upper(rtrim(ltrim(itrim(ovrf4)))) //1 changes
+gen risk_oth=ovrf1+" "+ovrf2+" "+ovrf3+" "+ovrf4 if ovrf!=99 & ovrf!=5 & ovrf!=. //85
+
+** Create variable to capture the highest count of the other symptom variable
+count if (regexm(risk_oth, "OBES") | regexm(risk_oth, "OBESITY") | regexm(risk_oth, "OBESE") | ///
+          regexm(risk_oth, "OVERW")) & abstracted==1 & year==2020 & ///
+		 (risk_oth!=""|risk_oth!=""|risk_oth!="") //5
+*/
+
+//Alcohol use
+use "`datapath'\version02\2-working\riskfactors_heart_ar" ,clear
+tab risk11 if year==2020 & abstracted==1 ,m
+contract risk11 if year==2020 & abstracted==1 & risk11!=.
+gen id=_n
+gen rftype_ar=3
+gen rf_ar=5
+rename _freq number
+gen denominator=sum(number)
+replace denominator=. if id!=2
+replace denominator=denominator[_n+1] if denominator==.
+drop if id!=1
+replace id=5
+gen rf_percent=number/denominator*100
+
+append using "`datapath'\version02\2-working\riskfactors_heart"
+save "`datapath'\version02\2-working\riskfactors_heart" ,replace
+
+clear
+
+//Smoking
+use "`datapath'\version02\2-working\riskfactors_heart_ar" ,clear
+tab risk9 if year==2020 & abstracted==1 ,m
+contract risk9 if year==2020 & abstracted==1 & risk9!=.
+gen id=_n
+gen rftype_ar=3
+gen rf_ar=6
+rename _freq number
+gen denominator=sum(number)
+replace denominator=. if id!=2
+replace denominator=denominator[_n+1] if denominator==.
+drop if id!=1
+replace id=6
+gen rf_percent=number/denominator*100
+
+append using "`datapath'\version02\2-working\riskfactors_heart"
+
+
+** format
+replace rf_percent=round(rf_percent,1.0)
+
+order id rftype_ar rf_ar number rf_percent denominator
+
+label define rftype_ar_lab 1 "Prior CVD event/disease" 2 "Current co-morbidity" 3 "Lifestyle-related" ,modify
+label values rftype_ar rftype_ar_lab
+label var rftype_ar "Risk factor type"
+
+label define rf_ar_lab 1 "Prior acute MI" 2 "Prior stroke" 3 "Hypertension" 4 "Diabetes" 5 "Alcohol use" 6 "Smoking" ,modify
+label values rf_ar rf_ar_lab
+label var rf_ar "Risk factor"
+
+drop risk*
+sort rf_ar
+
+** Remove the temp database created above to reduce space used on SharePoint
+erase "`datapath'\version02\2-working\riskfactors_heart_ar.dta"
+save "`datapath'\version02\2-working\riskfactors_heart" ,replace
+
+/*
+** JC 24feb2022: NS indicated this can be commented out as not currently used
+** JC 24feb2022: changed below year from 2019 to 2020 and added abstracted==1
+egen crisk2020 = rsum(risk1 risk2 risk3 risk4 risk5 risk6 risk7 risk8 risk9 risk10 risk11 risk12 ) if year==2020 & abstracted==1
 label var crisk2020 "Number of standard risk factors"
 tab1 crisk2020
 
@@ -491,8 +653,9 @@ tab1 crisk20202
 drop risk*
 
 
+** JC 24feb2022: changed below year from 2019 to 2020
 ** Family history in detail
-list org_id mumami dadami sibami famami if (famami==1 |mumami==1|dadami==1| sibami==1) & year==2019 
+list org_id mumami dadami sibami famami if (famami==1 |mumami==1|dadami==1| sibami==1) & year==2020
 replace famami=1 if mumami!=.| dadami!=. |sibami!=. & year==2020
 count  if (famami==1 | mumami==1 | dadami==1) & year==2020 
 count  if (sibami==1 | mumami==1 | dadami==1) & year==2020 
@@ -504,6 +667,7 @@ tab sibami if abstracted==1 & year==2020 , miss
 tab famami if (dadami==1 | mumami==1) & year==2020
 ** Fam History 28/ (28+86)114
 display 20/114
+//JC 24feb2022: unsure where the above figures came from as not seeing these in the outputs; Now checked 2019 analysis dofile and found the above display figures pertain to 2019 outputs not 2020.
 
 tab famstroke if org_id!=.  & year==2020  , miss
 list mumstroke dadstroke sibstroke if famstroke==1  & year==2020
@@ -524,4 +688,5 @@ label var risk2020 "2020 Number of all risk factors combined"
 tab1 risk  ,miss
 tab1 risk2020 if abstracted==1 & year==2020  ,miss
 ** No RF 10/ 257
+*/
 restore 
