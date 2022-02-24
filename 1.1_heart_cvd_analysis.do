@@ -15,7 +15,7 @@ cls
 	//  support:                Natasha Sobers and Ian R Hambleton  
 
     ** General algorithm set-up
-    version 16.0
+    version 17.0
     clear all
     macro drop _all
     set more off
@@ -44,7 +44,7 @@ cls
 ************************************************************************
 
 ** Load the dataset  
-use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
+use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022)"
 
 count
 ** 4794 as of 26-Jan-2022
@@ -54,7 +54,7 @@ replace sex=1 if anon_pid==596 & record_id=="20181197" //1 change
 
 sort sex age_10
 
-merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2010-10.dta"
+merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2010-10"
 
 ** Young ages (10-19 female) have no acute MI cases and so merge with error (_merge==2)
 ** Zero cases in any age group/sex combination are set to ZERO from MISSING
@@ -300,14 +300,14 @@ restore
 clear
 ************************************** 2011 *****************************
 ** Load the dataset  
-use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
+use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022)"
 
 count
 ** 4794 as of 26-Jan-2022
 
 sort sex age_10
 
-merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2011-10.dta"
+merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2011-10"
 
 ** Young ages (10-19 female) have no acute MI cases and so merge with error (_merge==2)
 ** Zero cases in any age group/sex combination are set to ZERO from MISSING
@@ -542,14 +542,14 @@ restore
 clear
 ************************************** 2012 *****************************
 ** Load the dataset  
-use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
+use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022)"
 
 count
 ** 4794 as of 26-Jan-2022
 
 sort sex age_10
 
-merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2012-10.dta"
+merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2012-10"
 
 ** Young ages (10-19 female) have no acute MI cases and so merge with error (_merge==2)
 ** Zero cases in any age group/sex combination are set to ZERO from MISSING
@@ -773,14 +773,14 @@ restore
 clear
 ************************************** 2013 *****************************
 ** Load the dataset  
-use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
+use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022)"
 
 count
 ** 4794 as of 26-Jan-2022
 
 sort sex age_10
 
-merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2013-10.dta"
+merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2013-10"
 
 ** Young ages (10-19 female) have no acute MI cases and so merge with error (_merge==2)
 ** Zero cases in any age group/sex combination are set to ZERO from MISSING
@@ -1004,14 +1004,14 @@ restore
 clear
 ************************************** 2014 *****************************
 ** Load the dataset  
-use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
+use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022)"
 
 count
 ** 4794 as of 26-Jan-2022
 
 sort sex age_10
 
-merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2014-10.dta"
+merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2014-10"
 
 ** Young ages (10-19 female) have no acute MI cases and so merge with error (_merge==2)
 ** Zero cases in any age group/sex combination are set to ZERO from MISSING
@@ -1235,14 +1235,14 @@ restore
 clear
 ************************************** 2015 *****************************
 ** Load the dataset  
-use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
+use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022)"
 
 count
 ** 4794 as of 26-Jan-2022
 
 sort sex age_10
 
-merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2015-10.dta"
+merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2015-10"
 
 ** Young ages (10-19 female) have no acute MI cases and so merge with error (_merge==2)
 ** Zero cases in any age group/sex combination are set to ZERO from MISSING
@@ -1464,14 +1464,14 @@ restore
 clear
 ************************************** 2016 *****************************
 ** Load the dataset  
-use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
+use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022)"
 
 count
 ** 4794 as of 26-Jan-2022
 
 sort sex age_10
 
-merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2016-10.dta"
+merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2016-10"
 
 ** Young ages (10-19 female) have no acute MI cases and so merge with error (_merge==2)
 ** Zero cases in any age group/sex combination are set to ZERO from MISSING
@@ -1698,14 +1698,14 @@ restore
 clear
 ************************************** 2017 *****************************
 ** Load the dataset  
-use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
+use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022)"
 
 count
 ** 4794 as of 26-Jan-2022
 
 sort sex age_10
 
-merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2017-10.dta"
+merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2017-10"
 
 ** Young ages (10-19 female) have no acute MI cases and so merge with error (_merge==2)
 ** Zero cases in any age group/sex combination are set to ZERO from MISSING
@@ -1930,14 +1930,14 @@ restore
 clear
 ************************************** 2018 *****************************
 ** Load the dataset  
-use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
+use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022)"
 
 count
 ** 4794 as of 26-Jan-2022
 
 sort sex age_10
 
-merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2018-10.dta"
+merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2018-10"
 
 ** Young ages (10-19 female) have no acute MI cases and so merge with error (_merge==2)
 ** Zero cases in any age group/sex combination are set to ZERO from MISSING
@@ -2162,14 +2162,14 @@ restore
 clear
 ************************************** 2019 *****************************
 ** Load the dataset  
-use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
+use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022)"
 
 count
 ** 4794 as of 26-Jan-2022
 
 sort sex age_10
 
-merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2019-10.dta"
+merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2019-10"
 
 ** Young ages (10-19 female) have no acute MI cases and so merge with error (_merge==2)
 ** Zero cases in any age group/sex combination are set to ZERO from MISSING
@@ -2392,14 +2392,14 @@ restore
 clear
 ************************************** 2020 *****************************
 ** Load the dataset  
-use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
+use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022)"
 
 count
 ** 4794 as of 26-Jan-2022
 
 sort sex age_10
 
-merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2020-10.dta"
+merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2020-10"
 
 ** Young ages (10-19 female) have no acute MI cases and so merge with error (_merge==2)
 ** Zero cases in any age group/sex combination are set to ZERO from MISSING
@@ -2542,6 +2542,7 @@ label define year_lab 1 "2010" 2 "2011" 3 "2012" 4 "2013" 5 "2014" 6 "2015" 7 "2
 label values year year_lab
 order year sex number percent asir ui_range cir
 sort sex year
+erase "`datapath'\version02\2-working\tempdistrate_heart"
 save "`datapath'\version02\2-working\ASIRs_heart" ,replace
 
 restore
@@ -2628,7 +2629,7 @@ restore
 *** 2018- Fig. 1.3: AGE- and SEX-STRATIFIED INCIDENCE RATE ***********
 ****************************************************************
 ** For this chart, we need the population dataset
-use "`datapath'\version02\3-output\2018_heart_dataset_popn.dta", clear
+use "`datapath'\version02\3-output\2018_heart_dataset_popn", clear
 keep case pop_bb pfu age_10 sex
 collapse (sum) case (mean) pop_bb , by(pfu age_10 sex)
 
@@ -2715,7 +2716,7 @@ graph export "`datapath'\version02\3-output\2018_age-sex graph_heart.png" ,repla
 *** 2019 - Fig. 1.3: AGE- and SEX-STRATIFIED INCIDENCE RATE ***********
 ****************************************************************
 ** For this chart, we need the population dataset
-use "`datapath'\version02\3-output\2019_heart_dataset_popn.dta", clear
+use "`datapath'\version02\3-output\2019_heart_dataset_popn", clear
 keep case pop_bb pfu age_10 sex
 collapse (sum) case (mean) pop_bb , by(pfu age_10 sex)
 
@@ -2803,7 +2804,7 @@ graph export "`datapath'\version02\3-output\2019_age-sex graph_heart.png" ,repla
 *** 2020 - Fig. 1.3: AGE- and SEX-STRATIFIED INCIDENCE RATE ***********
 ****************************************************************
 ** For this chart, we need the population dataset
-use "`datapath'\version02\3-output\2020_heart_dataset_popn.dta", clear
+use "`datapath'\version02\3-output\2020_heart_dataset_popn", clear
 keep case pop_wpp pfu age_10 sex
 collapse (sum) case (mean) pop_wpp , by(pfu age_10 sex)
 

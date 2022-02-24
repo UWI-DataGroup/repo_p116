@@ -15,7 +15,7 @@ cls
 	//  support:                Natasha Sobers and Ian R Hambleton  
 
     ** General algorithm set-up
-    version 16.0
+    version 17.0
     clear all
     macro drop _all
     set more off
@@ -42,7 +42,7 @@ cls
  *              Table 1.3 2020 Risk Factors
 ************************************************************************
 ** Load the dataset  
-use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
+use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022)"
 
 count
 **4794 seen 27-Jan-2022
@@ -231,94 +231,94 @@ gen symp_oth=1 if (regexm(ohsym1, "NAUSEA") | regexm(ohsym2, "NAUSEA") | regexm(
 			   ( ohsym1!="" |  ohsym2!=""| ohsym3!="")
 
 
-save "`datapath'\version02\2-working\symptoms_heart.dta" ,replace
+save "`datapath'\version02\2-working\symptoms_heart" ,replace
 
 contract sex if abstracted==1 & year==2020 & symp_chpa==1
 gen hsym_ar=1
-save "`datapath'\version02\2-working\symptoms_heart_ar.dta" ,replace
+save "`datapath'\version02\2-working\symptoms_heart_ar" ,replace
 
 clear
 
-use "`datapath'\version02\2-working\symptoms_heart.dta" ,clear
+use "`datapath'\version02\2-working\symptoms_heart" ,clear
 contract sex if abstracted==1 & year==2020 & symp_sob==1
 gen hsym_ar=2
 
-append using "`datapath'\version02\2-working\symptoms_heart_ar.dta"
+append using "`datapath'\version02\2-working\symptoms_heart_ar"
 
-save "`datapath'\version02\2-working\symptoms_heart_ar.dta" ,replace
+save "`datapath'\version02\2-working\symptoms_heart_ar" ,replace
 
 clear
 
-use "`datapath'\version02\2-working\symptoms_heart.dta" ,clear
+use "`datapath'\version02\2-working\symptoms_heart" ,clear
 contract sex if abstracted==1 & year==2020 & symp_sweat==1
 gen hsym_ar=3
 
-append using "`datapath'\version02\2-working\symptoms_heart_ar.dta"
+append using "`datapath'\version02\2-working\symptoms_heart_ar"
 
-save "`datapath'\version02\2-working\symptoms_heart_ar.dta" ,replace
+save "`datapath'\version02\2-working\symptoms_heart_ar" ,replace
 
 clear
 
-use "`datapath'\version02\2-working\symptoms_heart.dta" ,clear
+use "`datapath'\version02\2-working\symptoms_heart" ,clear
 contract sex if abstracted==1 & year==2020 & symp_vom==1
 gen hsym_ar=4
 
-append using "`datapath'\version02\2-working\symptoms_heart_ar.dta"
+append using "`datapath'\version02\2-working\symptoms_heart_ar"
 
-save "`datapath'\version02\2-working\symptoms_heart_ar.dta" ,replace
+save "`datapath'\version02\2-working\symptoms_heart_ar" ,replace
 
 clear
 
-use "`datapath'\version02\2-working\symptoms_heart.dta" ,clear
+use "`datapath'\version02\2-working\symptoms_heart" ,clear
 contract sex if abstracted==1 & year==2020 & symp_oth==1
 gen hsym_ar=5
 
-append using "`datapath'\version02\2-working\symptoms_heart_ar.dta"
+append using "`datapath'\version02\2-working\symptoms_heart_ar"
 
-save "`datapath'\version02\2-working\symptoms_heart_ar.dta" ,replace
+save "`datapath'\version02\2-working\symptoms_heart_ar" ,replace
 
 clear
 
-use "`datapath'\version02\2-working\symptoms_heart.dta" ,clear
+use "`datapath'\version02\2-working\symptoms_heart" ,clear
 contract sex if abstracted==1 & year==2020 & symp_palp==1
 gen hsym_ar=6
 
-append using "`datapath'\version02\2-working\symptoms_heart_ar.dta"
+append using "`datapath'\version02\2-working\symptoms_heart_ar"
 
-save "`datapath'\version02\2-working\symptoms_heart_ar.dta" ,replace
+save "`datapath'\version02\2-working\symptoms_heart_ar" ,replace
 
 clear
 
-use "`datapath'\version02\2-working\symptoms_heart.dta" ,clear
+use "`datapath'\version02\2-working\symptoms_heart" ,clear
 contract sex if abstracted==1 & year==2020 & symp_dizzy==1
 gen hsym_ar=7
 
-append using "`datapath'\version02\2-working\symptoms_heart_ar.dta"
+append using "`datapath'\version02\2-working\symptoms_heart_ar"
 
-save "`datapath'\version02\2-working\symptoms_heart_ar.dta" ,replace
+save "`datapath'\version02\2-working\symptoms_heart_ar" ,replace
 
 clear
 
-use "`datapath'\version02\2-working\symptoms_heart.dta" ,clear
+use "`datapath'\version02\2-working\symptoms_heart" ,clear
 contract sex if abstracted==1 & year==2020 & symp_loc==1
 gen hsym_ar=8
 
-append using "`datapath'\version02\2-working\symptoms_heart_ar.dta"
+append using "`datapath'\version02\2-working\symptoms_heart_ar"
 
 
-save "`datapath'\version02\2-working\symptoms_heart_ar.dta" ,replace
+save "`datapath'\version02\2-working\symptoms_heart_ar" ,replace
 
 clear
 
 ** Create variables for totals for all patients (combined and separately for sex) with info for 2020
-use "`datapath'\version02\2-working\symptoms_heart.dta" ,clear
+use "`datapath'\version02\2-working\symptoms_heart" ,clear
 egen totsympts=count(anon_pid) if abstracted==1 & year==2020
 egen totsympts_f=count(anon_pid) if abstracted==1 & year==2020 & sex==1
 egen totsympts_m=count(anon_pid) if abstracted==1 & year==2020 & sex==2
 gen hsym_ar=9
 collapse totsympts totsympts_f totsympts_m
 
-append using "`datapath'\version02\2-working\symptoms_heart_ar.dta"
+append using "`datapath'\version02\2-working\symptoms_heart_ar"
 
 replace hsym_ar=9 if hsym_ar==.
 sort sex hsym_ar
@@ -389,8 +389,8 @@ label var number_total "Total #"
 label var percent_total "Total %"
 
 ** Remove the temp database created above to reduce space used on SharePoint
-erase "`datapath'\version02\2-working\symptoms_heart_ar.dta"
-save "`datapath'\version02\2-working\symptoms_heart.dta" ,replace
+erase "`datapath'\version02\2-working\symptoms_heart_ar"
+save "`datapath'\version02\2-working\symptoms_heart" ,replace
 restore
 stop
 

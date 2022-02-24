@@ -135,7 +135,7 @@ restore
 ** Figures 1.1 + 1.2 in AR:
 ***********************************************************
 ************************************* MERGING POPULATION TO DATASET *************************************
-merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2010-2020-10.dta"
+merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2010-2020-10"
 ** 4147 matches; 100 not matched.
 
 
