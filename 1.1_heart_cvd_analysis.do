@@ -2542,9 +2542,10 @@ label define year_lab 1 "2010" 2 "2011" 3 "2012" 4 "2013" 5 "2014" 6 "2015" 7 "2
 label values year year_lab
 order year sex number percent asir ui_range cir
 sort sex year
-erase "`datapath'\version02\2-working\tempdistrate_heart"
-save "`datapath'\version02\2-working\ASIRs_heart" ,replace
 
+save "`datapath'\version02\2-working\ASIRs_heart" ,replace
+** Remove the temp database created above to reduce space used on SharePoint
+erase "`datapath'\version02\2-working\tempdistrate_heart.dta"
 restore
 
 

@@ -389,7 +389,7 @@ label var number_total "Total #"
 label var percent_total "Total %"
 
 ** Remove the temp database created above to reduce space used on SharePoint
-erase "`datapath'\version02\2-working\symptoms_heart_ar"
+erase "`datapath'\version02\2-working\symptoms_heart_ar.dta"
 save "`datapath'\version02\2-working\symptoms_heart" ,replace
 restore
 stop
