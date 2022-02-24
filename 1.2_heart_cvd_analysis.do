@@ -3,9 +3,9 @@ cls
 **  DO-FILE METADATA
     //  algorithm name          1.2_heart_cvd_analysis.do
     //  project:                BNR Heart
-    //  analysts:               Ashley HENRY
+    //  analysts:               Ashley HENRY and Jacqueline CAMPBELL
     //  date first created:     27-Jan-2022
-    //  date last modified:     27-Jan-2022
+    //  date last modified:     23-Feb-2022
 	//  analysis:               Heart 2020 dataset for Annual Report
     //  algorithm task          Performing Heart 2020 Data Analysis
     //  status:                 Pending
@@ -29,9 +29,9 @@ cls
 
     ** Set working directories: this is for DATASET and LOGFILE import and export
     ** DATASETS to encrypted SharePoint folder
-    local datapath "C:\Users\CVD 03\Desktop\BNR_data\DM\data_analysis\2020\heart\weeks01-52\versions\version01\data"
+    local datapath "X:/The University of the West Indies/DataGroup - repo_data/data_p116"
     ** LOGFILES to unencrypted OneDrive folder (.gitignore set to IGNORE log files on PUSH to GitHub)
-    local logpath C:\Users\CVD 03\Desktop\BNR_data\DM\data_analysis\2020\heart\weeks01-52\versions\version01\logfiles
+    local logpath X:/OneDrive - The University of the West Indies/repo_datagroup/repo_p116
 
     ** Close any open log file and open a new log file
     capture log close
@@ -42,10 +42,14 @@ cls
  *              Table 1.3 2020 Risk Factors
 ************************************************************************
 ** Load the dataset  
-use "`datapath'\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
+use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
 
 count
 **4794 seen 27-Jan-2022
+
+** JC 17feb2022: Sex updated for 2018 pid that has sex=99 using MedData
+replace sex=1 if anon_pid==596 & record_id=="20181197" //1 change
+
 
 *******************************************************
 ** TABLE 1.2 PRESENTING HEART STMPTOMS & SIGNS 
@@ -173,7 +177,7 @@ count if (regexm(ohsym1, "BURPING") | regexm(ohsym2, "BURPING") | regexm(ohsym3,
 foreach var in symp_chpa symp_sob symp_vom symp_dizzy symp_loc symp_palp symp_sweat {
 	recode `var' 2 99 = 0	
 		}
-	
+
 egen chsym2020 = rsum(symp_chpa symp_sob symp_vom symp_dizzy symp_loc symp_palp symp_sweat)
 label var chsym2020 "Number of hsyms"
 tab chsym2020 if org_id!=. & abstracted==1
@@ -200,6 +204,195 @@ tab symp_loc sex if abstracted==1  & year==2020 ,m
 tab symp_palp sex if abstracted==1  & year==2020 ,m
 tab symp_sweat sex if abstracted==1  & year==2020 ,m
 
+** JC update: Save these results as a dataset for reporting Table 1.3
+preserve
+tab chsym2020 if year==2020 & abstracted==1
+count if abstracted==1 & year==2020 //291
+tab sex if abstracted==1 & year==2020
+/*
+        Sex |      Freq.     Percent        Cum.
+------------+-----------------------------------
+     Female |        125       42.96       42.96
+       Male |        166       57.04      100.00
+------------+-----------------------------------
+      Total |        291      100.00
+*/
+
+** Create variable to capture the highest count of the other symptom variable
+gen symp_oth=1 if (regexm(ohsym1, "NAUSEA") | regexm(ohsym2, "NAUSEA") | regexm(ohsym3, "NAUSEA") | ///
+               regexm(ohsym1, "MALAISE") | regexm(ohsym2, "MALAISE") | ///
+			   regexm(ohsym3, "MALAISE") | regexm(ohsym1, "BAD FEEL") | ///
+			   regexm(ohsym2, "BAD FEEL")| regexm(ohsym3, "BAD FEEL") | ///
+			   regexm(ohsym1, "UNWELL") | regexm(ohsym2, "UNWELL") | ///
+			   regexm(ohsym3, "UNWELL") | regexm(ohsym1, "FEELING BAD") | ///
+			   regexm(ohsym2, "FEELING BAD") | regexm(ohsym3, "FEELING BAD") ///
+			   | regexm(ohsym1, "NOT FEELING WELL") | regexm(ohsym2, "NOT FEELING WELL") ///
+			   | regexm(ohsym3, "NOT FEELING WELL") ) & abstracted==1 & year==2020 & ///
+			   ( ohsym1!="" |  ohsym2!=""| ohsym3!="")
+
+
+save "`datapath'\version02\2-working\symptoms_heart.dta" ,replace
+
+contract sex if abstracted==1 & year==2020 & symp_chpa==1
+gen hsym_ar=1
+save "`datapath'\version02\2-working\symptoms_heart_ar.dta" ,replace
+
+clear
+
+use "`datapath'\version02\2-working\symptoms_heart.dta" ,clear
+contract sex if abstracted==1 & year==2020 & symp_sob==1
+gen hsym_ar=2
+
+append using "`datapath'\version02\2-working\symptoms_heart_ar.dta"
+
+save "`datapath'\version02\2-working\symptoms_heart_ar.dta" ,replace
+
+clear
+
+use "`datapath'\version02\2-working\symptoms_heart.dta" ,clear
+contract sex if abstracted==1 & year==2020 & symp_sweat==1
+gen hsym_ar=3
+
+append using "`datapath'\version02\2-working\symptoms_heart_ar.dta"
+
+save "`datapath'\version02\2-working\symptoms_heart_ar.dta" ,replace
+
+clear
+
+use "`datapath'\version02\2-working\symptoms_heart.dta" ,clear
+contract sex if abstracted==1 & year==2020 & symp_vom==1
+gen hsym_ar=4
+
+append using "`datapath'\version02\2-working\symptoms_heart_ar.dta"
+
+save "`datapath'\version02\2-working\symptoms_heart_ar.dta" ,replace
+
+clear
+
+use "`datapath'\version02\2-working\symptoms_heart.dta" ,clear
+contract sex if abstracted==1 & year==2020 & symp_oth==1
+gen hsym_ar=5
+
+append using "`datapath'\version02\2-working\symptoms_heart_ar.dta"
+
+save "`datapath'\version02\2-working\symptoms_heart_ar.dta" ,replace
+
+clear
+
+use "`datapath'\version02\2-working\symptoms_heart.dta" ,clear
+contract sex if abstracted==1 & year==2020 & symp_palp==1
+gen hsym_ar=6
+
+append using "`datapath'\version02\2-working\symptoms_heart_ar.dta"
+
+save "`datapath'\version02\2-working\symptoms_heart_ar.dta" ,replace
+
+clear
+
+use "`datapath'\version02\2-working\symptoms_heart.dta" ,clear
+contract sex if abstracted==1 & year==2020 & symp_dizzy==1
+gen hsym_ar=7
+
+append using "`datapath'\version02\2-working\symptoms_heart_ar.dta"
+
+save "`datapath'\version02\2-working\symptoms_heart_ar.dta" ,replace
+
+clear
+
+use "`datapath'\version02\2-working\symptoms_heart.dta" ,clear
+contract sex if abstracted==1 & year==2020 & symp_loc==1
+gen hsym_ar=8
+
+append using "`datapath'\version02\2-working\symptoms_heart_ar.dta"
+
+
+save "`datapath'\version02\2-working\symptoms_heart_ar.dta" ,replace
+
+clear
+
+** Create variables for totals for all patients (combined and separately for sex) with info for 2020
+use "`datapath'\version02\2-working\symptoms_heart.dta" ,clear
+egen totsympts=count(anon_pid) if abstracted==1 & year==2020
+egen totsympts_f=count(anon_pid) if abstracted==1 & year==2020 & sex==1
+egen totsympts_m=count(anon_pid) if abstracted==1 & year==2020 & sex==2
+gen hsym_ar=9
+collapse totsympts totsympts_f totsympts_m
+
+append using "`datapath'\version02\2-working\symptoms_heart_ar.dta"
+
+replace hsym_ar=9 if hsym_ar==.
+sort sex hsym_ar
+gen id=_n
+order id hsym_ar sex _freq totsympts
+fillmissing totsympts totsympts_f totsympts_m
+rename _freq number
+
+
+label define hsym_lab 1 "Chest pain" 2 "Shortness of breath" 3 "Sweating" 4 "Sudden vomiting" 5 "Light-headness, nausea/malaise" 6 "Palpitations" 7 "Sudden dizziness/vertigo" 8 "Loss of consciousness" 9 "Total Patients" ,modify
+label values hsym_ar hsym_lab
+label var hsym_ar "Symptom"
+
+** Create variables for totals for each symptom
+gen number_total=sum(number) if hsym_ar==1
+replace number_total=sum(number) if hsym_ar==2
+replace number_total=sum(number) if hsym_ar==3
+replace number_total=sum(number) if hsym_ar==4
+replace number_total=sum(number) if hsym_ar==5
+replace number_total=sum(number) if hsym_ar==6
+replace number_total=sum(number) if hsym_ar==7
+replace number_total=sum(number) if hsym_ar==8
+replace number_total=. if sex==1
+
+** Create variables for % of totals for each symptom
+gen percent_total=number_tot/totsympts*100 if hsym_ar==1 & number_total!=.
+replace percent_total=number_tot/totsympts*100 if hsym_ar==2 & number_total!=.
+replace percent_total=number_tot/totsympts*100 if hsym_ar==3 & number_total!=.
+replace percent_total=number_tot/totsympts*100 if hsym_ar==4 & number_total!=.
+replace percent_total=number_tot/totsympts*100 if hsym_ar==5 & number_total!=.
+replace percent_total=number_tot/totsympts*100 if hsym_ar==6 & number_total!=.
+replace percent_total=number_tot/totsympts*100 if hsym_ar==7 & number_total!=.
+replace percent_total=number_tot/totsympts*100 if hsym_ar==8 & number_total!=.
+replace percent_total=round(percent_total,1.0)
+
+** Create variables for % of totals for each symptom by sex
+gen percent_female=number/totsympts_f*100 if sex==1
+replace percent_female=round(percent_female,1.0)
+
+gen percent_male=number/totsympts_m*100 if sex==2
+replace percent_male=round(percent_male,1.0)
+
+** Organize dataset to mirror layout of Table 1.3 of annual report
+order id hsym_ar sex number percent_female percent_male number_total percent_total totsympts totsympts_f totsympts_m 
+replace percent_female=percent_male if percent_female==. & hsym_ar!=9
+drop percent_male
+rename percent_female percent
+drop if id==17
+replace number_total=number_total[_n+8] if number_total==.
+replace percent_total=percent_total[_n+8] if percent_total==.
+
+reshape wide hsym_ar number percent, i(id)  j(sex)
+rename hsym_ar1 hsym_ar
+rename number1 number_female
+rename percent1 percent_female
+rename number2 number_male
+rename percent2 percent_male
+replace number_male=number_male[_n+8] if number_male==.
+replace percent_male=percent_male[_n+8] if percent_male==.
+drop if id>8
+drop hsym_ar2
+
+label var number_female "Women #"
+label var percent_female "Women %"
+label var number_male "Men #"
+label var percent_male "Men %"
+label var number_total "Total #"
+label var percent_total "Total %"
+
+** Remove the temp database created above to reduce space used on SharePoint
+erase "`datapath'\version02\2-working\symptoms_heart_ar.dta"
+save "`datapath'\version02\2-working\symptoms_heart.dta" ,replace
+restore
+stop
 
 *********************************************************
 ** TABLE 1.3 : RISK FACTORS *****************************

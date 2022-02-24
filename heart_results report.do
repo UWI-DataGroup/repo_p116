@@ -421,6 +421,69 @@ putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV03_`listdate'.
 putdocx clear
 restore
 
+
+preserve
+use "`datapath'\version02\2-working\symptoms_heart", clear
+replace totsympts=0 if id!=1
+replace totsympts_f=0 if id!=1
+replace totsympts_m=0 if id!=1
+
+sort hsym_ar
+
+putdocx clear
+putdocx begin
+
+putdocx paragraph, style(Heading1)
+putdocx text ("AMI: Symptoms and Risk Factors"), bold
+putdocx paragraph, style(Heading2)
+putdocx text ("AMI: Symptoms"), bold
+putdocx paragraph, halign(center)
+qui sum totsympts
+local sum : display %3.0f `r(sum)'
+putdocx text ("Table 1.3 Main presenting symptoms for acute MI patients in Barbados. Jan-Dec 2020 (N=`sum')"), bold font(Helvetica,10,"blue")
+putdocx paragraph
+/*
+rename number_female WomenNum
+rename percent_female WomenPercent
+rename number_male MenNum
+rename percent_male MenPercent
+rename number_total TotalNum
+rename percent_total TotalPercent
+putdocx table tbl1 = data(hsym_ar WomenNum WomenPercent MenNum MenPercent TotalNum TotalPercent), halign(center) varnames
+*/
+putdocx table tbl1 = data(hsym_ar number_female percent_female number_male percent_male number_total percent_total), halign(center) varnames
+putdocx table tbl1(1,1), bold shading(lightgray)
+putdocx table tbl1(1,2), bold shading(lightgray)
+putdocx table tbl1(1,3), bold shading(lightgray)
+putdocx table tbl1(1,4), bold shading(lightgray)
+putdocx table tbl1(1,5), bold shading(lightgray)
+putdocx table tbl1(1,6), bold shading(lightgray)
+putdocx table tbl1(1,7), bold shading(lightgray)
+
+putdocx paragraph
+qui sum totsympts_f
+local sum : display %3.0f `r(sum)'
+putdocx text ("Women - The number and percentage of women with a given symptom as a % of the number of women (N=`sum') with information for a specific year.")
+
+putdocx paragraph
+qui sum totsympts_m
+local sum : display %3.0f `r(sum)'
+putdocx text ("Men - The number and percentage of men with a given symptom as a % of the number of men (N=`sum') with information for a specific year.")
+
+putdocx paragraph
+qui sum totsympts
+local sum : display %3.0f `r(sum)'
+putdocx text ("Totals –The total number and percentage of patients (men & women) with a given symptom as a % of all patients (N=`sum') with information for a specific year.")
+
+
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV03_`listdate'.docx", append
+putdocx clear
+restore
+
+clear
+
+
 stop
 save "`datapath'\version02\2-working\2015_cases_parish+site.dta" ,replace
 label data "BNR-Cancer 2015 Cases by Parish"
