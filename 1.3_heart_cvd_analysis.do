@@ -3,9 +3,9 @@ cls
 **  DO-FILE METADATA
     //  algorithm name          1.3_heart_cvd_analysis.do
     //  project:                BNR Heart
-    //  analysts:               Ashley HENRY
+    //  analysts:               Ashley HENRY and Jacqueline CAMPBELL
     //  date first created:     26-Jan-2022
-    //  date last modified:     26-Jan-2022
+    //  date last modified:     02-Mar-2022
 	//  analysis:               Heart 2020 dataset for Annual Report
     //  algorithm task          Performing Heart 2020 Data Analysis
     //  status:                 Pending
@@ -15,7 +15,7 @@ cls
 	//  support:                Natasha Sobers and Ian R Hambleton  
 
     ** General algorithm set-up
-    version 16.0
+    version 17.0
     clear all
     macro drop _all
     set more off
@@ -29,9 +29,9 @@ cls
 
     ** Set working directories: this is for DATASET and LOGFILE import and export
     ** DATASETS to encrypted SharePoint folder
-    local datapath "C:\Users\CVD 03\Desktop\BNR_data\DM\data_analysis\2020\heart\weeks01-52\versions\version01\data"
+    local datapath "X:/The University of the West Indies/DataGroup - repo_data/data_p116"
     ** LOGFILES to unencrypted OneDrive folder (.gitignore set to IGNORE log files on PUSH to GitHub)
-    local logpath C:\Users\CVD 03\Desktop\BNR_data\DM\data_analysis\2020\heart\weeks01-52\versions\version01\logfiles
+    local logpath X:/OneDrive - The University of the West Indies/repo_datagroup/repo_p116
 
     ** Close any open log file and open a new log file
     capture log close
@@ -49,10 +49,13 @@ cls
  *              Performance Measures 1 - 5
 ************************************************************************
 ** Load the dataset  
-use "`datapath'\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
+use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022).dta"
 
 count
 ** 4794 as of 26-Jan-2022
+
+** JC 17feb2022: Sex updated for 2018 pid that has sex=99 using MedData
+replace sex=1 if anon_pid==596 & record_id=="20181197" //1 change
 
 ** Number of BNR Regsitrations by year
 ** 547 BNR Reg for year 2020
@@ -75,6 +78,7 @@ dis 68/291
 **Total Hospital Deaths
 **115 for year 2020
 tab prehosp_d if hosp==1 & year==2020 ,m
+tab prehosp_d year if hosp==1
 
 **Case Fatality Rate at 28 day
 ** 79/291
@@ -82,8 +86,392 @@ tab f1vstatus year if hosp==1
 tab abstracted year,miss
 dis 79/291
 
+** JC update: Save these results as a dataset for reporting Table 1.5
+preserve
+save "`datapath'\version02\2-working\mort_heart_ar" ,replace
+/* Another option for doing this - for 2021 annual report need to find way to save tabulate totals as a dataset (bysort year :tab abstracted hosp)
+tab hosp year , matcell(foo)
+mat li foo
+svmat foo, names(year)
+gen id=_n
+keep id year*
 
+drop year year_ami year1 year2
+drop if id>3
+rename year3 year_2011
+rename year4 year_2012
+rename year5 year_2013
+rename year6 year_2014
+rename year7 year_2015
+rename year8 year_2016
+rename year9 year_2017
+rename year10 year_2018
+rename year11 year_2019
+rename year12 year_2020
+egen number_total_2011=sum(year_2011)
+egen number_total_2012=sum(year_2012)
+egen number_total_2013=sum(year_2013)
+egen number_total_2014=sum(year_2014)
+egen number_total_2015=sum(year_2015)
+egen number_total_2016=sum(year_2016)
+egen number_total_2017=sum(year_2017)
+egen number_total_2018=sum(year_2018)
+egen number_total_2019=sum(year_2019)
+egen number_total_2020=sum(year_2020)
+replace year_2011=number_total_2011 if id==3
+replace year_2012=number_total_2012 if id==3
+replace year_2013=number_total_2013 if id==3
+replace year_2014=number_total_2014 if id==3
+replace year_2015=number_total_2015 if id==3
+replace year_2016=number_total_2016 if id==3
+replace year_2017=number_total_2017 if id==3
+replace year_2018=number_total_2018 if id==3
+replace year_2019=number_total_2019 if id==3
+replace year_2020=number_total_2020 if id==3
 
+drop number_total*
+drop if id==2
+gen mort_heart_ar=1 if id==3
+replace mort_heart_ar=2 if id==1
+drop id
+sort mort_heart_ar
+order mort_heart_ar year*
+*/
+contract hosp year if year>2010
+rename _freq number
+gsort -hosp
+gen number_total=sum(number) if year==2011
+replace number_total=sum(number) if year==2012
+replace number_total=sum(number) if year==2013
+replace number_total=sum(number) if year==2014
+replace number_total=sum(number) if year==2015
+replace number_total=sum(number) if year==2016
+replace number_total=sum(number) if year==2017
+replace number_total=sum(number) if year==2018
+replace number_total=sum(number) if year==2019
+replace number_total=sum(number) if year==2020
+drop if hosp!=1
+drop hosp
+sort year
+gen id=_n
+order id year number number_total
+reshape wide number number_total, i(id)  j(year)
+fillmissing number*
+gen mort_heart_ar=1
+rename number2011 year_2011
+rename number2012 year_2012
+rename number2013 year_2013
+rename number2014 year_2014
+rename number2015 year_2015
+rename number2016 year_2016
+rename number2017 year_2017
+rename number2018 year_2018
+rename number2019 year_2019
+rename number2020 year_2020
+replace year_2011=number_total2011 if id==1
+replace year_2012=number_total2012 if id==1
+replace year_2013=number_total2013 if id==1
+replace year_2014=number_total2014 if id==1
+replace year_2015=number_total2015 if id==1
+replace year_2016=number_total2016 if id==1
+replace year_2017=number_total2017 if id==1
+replace year_2018=number_total2018 if id==1
+replace year_2019=number_total2019 if id==1
+replace year_2020=number_total2020 if id==1
+drop number_total*
+drop if id>2
+replace mort_heart_ar=2 if id==2
+drop id
+order mort_heart_ar year*
+save "`datapath'\version02\2-working\mort_heart" ,replace
+clear
+
+use "`datapath'\version02\2-working\mort_heart_ar" ,clear
+
+contract abstracted year if year>2010
+rename _freq number
+drop if abstracted!=1
+sort year
+drop abstracted
+gen id=_n
+reshape wide number , i(id)  j(year)
+collapse number*
+rename number2011 year_2011
+rename number2012 year_2012
+rename number2013 year_2013
+rename number2014 year_2014
+rename number2015 year_2015
+rename number2016 year_2016
+rename number2017 year_2017
+rename number2018 year_2018
+rename number2019 year_2019
+rename number2020 year_2020
+gen mort_heart_ar=3
+order mort_heart_ar year*
+append using "`datapath'\version02\2-working\mort_heart"
+sort mort_heart_ar
+save "`datapath'\version02\2-working\mort_heart" ,replace
+clear
+
+use "`datapath'\version02\2-working\mort_heart_ar" ,clear
+/*
+tab prehosp_d year if abstracted==1 , matcell(foo)
+mat li foo
+svmat foo, names(year)
+gen id=_n
+keep id year*
+drop if id>1
+drop year year_ami year1 year2
+rename year3 year_2011
+rename year4 year_2012
+rename year5 year_2013
+rename year6 year_2014
+rename year7 year_2015
+rename year8 year_2016
+rename year9 year_2017
+rename year10 year_2018
+rename year11 year_2019
+rename year12 year_2020
+drop id
+gen mort_heart_ar=4
+order mort_heart_ar year*
+*/
+
+contract prehosp_d year if abstracted==1
+drop if prehosp_d!=2
+drop if year<2011
+gen id=_n
+rename _freq number
+reshape wide number , i(id)  j(year)
+collapse number*
+gen id=_n
+rename number2011 year_2011
+rename number2012 year_2012
+rename number2013 year_2013
+rename number2014 year_2014
+rename number2015 year_2015
+rename number2016 year_2016
+rename number2017 year_2017
+rename number2018 year_2018
+rename number2019 year_2019
+rename number2020 year_2020
+gen mort_heart_ar=4
+drop id
+order mort_heart_ar year*
+append using "`datapath'\version02\2-working\mort_heart"
+sort mort_heart_ar
+save "`datapath'\version02\2-working\mort_heart" ,replace
+
+gen cfr_percent_2011=year_2011[4]/year_2011[3]*100
+replace cfr_percent_2011=round(cfr_percent_2011,1.0)
+gen cfr_percent_2012=year_2012[4]/year_2012[3]*100
+replace cfr_percent_2012=round(cfr_percent_2012,1.0)
+gen cfr_percent_2013=year_2013[4]/year_2013[3]*100
+replace cfr_percent_2013=round(cfr_percent_2013,1.0)
+gen cfr_percent_2014=year_2014[4]/year_2014[3]*100
+replace cfr_percent_2014=round(cfr_percent_2014,1.0)
+gen cfr_percent_2015=year_2015[4]/year_2015[3]*100
+replace cfr_percent_2015=round(cfr_percent_2015,1.0)
+gen cfr_percent_2016=year_2016[4]/year_2016[3]*100
+replace cfr_percent_2016=round(cfr_percent_2016,1.0)
+gen cfr_percent_2017=year_2017[4]/year_2017[3]*100
+replace cfr_percent_2017=round(cfr_percent_2017,1.0)
+gen cfr_percent_2018=year_2018[4]/year_2018[3]*100
+replace cfr_percent_2018=round(cfr_percent_2018,1.0)
+gen cfr_percent_2019=year_2019[4]/year_2019[3]*100
+replace cfr_percent_2019=round(cfr_percent_2019,1.0)
+gen cfr_percent_2020=year_2020[4]/year_2020[3]*100
+replace cfr_percent_2020=round(cfr_percent_2020,1.0)
+
+drop year_*
+collapse mort_heart_ar cfr*
+replace mort_heart_ar=5
+rename cfr_percent_2011 year_2011
+rename cfr_percent_2012 year_2012
+rename cfr_percent_2013 year_2013
+rename cfr_percent_2014 year_2014
+rename cfr_percent_2015 year_2015
+rename cfr_percent_2016 year_2016
+rename cfr_percent_2017 year_2017
+rename cfr_percent_2018 year_2018
+rename cfr_percent_2019 year_2019
+rename cfr_percent_2020 year_2020
+
+append using "`datapath'\version02\2-working\mort_heart"
+sort mort_heart_ar
+save "`datapath'\version02\2-working\mort_heart" ,replace
+
+clear
+
+use "`datapath'\version02\2-working\mort_heart_ar" ,clear
+
+tab prehosp_d year if hosp==1
+
+contract prehosp_d year if hosp==1 & year>2010
+rename _freq number
+drop if prehosp_d!=2
+sort year
+drop prehosp_d
+gen id=_n
+reshape wide number , i(id)  j(year)
+collapse number*
+rename number2011 year_2011
+rename number2012 year_2012
+rename number2013 year_2013
+rename number2014 year_2014
+rename number2015 year_2015
+rename number2016 year_2016
+rename number2017 year_2017
+rename number2018 year_2018
+rename number2019 year_2019
+rename number2020 year_2020
+gen mort_heart_ar=6
+order mort_heart_ar year*
+append using "`datapath'\version02\2-working\mort_heart"
+sort mort_heart_ar
+save "`datapath'\version02\2-working\mort_heart" ,replace
+
+gen mort_percent_2011=year_2011[6]/year_2011[2]*100
+replace mort_percent_2011=round(mort_percent_2011,1.0)
+gen mort_percent_2012=year_2012[6]/year_2012[2]*100
+replace mort_percent_2012=round(mort_percent_2012,1.0)
+gen mort_percent_2013=year_2013[6]/year_2013[2]*100
+replace mort_percent_2013=round(mort_percent_2013,1.0)
+gen mort_percent_2014=year_2014[6]/year_2014[2]*100
+replace mort_percent_2014=round(mort_percent_2014,1.0)
+gen mort_percent_2015=year_2015[6]/year_2015[2]*100
+replace mort_percent_2015=round(mort_percent_2015,1.0)
+gen mort_percent_2016=year_2016[6]/year_2016[2]*100
+replace mort_percent_2016=round(mort_percent_2016,1.0)
+gen mort_percent_2017=year_2017[6]/year_2017[2]*100
+replace mort_percent_2017=round(mort_percent_2017,1.0)
+gen mort_percent_2018=year_2018[6]/year_2018[2]*100
+replace mort_percent_2018=round(mort_percent_2018,1.0)
+gen mort_percent_2019=year_2019[6]/year_2019[2]*100
+replace mort_percent_2019=round(mort_percent_2019,1.0)
+gen mort_percent_2020=year_2020[6]/year_2020[2]*100
+replace mort_percent_2020=round(mort_percent_2020,1.0)
+
+drop year_*
+collapse mort*
+
+replace mort_heart_ar=7
+rename mort_percent_2011 year_2011
+rename mort_percent_2012 year_2012
+rename mort_percent_2013 year_2013
+rename mort_percent_2014 year_2014
+rename mort_percent_2015 year_2015
+rename mort_percent_2016 year_2016
+rename mort_percent_2017 year_2017
+rename mort_percent_2018 year_2018
+rename mort_percent_2019 year_2019
+rename mort_percent_2020 year_2020
+
+append using "`datapath'\version02\2-working\mort_heart"
+sort mort_heart_ar
+save "`datapath'\version02\2-working\mort_heart" ,replace
+clear
+
+use "`datapath'\version02\2-working\mort_heart_ar" ,clear
+
+tab f1vstatus year if hosp==1
+
+contract f1vstatus year if hosp==1 & f1vstatus==2 & year>2010
+
+rename _freq number
+sort year
+drop f1vstatus
+gen id=_n
+reshape wide number , i(id)  j(year)
+collapse number*
+rename number2011 year_2011
+rename number2012 year_2012
+rename number2013 year_2013
+rename number2014 year_2014
+rename number2015 year_2015
+rename number2016 year_2016
+rename number2017 year_2017
+rename number2018 year_2018
+rename number2019 year_2019
+rename number2020 year_2020
+gen mort_heart_ar=8
+order mort_heart_ar year*
+append using "`datapath'\version02\2-working\mort_heart"
+sort mort_heart_ar
+save "`datapath'\version02\2-working\mort_heart" ,replace
+
+gen cfr_28d_percent_2011=year_2011[8]/year_2011[3]*100
+replace cfr_28d_percent_2011=round(cfr_28d_percent_2011,1.0)
+gen cfr_28d_percent_2012=year_2012[8]/year_2012[3]*100
+replace cfr_28d_percent_2012=round(cfr_28d_percent_2012,1.0)
+gen cfr_28d_percent_2013=year_2013[8]/year_2013[3]*100
+replace cfr_28d_percent_2013=round(cfr_28d_percent_2013,1.0)
+gen cfr_28d_percent_2014=year_2014[8]/year_2014[3]*100
+replace cfr_28d_percent_2014=round(cfr_28d_percent_2014,1.0)
+gen cfr_28d_percent_2015=year_2015[8]/year_2015[3]*100
+replace cfr_28d_percent_2015=round(cfr_28d_percent_2015,1.0)
+gen cfr_28d_percent_2016=year_2016[8]/year_2016[3]*100
+replace cfr_28d_percent_2016=round(cfr_28d_percent_2016,1.0)
+gen cfr_28d_percent_2017=year_2017[8]/year_2017[3]*100
+replace cfr_28d_percent_2017=round(cfr_28d_percent_2017,1.0)
+gen cfr_28d_percent_2018=year_2018[8]/year_2018[3]*100
+replace cfr_28d_percent_2018=round(cfr_28d_percent_2018,1.0)
+gen cfr_28d_percent_2019=year_2019[8]/year_2019[3]*100
+replace cfr_28d_percent_2019=round(cfr_28d_percent_2019,1.0)
+gen cfr_28d_percent_2020=year_2020[8]/year_2020[3]*100
+replace cfr_28d_percent_2020=round(cfr_28d_percent_2020,1.0)
+
+drop year_*
+collapse mort* cfr*
+
+replace mort_heart_ar=9
+rename cfr_28d_percent_2011 year_2011
+rename cfr_28d_percent_2012 year_2012
+rename cfr_28d_percent_2013 year_2013
+rename cfr_28d_percent_2014 year_2014
+rename cfr_28d_percent_2015 year_2015
+rename cfr_28d_percent_2016 year_2016
+rename cfr_28d_percent_2017 year_2017
+rename cfr_28d_percent_2018 year_2018
+rename cfr_28d_percent_2019 year_2019
+rename cfr_28d_percent_2020 year_2020
+
+append using "`datapath'\version02\2-working\mort_heart"
+drop if mort_heart_ar==8
+replace mort_heart_ar=8 if mort_heart_ar==9
+sort mort_heart_ar
+
+label define mort_heart_ar_lab 1 "Number of BNR Registrations" 2 "Number of hospitalised cases" 3 "Number of cases with full information" ///
+							   4 "In-hospital CFR (Clinical)" 5 "In-hospital CFR(%)" 6 "Total hospitalised deaths" 7 "Total hospitalised deaths(%)" ///
+							   8 "CFR at 28 days(%)" ,modify
+label values mort_heart_ar mort_heart_ar_lab
+label var mort_heart_ar "Moratlity Stats Category"
+
+tostring year_2011 ,replace
+tostring year_2012 ,replace
+tostring year_2013 ,replace
+tostring year_2014 ,replace
+tostring year_2015 ,replace
+tostring year_2016 ,replace
+tostring year_2017 ,replace
+tostring year_2018 ,replace
+tostring year_2019 ,replace
+tostring year_2020 ,replace
+replace year_2011=year_2011+"%" if mort_heart_ar==5|mort_heart_ar==7|mort_heart_ar==8
+replace year_2012=year_2012+"%" if mort_heart_ar==5|mort_heart_ar==7|mort_heart_ar==8
+replace year_2013=year_2013+"%" if mort_heart_ar==5|mort_heart_ar==7|mort_heart_ar==8
+replace year_2014=year_2014+"%" if mort_heart_ar==5|mort_heart_ar==7|mort_heart_ar==8
+replace year_2015=year_2015+"%" if mort_heart_ar==5|mort_heart_ar==7|mort_heart_ar==8
+replace year_2016=year_2016+"%" if mort_heart_ar==5|mort_heart_ar==7|mort_heart_ar==8
+replace year_2017=year_2017+"%" if mort_heart_ar==5|mort_heart_ar==7|mort_heart_ar==8
+replace year_2018=year_2018+"%" if mort_heart_ar==5|mort_heart_ar==7|mort_heart_ar==8
+replace year_2019=year_2019+"%" if mort_heart_ar==5|mort_heart_ar==7|mort_heart_ar==8
+replace year_2020=year_2020+"%" if mort_heart_ar==5|mort_heart_ar==7|mort_heart_ar==8
+
+erase "`datapath'\version02\2-working\mort_heart_ar.dta"
+save "`datapath'\version02\2-working\mort_heart" ,replace
+restore
+stop
 ***********************************
 **FIGURE 1.4 MI OUTCOME FLOWCHART *
 ***********************************
