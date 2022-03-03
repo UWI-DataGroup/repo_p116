@@ -4,7 +4,7 @@
     //  project:                BNR-Heart
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      15-FEB-2022
-    // 	date last modified      02-MAR-2022
+    // 	date last modified      03-MAR-2022
     //  algorithm task          Creating MS Word document with statistical + figure outputs for 2020 annual report
     //  status                  Pending
     //  objective               To have methods, tables, figures and text in an easy-to-use format for the report writer
@@ -236,7 +236,7 @@ putdocx textblock begin
 putdocx textblock end
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV05_`listdate'.docx", replace
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV06_`listdate'.docx", replace
 putdocx clear
 
 restore
@@ -279,7 +279,7 @@ putdocx table tbl1(1,2), bold shading(lightgray)
 putdocx table tbl1(1,3), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV05_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV06_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -305,7 +305,7 @@ putdocx table tbl1(1,2), bold shading(lightgray)
 putdocx table tbl1(1,3), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV05_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV06_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -337,7 +337,7 @@ putdocx table tbl1(1,5), bold shading(lightgray)
 putdocx table tbl1(1,6), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV05_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV06_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -365,7 +365,7 @@ putdocx table tbl1(1,5), bold shading(lightgray)
 putdocx table tbl1(1,6), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV05_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV06_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -385,7 +385,7 @@ putdocx paragraph
 putdocx image "`datapath'\version02\3-output\2020_age-sex graph_heart.png", width(5.5) height(2.0)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV05_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV06_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -402,7 +402,7 @@ putdocx paragraph
 putdocx image "`datapath'\version02\3-output\2019_age-sex graph_heart.png", width(5.5) height(2.0)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV05_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV06_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -417,7 +417,7 @@ putdocx paragraph
 putdocx image "`datapath'\version02\3-output\2018_age-sex graph_heart.png", width(5.5) height(2.0)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV05_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV06_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -477,7 +477,7 @@ putdocx text ("Totals –The total number and percentage of patients (men & wome
 
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV05_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV06_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -509,7 +509,7 @@ putdocx table tbl1(1,4), bold shading(lightgray)
 putdocx table tbl1(1,5), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV05_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV06_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -547,12 +547,103 @@ putdocx table tbl1(1,10), bold shading(lightgray)
 putdocx table tbl1(1,11), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV05_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV06_`listdate'.docx", append
 putdocx clear
 restore
 
 clear
 
+
+preserve
+use "`datapath'\version02\2-working\outcomes_heart", clear
+
+sort outcomes_heart_ar
+
+putdocx clear
+putdocx begin
+
+putdocx pagebreak
+putdocx paragraph, style(Heading1)
+putdocx text ("AMI: Mortality"), bold
+putdocx paragraph, style(Heading2)
+putdocx text ("AMI: Focus on acute MI in-hospital outcomes"), bold
+putdocx paragraph, halign(center)
+putdocx text ("Figure 1.4 Flow chart of vital status of acute MI patients admitted to the Queen Elizabeth Hospital in Barbados, 2020"), bold font(Helvetica,10,"blue")
+
+rename outcomes_heart_ar category
+//rename year_* year__*
+putdocx table tbl1 = data(category year_2020), halign(center) varnames
+putdocx table tbl1(1,1), bold shading(lightgray)
+putdocx table tbl1(1,2), bold shading(lightgray)
+
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV06_`listdate'.docx", append
+putdocx clear
+restore
+
+clear
+
+
+preserve
+use "`datapath'\version02\2-working\pm1_asp24h_heart", clear
+
+putdocx clear
+putdocx begin
+
+putdocx pagebreak
+putdocx paragraph, style(Heading1)
+putdocx text ("AMI: Performance measures, 2020"), bold
+putdocx paragraph, style(Heading2)
+putdocx text ("AMI: Performance measures for acute care"), bold
+putdocx paragraph, halign(center)
+putdocx text ("PM 1: Documented aspirin use within the first 24 hours"), bold font(Helvetica,10,"blue")
+
+putdocx paragraph
+qui sum percent_pm1_heart
+local sum : display %3.0f `r(sum)'
+putdocx text ("Typically, the AHA Get with the Guidelines Program (GWGT) recognises performance of 85% or greater compliance on each performance measure11. Standards of care suggest that patients with acute myocardial infarction receive aspirin within the first 24 hours of arrival at hospital or first onset of symptoms (see Appendix B- Descriptions) In Barbados, in 2020,`sum'% of patients received aspirin within 24 hours, in comparison to 62%, 69% and 54% in 2017, 2018 and 2019 respectively. Poor documentation of medications prescribed at admission and during care is one possible reason for low rates described.")
+
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV06_`listdate'.docx", append
+putdocx clear
+restore
+
+clear
+
+
+preserve
+use "`datapath'\version02\2-working\pm2_stemi_heart", clear
+
+sort year
+
+putdocx clear
+putdocx begin
+
+putdocx pagebreak
+putdocx paragraph, style(Heading1)
+putdocx text ("AMI: Performance measures, 2020"), bold
+putdocx paragraph, style(Heading2)
+putdocx text ("AMI: PM 2-Proportion of STEMI patients who received reperfusion via fibrinolysis"), bold
+putdocx paragraph, halign(center)
+putdocx text ("Table 1.6. Number of STEMI cases and proportion reperfused by gender"), bold font(Helvetica,10,"blue")
+
+//rename year_* year__*
+putdocx table tbl1 = data(year female percent_female male percent_male total_number percent_total total_stemi), halign(center) varnames
+putdocx table tbl1(1,1), bold shading(lightgray)
+putdocx table tbl1(1,2), bold shading(lightgray)
+putdocx table tbl1(1,3), bold shading(lightgray)
+putdocx table tbl1(1,4), bold shading(lightgray)
+putdocx table tbl1(1,5), bold shading(lightgray)
+putdocx table tbl1(1,6), bold shading(lightgray)
+putdocx table tbl1(1,7), bold shading(lightgray)
+putdocx table tbl1(1,8), bold shading(lightgray)
+
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV06_`listdate'.docx", append
+putdocx clear
+restore
+
+clear
 stop
 save "`datapath'\version02\2-working\2015_cases_parish+site.dta" ,replace
 label data "BNR-Cancer 2015 Cases by Parish"

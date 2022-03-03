@@ -5,7 +5,7 @@ cls
     //  project:                BNR Heart
     //  analysts:               Ashley HENRY and Jacqueline CAMPBELL
     //  date first created:     26-Jan-2022
-    //  date last modified:     02-Mar-2022
+    //  date last modified:     03-Mar-2022
 	//  analysis:               Heart 2020 dataset for Annual Report
     //  algorithm task          Performing Heart 2020 Data Analysis
     //  status:                 Pending
@@ -87,6 +87,7 @@ tab abstracted year,miss
 dis 79/291
 
 ** JC update: Save these results as a dataset for reporting Table 1.5
+
 preserve
 save "`datapath'\version02\2-working\mort_heart_ar" ,replace
 /* Another option for doing this - for 2021 annual report need to find way to save tabulate totals as a dataset (bysort year :tab abstracted hosp)
@@ -441,6 +442,8 @@ drop if mort_heart_ar==8
 replace mort_heart_ar=8 if mort_heart_ar==9
 sort mort_heart_ar
 
+save "`datapath'\version02\2-working\outcomes_heart" ,replace //for in-hosp outcomes flowchart need some of these stats
+
 label define mort_heart_ar_lab 1 "Number of BNR Registrations" 2 "Number of hospitalised cases" 3 "Number of cases with full information" ///
 							   4 "In-hospital CFR (Clinical)" 5 "In-hospital CFR(%)" 6 "Total hospitalised deaths" 7 "Total hospitalised deaths(%)" ///
 							   8 "CFR at 28 days(%)" ,modify
@@ -468,10 +471,9 @@ replace year_2018=year_2018+"%" if mort_heart_ar==5|mort_heart_ar==7|mort_heart_
 replace year_2019=year_2019+"%" if mort_heart_ar==5|mort_heart_ar==7|mort_heart_ar==8
 replace year_2020=year_2020+"%" if mort_heart_ar==5|mort_heart_ar==7|mort_heart_ar==8
 
-erase "`datapath'\version02\2-working\mort_heart_ar.dta"
 save "`datapath'\version02\2-working\mort_heart" ,replace
 restore
-stop
+
 ***********************************
 **FIGURE 1.4 MI OUTCOME FLOWCHART *
 ***********************************
@@ -504,9 +506,74 @@ tab vstatus if hosp==1 & abstracted==1 & year==2020  ,m
 count if abstracted!=1 & hosp==1 & year==2020
 display ((68+47)/338)*100 //34% In Hosp CFR
 display (68+6)/(291+6) // NS new CF calculation
- 
- 
- 
+
+
+** JC update: Save these results as a dataset for reporting Figure 1.4 
+preserve
+use "`datapath'\version02\2-working\outcomes_heart" ,clear 
+keep mort_heart_ar year_2020
+rename mort_heart_ar outcomes_heart_ar
+drop if outcomes_heart_ar<2 | outcomes_heart_ar>4
+gen id=_n
+drop outcomes_heart_ar
+order id year_2020
+
+save "`datapath'\version02\2-working\outcomes_heart" ,replace
+clear
+
+use "`datapath'\version02\2-working\mort_heart_ar" ,clear 
+tab vstatus if hosp==1 & abstracted==1 & year==2020 ,m matcell(foo)
+mat li foo
+svmat foo
+drop if foo==.
+keep foo
+gen id=_n
+drop if id==2
+replace id=4 if id==1
+replace id=5 if id==3
+rename foo year_2020
+order id year_2020
+
+append using "`datapath'\version02\2-working\outcomes_heart"
+sort id
+save "`datapath'\version02\2-working\outcomes_heart" ,replace
+clear
+
+use "`datapath'\version02\2-working\mort_heart_ar" ,clear
+tab certtype if prehosp==2 & year==2020 & abstracted!=1 ,m matcell(foo)
+mat li foo
+svmat foo
+drop if foo==.
+keep foo
+gen id=_n
+gen tot=sum(foo)
+replace foo=sum(foo) if id!=2
+replace tot=. if id!=3
+fillmissing tot
+replace foo=tot if id==1
+rename foo year_2020
+drop tot
+replace id=6 if id==1
+replace id=7 if id==2
+replace id=8 if id==3
+order id year_2020
+
+append using "`datapath'\version02\2-working\outcomes_heart"
+sort id
+rename id outcomes_heart_ar
+
+
+label define outcomes_heart_ar_lab 1 "Admitted to QEH" 2 "Data abstracted by BNR team" 3 "Died in hospital" ///
+							   4 "Discharged alive" 5 "Unknown Outcome" 6 "Death record only (place of death QEH)" 7 "Post mortem conducted" ///
+							   8 "No Post Mortem" ,modify
+label values outcomes_heart_ar outcomes_heart_ar_lab
+label var outcomes_heart_ar "In-hospital Outcomes Stats Category"
+
+erase "`datapath'\version02\2-working\mort_heart_ar.dta"
+save "`datapath'\version02\2-working\outcomes_heart" ,replace
+
+restore
+
 ************************** PERFORMANCE MEASURES *********************
  
 **************************
@@ -532,6 +599,73 @@ tab aspach aspacs if year==2020, miss
 ** Of those with information on Aspirin given acutely to hosp admission/ symptom (291), 161 had either received aspirin acute of symptoms/ acute of hospital arrival.
 dis ((144+114)-97)/291   //55%
 
+
+** JC update: Save these results as a dataset for reporting Performance Measure 1 (Aspirin within 1st 24h)
+preserve
+save "`datapath'\version02\2-working\pm1_asp24h_heart_ar" ,replace
+contract aspach if year==2020
+rename _freq number
+gen id=_n
+drop if id!=1
+drop aspach
+order id number
+
+save "`datapath'\version02\2-working\pm1_asp24h_heart" ,replace
+clear
+
+use "`datapath'\version02\2-working\pm1_asp24h_heart_ar" ,clear
+contract aspacs if year==2020
+rename _freq number
+gen id=_n
+drop if id!=1
+replace id=2
+drop aspacs
+order id number
+
+append using "`datapath'\version02\2-working\pm1_asp24h_heart"
+sort id
+
+save "`datapath'\version02\2-working\pm1_asp24h_heart" ,replace
+clear
+
+use "`datapath'\version02\2-working\pm1_asp24h_heart_ar" ,clear
+contract aspach aspacs if year==2020
+rename _freq number
+gen id=_n
+drop if id!=1
+replace id=3
+keep id number
+order id number
+
+append using "`datapath'\version02\2-working\pm1_asp24h_heart"
+sort id
+save "`datapath'\version02\2-working\pm1_asp24h_heart" ,replace
+clear
+
+use "`datapath'\version02\2-working\pm1_asp24h_heart_ar" ,clear
+contract aspact if year==2020
+rename _freq number
+gen id=_n
+drop if id==3
+gen totasp=sum(number)
+drop if id==1
+replace id=4
+keep id totasp
+order id totasp
+
+append using "`datapath'\version02\2-working\pm1_asp24h_heart"
+sort id
+
+gen percent_pm1_heart=(number[1]+number[2]-number[3])/totasp*100
+replace percent_pm1_heart=round(percent_pm1_heart,1.0)
+drop if id!=4
+keep percent*
+
+erase "`datapath'\version02\2-working\pm1_asp24h_heart_ar.dta"
+save "`datapath'\version02\2-working\pm1_asp24h_heart" ,replace
+
+restore
+*/
 **********************************
 **PM2: STEMI pts with Reperfusion
 **********************************
@@ -543,7 +677,161 @@ list record_id if year==2020 & ecgste ==. & abstracted==1 & reperf==1
 tab ecgste reperf if year==2020 & diagnosis==2 ,m 
 tab ecgste sex if year==2020 & diagnosis==2 ,m  
 ** 48/51 reperfusions were STEMI 
-** 48/103 STEMIs by ecg result were reperfused 
+** 48/103 STEMIs by ecg result were reperfused
+
+
+** JC update: Save these results as a dataset for reporting Table 1.6
+preserve
+tab reperf ecgste if year==2020
+tab ecgste if year==2020
+tab diagnosis if year==2020
+tab diagnosis ecgste if year==2020
+tab diagnosis ecgste if year==2020 & abstracted==1
+tab repertype if year==2020 ,m
+tab repertype ecgste if year==2020
+
+save "`datapath'\version02\2-working\pm2_stemi_heart_ar" ,replace
+tab ecgste reperf if year==2020 & diagnosis==2 ,m 
+contract ecgste reperf if year==2020 & diagnosis==2
+rename _freq number
+egen totstemi=total(number) if ecgste==1
+gen id=_n
+drop if id!=1
+keep id number totstemi
+
+gen percent_pm2_stemi=(number)/totstemi*100
+replace percent_pm2_stemi=round(percent_pm2_stemi,1.0)
+order id number totstemi percent*
+save "`datapath'\version02\2-working\pm2_stemi_heart" ,replace
+clear
+
+use "`datapath'\version02\2-working\pm2_stemi_heart_ar" ,clear
+tab ecgste sex if year==2020 & diagnosis==2 & reperf==1 ,m 
+contract ecgste sex if year==2020 & diagnosis==2 & reperf==1
+drop if ecgste!=1
+gen id=_n
+rename _freq number
+drop ecgste
+reshape wide number , i(id)  j(sex)
+collapse number1 number2
+rename number1 female
+rename number2 male
+gen totstemi=female+male
+gen percent_pm2_female=female/totstemi*100
+replace percent_pm2_female=round(percent_pm2_female,1.0)
+gen percent_pm2_male=male/totstemi*100
+replace percent_pm2_male=round(percent_pm2_male,1.0)
+gen id=1
+drop totstemi
+order id female male percent_pm2_female percent_pm2_male
+
+merge 1:1 id using "`datapath'\version02\2-working\pm2_stemi_heart"
+drop _merge
+order id female percent_pm2_female male percent_pm2_male number percent_pm2_stemi totstemi
+
+save "`datapath'\version02\2-working\pm2_stemi_heart" ,replace
+clear
+
+use "`datapath'\version02\2-working\pm2_stemi_heart_ar" ,clear
+tab ecgste reperf if year==2019 & diagnosis==2 ,m 
+contract ecgste reperf if year==2019 & diagnosis==2
+rename _freq number
+egen totstemi=total(number) if ecgste==1
+gen id=_n
+drop if id!=1
+keep id number totstemi
+
+gen percent_pm2_stemi=(number)/totstemi*100
+replace percent_pm2_stemi=round(percent_pm2_stemi,1.0)
+replace id=2
+order id number totstemi percent*
+
+append using "`datapath'\version02\2-working\pm2_stemi_heart"
+save "`datapath'\version02\2-working\pm2_stemi_heart" ,replace
+clear
+
+use "`datapath'\version02\2-working\pm2_stemi_heart_ar" ,clear
+tab ecgste sex if year==2019 & diagnosis==2 & reperf==1 ,m 
+contract ecgste sex if year==2019 & diagnosis==2 & reperf==1
+drop if ecgste!=1
+gen id=_n
+rename _freq number
+drop ecgste
+reshape wide number , i(id)  j(sex)
+collapse number1 number2
+rename number1 female
+rename number2 male
+gen totstemi=female+male
+gen percent_pm2_female=female/totstemi*100
+replace percent_pm2_female=round(percent_pm2_female,1.0)
+gen percent_pm2_male=male/totstemi*100
+replace percent_pm2_male=round(percent_pm2_male,1.0)
+gen id=2
+drop totstemi
+order id female male percent_pm2_female percent_pm2_male
+
+merge 1:1 id using "`datapath'\version02\2-working\pm2_stemi_heart"
+drop _merge
+order id female percent_pm2_female male percent_pm2_male number percent_pm2_stemi totstemi
+
+save "`datapath'\version02\2-working\pm2_stemi_heart" ,replace
+clear
+
+use "`datapath'\version02\2-working\pm2_stemi_heart_ar" ,clear
+tab ecgste reperf if year==2018 & diagnosis==2 ,m 
+contract ecgste reperf if year==2018 & diagnosis==2
+rename _freq number
+egen totstemi=total(number) if ecgste==1
+gen id=_n
+drop if id!=1
+keep id number totstemi
+gen percent_pm2_stemi=(number)/totstemi*100
+replace percent_pm2_stemi=round(percent_pm2_stemi,1.0)
+replace id=3
+order id number totstemi percent*
+
+append using "`datapath'\version02\2-working\pm2_stemi_heart"
+save "`datapath'\version02\2-working\pm2_stemi_heart" ,replace
+clear
+
+use "`datapath'\version02\2-working\pm2_stemi_heart_ar" ,clear
+tab ecgste sex if year==2018 & diagnosis==2 & reperf==1 ,m 
+contract ecgste sex if year==2018 & diagnosis==2 & reperf==1
+drop if ecgste!=1
+gen id=_n
+rename _freq number
+drop ecgste
+reshape wide number , i(id)  j(sex)
+collapse number1 number2
+rename number1 female
+rename number2 male
+gen totstemi=female+male
+gen percent_pm2_female=female/totstemi*100
+replace percent_pm2_female=round(percent_pm2_female,1.0)
+gen percent_pm2_male=male/totstemi*100
+replace percent_pm2_male=round(percent_pm2_male,1.0)
+gen id=3
+drop totstemi
+order id female male percent_pm2_female percent_pm2_male
+
+merge 1:1 id using "`datapath'\version02\2-working\pm2_stemi_heart"
+drop _merge
+order id female percent_pm2_female male percent_pm2_male number percent_pm2_stemi totstemi
+
+rename number total_number
+rename totstemi total_stemi
+rename percent_pm2_female percent_female
+rename percent_pm2_male percent_male
+rename percent_pm2_stemi percent_total
+rename id year
+replace year=2020 if year==1
+replace year=2019 if year==2
+replace year=2018 if year==3
+erase "`datapath'\version02\2-working\pm2_stemi_heart_ar.dta"
+save "`datapath'\version02\2-working\pm2_stemi_heart" ,replace
+
+restore
+stop
 
 **********************************************************************
 **PM3: STEMI pts door2needle time for those who were thrombolysed
