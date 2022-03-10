@@ -5,7 +5,7 @@ cls
     //  project:                BNR Heart
     //  analysts:               Ashley HENRY and Jacqueline CAMPBELL
     //  date first created:     26-Jan-2022
-    //  date last modified:     03-Mar-2022
+    //  date last modified:     10-Mar-2022
 	//  analysis:               Heart 2020 dataset for Annual Report
     //  algorithm task          Performing Heart 2020 Data Analysis
     //  status:                 Pending
@@ -599,73 +599,95 @@ tab aspach aspacs if year==2020, miss
 ** Of those with information on Aspirin given acutely to hosp admission/ symptom (291), 161 had either received aspirin acute of symptoms/ acute of hospital arrival.
 dis ((144+114)-97)/291   //55%
 
+tab aspach aspacs if year==2019, miss
+tab aspach aspacs if year==2018, miss
+tab aspach aspacs if year==2017, miss
+
+tab aspach year if year>2016
+tab aspacs year if year>2016
+bysort year :tab aspach aspacs if  year>2016
+tab aspact year if  year>2016
 
 ** JC update: Save these results as a dataset for reporting Performance Measure 1 (Aspirin within 1st 24h)
 preserve
 save "`datapath'\version02\2-working\pm1_asp24h_heart_ar" ,replace
-contract aspach if year==2020
-rename _freq number
+contract aspach year if year>2016
+rename _freq number_aspach
 gen id=_n
-drop if id!=1
+drop if id>4
 drop aspach
-order id number
+order id year number_aspach
 
 save "`datapath'\version02\2-working\pm1_asp24h_heart" ,replace
 clear
 
 use "`datapath'\version02\2-working\pm1_asp24h_heart_ar" ,clear
-contract aspacs if year==2020
-rename _freq number
+
+contract aspacs year if year>2016
+rename _freq number_aspacs
 gen id=_n
-drop if id!=1
-replace id=2
-drop aspacs
-order id number
+drop if id>4
+drop aspacs id
+order year number_aspacs
 
 append using "`datapath'\version02\2-working\pm1_asp24h_heart"
-sort id
+drop id
+gen id=_n
 
 save "`datapath'\version02\2-working\pm1_asp24h_heart" ,replace
 clear
 
 use "`datapath'\version02\2-working\pm1_asp24h_heart_ar" ,clear
-contract aspach aspacs if year==2020
-rename _freq number
+contract aspach aspacs year if  year>2016
+rename _freq number_aspachacs
 gen id=_n
-drop if id!=1
-replace id=3
-keep id number
-order id number
+drop if id>4
+keep id year number_aspachacs
+order id year number_aspachacs
 
 append using "`datapath'\version02\2-working\pm1_asp24h_heart"
-sort id
+drop id
+gen id=_n
+
 save "`datapath'\version02\2-working\pm1_asp24h_heart" ,replace
 clear
 
 use "`datapath'\version02\2-working\pm1_asp24h_heart_ar" ,clear
-contract aspact if year==2020
-rename _freq number
+contract aspact year if  year>2016
+rename _freq number_aspact
 gen id=_n
-drop if id==3
-gen totasp=sum(number)
-drop if id==1
-replace id=4
-keep id totasp
-order id totasp
+drop if aspact==.
+gen totasp_2017=sum(number_aspact) if year==2017
+gen totasp_2018=sum(number_aspact) if year==2018
+gen totasp_2019=sum(number_aspact) if year==2019
+gen totasp_2020=sum(number_aspact) if year==2020
+drop if id<5
+keep year totasp*
+order year totasp*
 
 append using "`datapath'\version02\2-working\pm1_asp24h_heart"
-sort id
+drop id
 
-gen percent_pm1_heart=(number[1]+number[2]-number[3])/totasp*100
-replace percent_pm1_heart=round(percent_pm1_heart,1.0)
-drop if id!=4
+replace number_aspachacs=number_aspachacs[_n+4] if number_aspachacs==.
+replace number_aspacs=number_aspacs[_n+8] if number_aspacs==.
+replace number_aspach=number_aspach[_n+12] if number_aspach==.
+gen percent_pm1heart_2017=(number_aspacs+number_aspach-number_aspachacs)/totasp_2017*100 if year==2017
+gen percent_pm1heart_2018=(number_aspacs+number_aspach-number_aspachacs)/totasp_2018*100 if year==2018
+gen percent_pm1heart_2019=(number_aspacs+number_aspach-number_aspachacs)/totasp_2019*100 if year==2019
+gen percent_pm1heart_2020=(number_aspacs+number_aspach-number_aspachacs)/totasp_2020*100 if year==2020
+replace percent_pm1heart_2017=round(percent_pm1heart_2017,1.0)
+replace percent_pm1heart_2018=round(percent_pm1heart_2018,1.0)
+replace percent_pm1heart_2019=round(percent_pm1heart_2019,1.0)
+replace percent_pm1heart_2020=round(percent_pm1heart_2020,1.0)
 keep percent*
+collapse percent*
+order percent_pm1heart_2020 percent_pm1heart_2017 percent_pm1heart_2018 percent_pm1heart_2019
 
 erase "`datapath'\version02\2-working\pm1_asp24h_heart_ar.dta"
 save "`datapath'\version02\2-working\pm1_asp24h_heart" ,replace
 
 restore
-*/
+
 **********************************
 **PM2: STEMI pts with Reperfusion
 **********************************
@@ -831,25 +853,36 @@ erase "`datapath'\version02\2-working\pm2_stemi_heart_ar.dta"
 save "`datapath'\version02\2-working\pm2_stemi_heart" ,replace
 
 restore
-stop
+
+
 
 **********************************************************************
 **PM3: STEMI pts door2needle time for those who were thrombolysed
 ************************2***0*******2******0****************************
-tab reperf if year==2020,m
-** 51 pts had reperf
+tab reperf if year==2017,m // 40 pts had reperf
+tab reperf if year==2018,m // 42 pts had reperf
+tab reperf if year==2019,m // 44 pts had reperf
+tab reperf if year==2020,m // 51 pts had reperf
+
 preserve
 
 drop if  record_id=="20202380" | record_id=="202096" // case missing daetae - case ecg before admission.
 
-list reperfdt if year==2020 & reperfdt !=. 
+*******************************************************************************************************
+** Added by JC 10mar2022 - totals differ from AH's comments below (maybe a copy and paste error?)
+count if year==2020 & reperfdt !=. //47
+list record_id frmscnt dohtoh daetae reperfdt if year==2020 & reperfdt !=.
+count if year==2020 & daetae!=. & reperfdt !=. //44
+********************************************************************************************************
+
+list reperfdt if year==2020 & reperfdt !=.
 list record_id frmscnt doh toh daetae reperfdt if year==2020 & reperfdt !=.
 ** This shows that only 41 had times recorded for BOTH hosp arrival and TPA
 ** So we calculate door-to-needle time for 31 patients
-gen mins_door2needle=round(minutes(round(reperfdt-daetae))) if year==2020 & (daetae!=. & reperfdt!=.)  
-replace mins_door2needle=round(minutes(round(reperfdt-frmscnt_dtime))) if year==2020 & (frmscnt_dtime!=. & daetae==. & reperfdt!=.)   
+gen mins_door2needle=round(minutes(round(reperfdt-daetae))) if year==2020 & (daetae!=. & reperfdt!=.) //44 changes
+replace mins_door2needle=round(minutes(round(reperfdt-frmscnt_dtime))) if year==2020 & (frmscnt_dtime!=. & daetae==. & reperfdt!=.) //2 changes
 
-gen hrs_door2needle=(mins_door2needle/60)
+gen hrs_door2needle=(mins_door2needle/60) //46 changes
 label var mins_door2needle "Total minutes from arrival at hospital to thrombolysis (door-to-needle)"
 label var hrs_door2needle "Total hours from arrival at hospital to thrombolysis (door-to-needle)"
 
@@ -862,16 +895,172 @@ list record_id frmscnt doh toh daetae reperfdt mins_door2needle hrs_door2needle 
 
 gen k=1
 
-table k, c(p50 mins_door2needle p25 mins_door2needle p75 mins_door2needle min mins_door2needle max mins_door2needle)
-table k, c(p50 hrs_door2needle p25 hrs_door2needle p75 hrs_door2needle min hrs_door2needle max hrs_door2needle)
+** Below code runs in Stata 16 (used by AH) but not in Stata 17 (used by JC)
+//table k, c(p50 mins_door2needle p25 mins_door2needle p75 mins_door2needle min mins_door2needle max mins_door2needle)
+//table k, c(p50 hrs_door2needle p25 hrs_door2needle p75 hrs_door2needle min hrs_door2needle max hrs_door2needle)
 
 ameans mins_door2needle
 ameans hrs_door2needle
 
-table k, c(p50 hrs_door2needle p25 hrs_door2needle p75 hrs_door2needle min hrs_door2needle max hrs_door2needle)
+//table k, c(p50 hrs_door2needle p25 hrs_door2needle p75 hrs_door2needle min hrs_door2needle max hrs_door2needle)
 ** 1.7 hours seen - 1 hr 42 mins
+
+** This code will run in Stata 17
+table k, stat(q2 mins_door2needle) stat(q1 mins_door2needle) stat(q3 mins_door2needle) stat(min mins_door2needle) stat(max mins_door2needle)
+table k, stat(q2 hrs_door2needle) stat(q1 hrs_door2needle) stat(q3 hrs_door2needle) stat(min hrs_door2needle) stat(max hrs_door2needle)
+
 restore
 
+
+** JC update: Save these 'p50' results as a dataset for reporting Table 1.7
+preserve
+
+drop if  record_id=="20202380" | record_id=="202096" // case missing daetae - case ecg before admission.
+
+count if year==2018 & reperfdt !=. //40
+list record_id frmscnt dohtoh daetae reperfdt if year==2018 & reperfdt !=.
+count if year==2018 & dohtoh!=. & reperfdt !=. //37
+
+count if year==2019 & reperfdt !=. //41
+list record_id frmscnt dohtoh daetae reperfdt if year==2019 & reperfdt !=.
+count if year==2019 & dohtoh!=. & reperfdt !=. //39
+
+count if year==2020 & reperfdt !=. //47
+list record_id frmscnt dohtoh daetae reperfdt if year==2020 & reperfdt !=.
+count if year==2020 & daetae!=. & reperfdt !=. //44
+
+gen mins_door2needle=round(minutes(round(reperfdt-daetae))) if year==2020 & (daetae!=. & reperfdt!=.) //44 changes
+replace mins_door2needle=round(minutes(round(reperfdt-frmscnt_dtime))) if year==2020 & (frmscnt_dtime!=. & daetae==. & reperfdt!=.) //2 changes
+
+replace mins_door2needle=round(minutes(round(reperfdt-dohtoh))) if year==2019 & (dohtoh!=. & reperfdt!=.) // changes
+replace mins_door2needle=round(minutes(round(reperfdt-frmscnt_dtime))) if year==2019 & (frmscnt_dtime!=. & dohtoh==. & reperfdt!=.) // changes
+
+replace mins_door2needle=round(minutes(round(reperfdt-dohtoh))) if year==2018 & (dohtoh!=. & reperfdt!=.) // changes
+replace mins_door2needle=round(minutes(round(reperfdt-frmscnt_dtime))) if year==2018 & (frmscnt_dtime!=. & dohtoh==. & reperfdt!=.) // changes
+
+gen hrs_door2needle=(mins_door2needle/60) //46 changes
+label var mins_door2needle "Total minutes from arrival at hospital to thrombolysis (door-to-needle)"
+label var hrs_door2needle "Total hours from arrival at hospital to thrombolysis (door-to-needle)"
+
+gen k=1
+
+table k, stat(q2 mins_door2needle) stat(q1 mins_door2needle) stat(q3 mins_door2needle) stat(min mins_door2needle) stat(max mins_door2needle), if year==2020
+table k, stat(q2 hrs_door2needle) stat(q1 hrs_door2needle) stat(q3 hrs_door2needle) stat(min hrs_door2needle) stat(max hrs_door2needle), if year==2020
+
+table k, stat(q2 mins_door2needle) stat(q1 mins_door2needle) stat(q3 mins_door2needle) stat(min mins_door2needle) stat(max mins_door2needle), if year==2019
+table k, stat(q2 hrs_door2needle) stat(q1 hrs_door2needle) stat(q3 hrs_door2needle) stat(min hrs_door2needle) stat(max hrs_door2needle), if year==2019
+
+table k, stat(q2 mins_door2needle) stat(q1 mins_door2needle) stat(q3 mins_door2needle) stat(min mins_door2needle) stat(max mins_door2needle), if year==2018
+table k, stat(q2 hrs_door2needle) stat(q1 hrs_door2needle) stat(q3 hrs_door2needle) stat(min hrs_door2needle) stat(max hrs_door2needle), if year==2018
+
+drop if year<2018
+drop if k!=1
+
+save "`datapath'\version02\2-working\pm3_door2needle_heart_ar" ,replace
+
+sum mins_door2needle if year==2020
+sum mins_door2needle ,detail, if year==2020
+gen mins_door2needle_2020=r(p50) if year==2020
+
+tostring mins_door2needle_2020 ,replace
+replace mins_door2needle_2020=mins_door2needle_2020+" "+"minutes"
+
+
+sum mins_door2needle if year==2019
+sum mins_door2needle ,detail, if year==2019
+gen mins_door2needle_2019=r(p50) if year==2019
+
+tostring mins_door2needle_2019 ,replace
+replace mins_door2needle_2019=mins_door2needle_2019+" "+"minutes"
+
+
+sum mins_door2needle if year==2018
+sum mins_door2needle ,detail, if year==2018
+gen mins_door2needle_2018=r(p50) if year==2018
+
+tostring mins_door2needle_2018 ,replace
+replace mins_door2needle_2018=mins_door2needle_2018+" "+"minutes"
+
+replace mins_door2needle_2018="" if mins_door2needle_2018==". minutes"
+replace mins_door2needle_2019="" if mins_door2needle_2019==". minutes"
+replace mins_door2needle_2020="" if mins_door2needle_2020==". minutes"
+fillmissing mins_door2needle_2018 mins_door2needle_2019 mins_door2needle_2020
+
+keep mins_door2needle_2018 mins_door2needle_2019 mins_door2needle_2020
+order mins_door2needle_2018 mins_door2needle_2019 mins_door2needle_2020
+save "`datapath'\version02\2-working\pm3_door2needle_heart" ,replace
+
+use "`datapath'\version02\2-working\pm3_door2needle_heart_ar" ,clear
+
+sum hrs_door2needle if year==2020
+sum hrs_door2needle ,detail, if year==2020
+gen hours_2020=r(p50) if year==2020
+
+sum hrs_door2needle if year==2019
+sum hrs_door2needle ,detail, if year==2019
+gen hours_2019=r(p50) if year==2019
+
+sum hrs_door2needle if year==2018
+sum hrs_door2needle ,detail, if year==2018
+gen hours_2018=r(p50) if year==2018
+
+collapse hours_2018 hours_2019 hours_2020
+
+gen double fullhour_2018=int(hours_2018)
+gen double fraction_2018=hours_2018-fullhour_2018
+gen minutes_2018=round(fraction_2018*60,1)
+
+tostring fullhour_2018 ,replace
+tostring minutes_2018 ,replace
+replace fullhour_2018=fullhour_2018+" "+"hour"+" "+minutes_2018+" "+"minutes"
+rename fullhour_2018 hrs_door2needle_2018
+
+
+gen double fullhour_2019=int(hours_2019)
+gen double fraction_2019=hours_2019-fullhour_2019
+gen minutes_2019=round(fraction_2019*60,1)
+
+tostring fullhour_2019 ,replace
+tostring minutes_2019 ,replace
+replace fullhour_2019=fullhour_2019+" "+"hour"+" "+minutes_2019+" "+"minutes"
+rename fullhour_2019 hrs_door2needle_2019
+
+
+gen double fullhour_2020=int(hours_2020)
+gen double fraction_2020=hours_2020-fullhour_2020
+gen minutes_2020=round(fraction_2020*60,1)
+
+tostring fullhour_2020 ,replace
+tostring minutes_2020 ,replace
+replace fullhour_2020=fullhour_2020+" "+"hour"+" "+minutes_2020+" "+"minutes"
+rename fullhour_2020 hrs_door2needle_2020
+
+keep hrs_door2needle_2018 hrs_door2needle_2019 hrs_door2needle_2020
+
+append using "`datapath'\version02\2-working\pm3_door2needle_heart"
+
+fillmissing mins_door2needle*
+gen id=_n
+drop if id>1 
+drop id
+gen median_door2needle_2018=mins_door2needle_2018+" "+"or"+" "+hrs_door2needle_2018
+gen median_door2needle_2019=mins_door2needle_2019+" "+"or"+" "+hrs_door2needle_2019
+gen median_door2needle_2020=mins_door2needle_2020+" "+"or"+" "+hrs_door2needle_2020
+keep median_door2needle_2018 median_door2needle_2019 median_door2needle_2020
+gen pm3_category=3
+
+label var pm3_category "PM3 Category"
+label define pm3_category_lab 1 "Median time from scene to arrival at A&E" 2 "Median time from admission to first ECG" ///
+							  3 "Median time from admission to fibrinolysis" 4 "Median time from onset to fibrinolysis" , modify
+label values pm3_category pm3_category_lab
+
+order pm3_category median_door2needle_2018 median_door2needle_2019 median_door2needle_2020
+erase "`datapath'\version02\2-working\pm3_door2needle_heart_ar.dta"
+save "`datapath'\version02\2-working\pm3_door2needle_heart" ,replace
+
+restore
+
+stop
 **********************************************************************
 **PM4: PTs who received ECHO before discharge
 ************************2***0*******2******0**************************
