@@ -5,7 +5,7 @@ cls
     //  project:                BNR Heart
     //  analysts:               Ashley HENRY and Jacqueline CAMPBELL
     //  date first created:     26-Jan-2022
-    //  date last modified:     10-Mar-2022
+    //  date last modified:     14-Mar-2022
 	//  analysis:               Heart 2020 dataset for Annual Report
     //  algorithm task          Performing Heart 2020 Data Analysis
     //  status:                 Pending
@@ -56,7 +56,7 @@ count
 
 ** JC 17feb2022: Sex updated for 2018 pid that has sex=99 using MedData
 replace sex=1 if anon_pid==596 & record_id=="20181197" //1 change
-
+/*
 ** Number of BNR Regsitrations by year
 ** 547 BNR Reg for year 2020
 bysort year :tab abstracted hosp
@@ -1059,8 +1059,8 @@ erase "`datapath'\version02\2-working\pm3_door2needle_heart_ar.dta"
 save "`datapath'\version02\2-working\pm3_door2needle_heart" ,replace
 
 restore
+*/
 
-stop
 **********************************************************************
 **PM4: PTs who received ECHO before discharge
 ************************2***0*******2******0**************************
@@ -1078,6 +1078,71 @@ tab decho sex if year==2020
 tab decho if year==2019
 tab decho if year==2020
 
+
+** JC update: Save these results as a dataset for reporting Table 1.8
+preserve
+save "`datapath'\version02\2-working\pm4_ecg_heart_ar" ,replace
+
+drop if year!=2020
+
+/* JC 14mar2022: testing out below code to output to Word using asdoc command
+cd "`datapath'\version02\3-output"
+asdoc tabulate decho sex , nokey row column replace
+*/
+
+contract decho sex
+drop if decho==.
+rename _freq number
+egen disecho=total(number) if decho==1
+egen refecho=total(number) if decho==3
+egen totecho=total(number)
+gen percent_disecho_f=number/disecho*100 if sex==1 & disecho!=.
+gen percent_disecho_m=number/disecho*100 if sex==2 & disecho!=.
+gen percent_refecho_f=number/refecho*100 if sex==1 & refecho!=.
+gen percent_refecho_m=number/refecho*100 if sex==2 & refecho!=.
+gen percent_disecho_tot=disecho/totecho*100
+gen percent_refecho_tot=refecho/totecho*100
+
+drop if decho!=1 & decho!=3
+gen id=_n
+
+order id
+
+reshape wide decho number disecho refecho totecho percent_disecho_f percent_disecho_m percent_refecho_f percent_refecho_m percent_disecho_tot percent_refecho_tot, i(id)  j(sex)
+
+rename decho1 Timing
+
+label var Timing "Timing"
+label define Timing_lab 1 "Before discharge" 3 "Referred to receive after discharge" , modify
+label values Timing Timing_lab
+
+drop decho2
+fillmissing disecho* refecho* totecho* percent_disecho_f* percent_disecho_m* percent_refecho_f* percent_refecho_m* percent_disecho_tot* percent_refecho_tot*
+replace number2=number2[_n+1] if number2==.
+drop if id==2|id==4
+
+rename number1 female_num
+rename number2 male_num
+rename percent_disecho_f1 female_percent
+replace female_percent=percent_refecho_f1 if id==3
+rename percent_disecho_m2 male_percent
+replace male_percent=percent_refecho_m2 if id==3
+rename disecho1 total_num
+replace total_num=refecho1 if id==3
+rename percent_disecho_tot1 total_percent
+replace total_percent=percent_refecho_tot1 if id==3
+
+order id Timing female_num female_percent male_num male_percent total_num total_percent
+keep Timing female_num female_percent male_num male_percent total_num total_percent
+
+replace female_percent=round(female_percent,1.0)
+replace male_percent=round(male_percent,1.0)
+replace total_percent=round(total_percent,1.0)
+
+save "`datapath'\version02\2-working\pm4_ecg_heart" ,replace
+erase "`datapath'\version02\2-working\pm4_ecg_heart_ar.dta"
+restore
+stop
 **********************************************************************
 **PM5: PTs prescribed Aspirin at discharge
 ************************2***0*******2******0**************************
