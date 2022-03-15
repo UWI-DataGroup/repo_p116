@@ -5,7 +5,7 @@ cls
     //  project:                BNR Heart
     //  analysts:               Ashley HENRY and Jacqueline CAMPBELL
     //  date first created:     26-Jan-2022
-    //  date last modified:     14-Mar-2022
+    //  date last modified:     15-Mar-2022
 	//  analysis:               Heart 2020 dataset for Annual Report
     //  algorithm task          Performing Heart 2020 Data Analysis
     //  status:                 Pending
@@ -56,7 +56,7 @@ count
 
 ** JC 17feb2022: Sex updated for 2018 pid that has sex=99 using MedData
 replace sex=1 if anon_pid==596 & record_id=="20181197" //1 change
-/*
+
 ** Number of BNR Regsitrations by year
 ** 547 BNR Reg for year 2020
 bysort year :tab abstracted hosp
@@ -1059,7 +1059,7 @@ erase "`datapath'\version02\2-working\pm3_door2needle_heart_ar.dta"
 save "`datapath'\version02\2-working\pm3_door2needle_heart" ,replace
 
 restore
-*/
+
 
 **********************************************************************
 **PM4: PTs who received ECHO before discharge
@@ -1142,7 +1142,7 @@ replace total_percent=round(total_percent,1.0)
 save "`datapath'\version02\2-working\pm4_ecg_heart" ,replace
 erase "`datapath'\version02\2-working\pm4_ecg_heart_ar.dta"
 restore
-stop
+
 **********************************************************************
 **PM5: PTs prescribed Aspirin at discharge
 ************************2***0*******2******0**************************
@@ -1162,6 +1162,12 @@ tab vstatus if  abstracted==1 & year==2020
 ** Of those discharged( 222), 184 had aspirin at discharge.
 dis 184/222  //83%
 
+** JC update: Save these results as a dataset for reporting PM5 "Documented aspirin prescribed at discharge"
+preserve
+tab vstatus aspdis if abstracted==1 & year==2020
+save "`datapath'\version02\2-working\pm5_asp_heart" ,replace
+restore
+
 **********************************************************************
 **PM6: PTs prescribed Statin at discharge
 ************************2***0*******2******0**************************
@@ -1180,3 +1186,9 @@ tab statdis if year==2020
 tab vstatus if abstracted==1 & year==2020
 ** Of those discharged( 222), 181 had statin at discharge.
 dis 181/222  //82%
+
+** JC update: Save these results as a dataset for reporting PM6 "Documented statins prescribed at discharge"
+preserve
+tab vstatus statdis if abstracted==1 & year==2020
+save "`datapath'\version02\2-working\pm6_statin_heart" ,replace
+restore

@@ -4,7 +4,7 @@
     //  project:                BNR-Heart
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      15-FEB-2022
-    // 	date last modified      14-MAR-2022
+    // 	date last modified      15-MAR-2022
     //  algorithm task          Creating MS Word document with statistical + figure outputs for 2020 annual report
     //  status                  Pending
     //  objective               To have methods, tables, figures and text in an easy-to-use format for the report writer
@@ -171,7 +171,7 @@ putdocx textblock begin
 Date Prepared: 16-FEB-2022
 putdocx textblock end
 putdocx textblock begin
-Prepared by: JC using Stata
+Prepared by: JC using Stata 17.0
 putdocx textblock end
 putdocx textblock begin
 Data source: REDCap's BNRCVD_CORE database
@@ -180,7 +180,7 @@ putdocx textblock begin
 Data release date: 29-Oct-2021
 putdocx textblock end
 putdocx textblock begin
-Stata code file: heart_results report.do
+Stata code file: 1.4_cvd_results report.do
 putdocx textblock end
 putdocx textblock begin
 Dataset + dofile path: repo_data/data_p116/version02
@@ -188,45 +188,25 @@ putdocx textblock end
 putdocx paragraph, halign(center)
 putdocx text ("Methods"), bold font(Helvetica,10,"blue")
 putdocx textblock begin
-(1) No.(registrations): Includes standardized case definition, i.e. includes unk residents, non-malignant tumours, IARC non-reportable MPs (dataset used: "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022)"); 
-Dofile: 1.0_heart_cvd_analysis.do.
+(1) Incidence dataset used for heart analyses: "p116\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022)") - Note: one record with unknown sex for 2018 case was corrected and other corrections to be done were noted but not performed in light of pending CVD DM re-engineer process.
 putdocx textblock end
 putdocx textblock begin
-(2) % of population: WPP population for 2013, 2014 and 2015 (see p_117\2015AnnualReportV02 branch\0_population.do)
+(2) Population datasets used for heart analyses: WPP populations generated for each year from 2010-2020 (see: sync-stata-statadofiles-datareview-2019-pop_cmpile) + ("p116\version02\3-output\pop_wpp_yyyy-10")
 putdocx textblock end
 putdocx textblock begin
-(3) No.(patients): Includes standardized case definition, i.e. includes unk residents, non-malignant tumours, IARC non-reportable MPs (variable used: patient; dataset used: "`datapath'\version02\3-output\2013_2014_2015_cancer_nonsurvival")
+The above population datasets were used in conjunction with this WHO dataset when using distrate for ASIRs and ASMRs: "p116\version02\3-output\who2000_10-2".
 putdocx textblock end
 putdocx textblock begin
-(4) ASIR: Includes standardized case definition, i.e. includes unk residents, IARC non-reportable MPs but excludes non-malignant tumours; stata command distrate used with pop_wpp_2015-10, pop_wpp_2014-10, pop_wpp_2013-10 for 2015,2014,2013 cancer incidence, respectively, and world population dataset: who2000_10-2; (population datasets used: "`datapath'\version02\2-working\pop_wpp_2015-10;pop_wpp_2014-10;pop_wpp_2013-10"; cancer dataset used: "`datapath'\version02\2-working\2013_2014_2015_cancer_numbers")
+(3) Dofiles used for heart analyses: VS Code branch 2020AnnualReport for p116. Each dofile used in the below tables and outputs is listed below each title. 
 putdocx textblock end
-putdocx textblock begin
-(5) Site Order: These tables show where the order of 2015 top 10 sites in 2015,2014,2013, respectively; site order datasets used: "`datapath'\version02\2-working\siteorder_2015; siteorder_2014; siteorder_2013")
-putdocx textblock end
-putdocx textblock begin
-(6) ASIR by sex: Includes standardized case definition, i.e. includes unk residents, IARC non-reportable MPs but excludes non-malignant tumours; unk/missing ages were included in the median age group; stata command distrate used with pop_wpp_2015-10 for 2015 cancer incidence, ONLY, and world population dataset: who2000_10-2; (population datasets used: "`datapath'\version02\2-working\pop_wpp_2015-10"; cancer dataset used: "`datapath'\version02\2-working\2013_2014_2015_cancer_numbers")
-putdocx textblock end
-putdocx textblock begin
-(7) Population text files (WPP): saved in: "`datapath'\version02\2-working\WPP_population by sex_yyyy"
-putdocx textblock end
-putdocx textblock begin
-(8) Population files (WPP): generated from "https://population.un.org/wpp/Download/Standard/Population/" on 27-Nov-2019.
-putdocx textblock end
-putdocx textblock begin
-(9) No.(DCOs): Includes standardized case definition, i.e. includes unk residents, non-malignant tumours, IARC non-reportable MPs. (variable used: basis. dataset used: "`datapath'\version02\3-output\2013_2014_2015_cancer_nonsurvival")
-putdocx textblock end
-putdocx textblock begin
-(10) % of tumours: Includes standardized case definition, i.e. includes unk residents, non-malignant tumours, IARC non-reportable MPs (variable used: basis; dataset used: "`datapath'\version02\3-output\2013_2014_2015_cancer_nonsurvival")
-putdocx textblock end
-putdocx textblock begin
-(11) 1-yr, 3-yr, 5-yr (%): Excludes dco, unk slc, age 100+, multiple primaries, ineligible case definition, non-residents, REMOVE IF NO unk sex, non-malignant tumours, IARC non-reportable MPs (variable used: surv1yr_2013, surv1yr_2014, surv1yr_2015, surv3yr_2013, surv3yr_2014, surv3yr_2015, surv5yr_2013, surv5yr_2014; dataset used: "`datapath'\version02\3-output\2013_2014_2015_cancer_survival")
-putdocx textblock end
-//putdocx pagebreak
+
+
+putdocx pagebreak
 putdocx paragraph, style(Heading1)
-putdocx text ("Summary Statistics"), bold
+putdocx text ("Summary Statistics (Dofile: 1.0_heart_cvd_analysis.do)"), bold
 putdocx paragraph, halign(center)
 putdocx text ("Table 1.1 Summary Statistics for BNR-CVD, 2020 (Population=277,814)"), bold font(Helvetica,10,"blue")
-putdocx paragraph
+
 putdocx table tbl1 = data(Title Myocardial_Infarction), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
 putdocx table tbl1(1,2), bold shading(lightgray)
@@ -236,7 +216,7 @@ putdocx textblock begin
 putdocx textblock end
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV08_`listdate'.docx", replace
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV09_`listdate'.docx", replace
 putdocx clear
 
 restore
@@ -268,10 +248,9 @@ putdocx pagebreak
 putdocx paragraph, style(Heading1)
 putdocx text ("AMI: Burden"), bold
 putdocx paragraph, style(Heading2)
-putdocx text ("AMI: Cases and Crude Incidence Rates"), bold
+putdocx text ("AMI: Cases and Crude Incidence Rates (Dofile: 1.1_heart_cvd_analysis.do)"), bold
 putdocx paragraph, halign(center)
 putdocx text ("Figure 1.1 Number of men and women with acute MI by year in Barbados. 2010-2020"), bold font(Helvetica,10,"blue")
-putdocx paragraph
 
 putdocx table tbl1 = data(year sex number), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
@@ -279,7 +258,7 @@ putdocx table tbl1(1,2), bold shading(lightgray)
 putdocx table tbl1(1,3), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV08_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV09_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -295,9 +274,10 @@ putdocx clear
 putdocx begin
 
 putdocx pagebreak
+putdocx paragraph, style(Heading2)
+putdocx text ("AMI: Cases and Crude Incidence Rates (Dofile: 1.1_heart_cvd_analysis.do)"), bold
 putdocx paragraph, halign(center)
 putdocx text ("Figure 1.2 Crude incidence rate of men and women per 100,000 population with acute MI by year in Barbados. 2010-2020"), bold font(Helvetica,10,"blue")
-putdocx paragraph
 
 putdocx table tbl1 = data(year sex cir), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
@@ -305,7 +285,7 @@ putdocx table tbl1(1,2), bold shading(lightgray)
 putdocx table tbl1(1,3), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV08_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV09_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -320,13 +300,10 @@ putdocx clear
 putdocx begin
 
 putdocx pagebreak
-putdocx paragraph, style(Heading1)
-putdocx text ("AMI: Burden"), bold
 putdocx paragraph, style(Heading2)
-putdocx text ("AMI: Age-standardised Incidence + Mortality Rates"), bold
+putdocx text ("AMI: Age-standardised Incidence + Mortality Rates (Dofile: 1.1_heart_cvd_analysis.do)"), bold
 putdocx paragraph, halign(center)
 putdocx text ("Table 1.2 ASIRs (INCIDENCE) of men and women with acute MI or sudden cardiac death by year in Barbados. 2010-2020"), bold font(Helvetica,10,"blue")
-putdocx paragraph
 
 putdocx table tbl1 = data(year sex number percent asir ui_range), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
@@ -337,7 +314,7 @@ putdocx table tbl1(1,5), bold shading(lightgray)
 putdocx table tbl1(1,6), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV08_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV09_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -352,9 +329,10 @@ putdocx clear
 putdocx begin
 
 putdocx pagebreak
+putdocx paragraph, style(Heading2)
+putdocx text ("AMI: Age-standardised Incidence + Mortality Rates (Dofile: 1.1_heart_cvd_analysis.do)"), bold
 putdocx paragraph, halign(center)
 putdocx text ("Table 1.2 ASMRs (MORATLITY) of men and women with acute MI or sudden cardiac death by year in Barbados. 2010-2020"), bold font(Helvetica,10,"blue")
-putdocx paragraph
 
 putdocx table tbl1 = data(year sex number percent asmr ui_range), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
@@ -365,7 +343,7 @@ putdocx table tbl1(1,5), bold shading(lightgray)
 putdocx table tbl1(1,6), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV08_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV09_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -374,10 +352,8 @@ putdocx clear
 putdocx begin
 
 putdocx pagebreak
-putdocx paragraph, style(Heading1)
-putdocx text ("AMI: Burden"), bold
 putdocx paragraph, style(Heading2)
-putdocx text ("AMI: Age and Gender Stratified Incidence Rates"), bold
+putdocx text ("AMI: Age and Gender Stratified Incidence Rates (Dofile: 1.1_heart_cvd_analysis.do)"), bold
 putdocx paragraph, halign(center)
 putdocx text ("Figure 1.3a Age and gender stratified incidence rate per 100,000 population of AMI, Barbados, 2020 (N=547)"), bold font(Helvetica,10,"blue")
 putdocx paragraph
@@ -385,7 +361,7 @@ putdocx paragraph
 putdocx image "`datapath'\version02\3-output\2020_age-sex graph_heart.png", width(5.5) height(2.0)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV08_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV09_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -402,7 +378,7 @@ putdocx paragraph
 putdocx image "`datapath'\version02\3-output\2019_age-sex graph_heart.png", width(5.5) height(2.0)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV08_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV09_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -417,7 +393,7 @@ putdocx paragraph
 putdocx image "`datapath'\version02\3-output\2018_age-sex graph_heart.png", width(5.5) height(2.0)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV08_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV09_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -436,12 +412,12 @@ putdocx begin
 putdocx paragraph, style(Heading1)
 putdocx text ("AMI: Symptoms and Risk Factors"), bold
 putdocx paragraph, style(Heading2)
-putdocx text ("AMI: Symptoms"), bold
+putdocx text ("AMI: Symptoms (Dofile: 1.2_heart_cvd_analysis.do)"), bold
 putdocx paragraph, halign(center)
 qui sum totsympts
 local sum : display %3.0f `r(sum)'
 putdocx text ("Table 1.3 Main presenting symptoms for acute MI patients in Barbados. Jan-Dec 2020 (N=`sum')"), bold font(Helvetica,10,"blue")
-putdocx paragraph
+
 /*
 rename number_female WomenNum
 rename percent_female WomenPercent
@@ -477,7 +453,7 @@ putdocx text ("Totals –The total number and percentage of patients (men & wome
 
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV08_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV09_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -493,15 +469,14 @@ putdocx clear
 putdocx begin
 
 putdocx pagebreak
-putdocx paragraph, style(Heading1)
-putdocx text ("AMI: Symptoms and Risk Factors"), bold
 putdocx paragraph, style(Heading2)
-putdocx text ("AMI: Risk Factors"), bold
+putdocx text ("AMI: Risk Factors (Dofile: 1.2_heart_cvd_analysis.do)"), bold
 putdocx paragraph, halign(center)
 putdocx text ("Table 1.4 Prevalence of known risk factors among hospitalised acute MI patients, 2020"), bold font(Helvetica,10,"blue")
-putdocx paragraph
 
-putdocx table tbl1 = data(rftype_ar rf_ar number rf_percent denominator), halign(center) varnames
+rename rftype_ar rf_category
+rename rf_ar risk_factor
+putdocx table tbl1 = data(rf_category risk_factor number rf_percent denominator), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
 putdocx table tbl1(1,2), bold shading(lightgray)
 putdocx table tbl1(1,3), bold shading(lightgray)
@@ -509,7 +484,7 @@ putdocx table tbl1(1,4), bold shading(lightgray)
 putdocx table tbl1(1,5), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV08_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV09_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -527,7 +502,7 @@ putdocx pagebreak
 putdocx paragraph, style(Heading1)
 putdocx text ("AMI: Mortality"), bold
 putdocx paragraph, style(Heading2)
-putdocx text ("AMI: Secular trends in case fatality rates for AMI"), bold
+putdocx text ("AMI: Secular trends in case fatality rates for AMI (Dofile: 1.3_heart_cvd_analysis.do)"), bold
 putdocx paragraph, halign(center)
 putdocx text ("Table 1.5 Mortality statistics for acute MI patients in Barbados, 2020"), bold font(Helvetica,10,"blue")
 
@@ -547,7 +522,7 @@ putdocx table tbl1(1,10), bold shading(lightgray)
 putdocx table tbl1(1,11), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV08_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV09_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -562,11 +537,9 @@ sort outcomes_heart_ar
 putdocx clear
 putdocx begin
 
-putdocx pagebreak
-putdocx paragraph, style(Heading1)
-putdocx text ("AMI: Mortality"), bold
+//putdocx pagebreak
 putdocx paragraph, style(Heading2)
-putdocx text ("AMI: Focus on acute MI in-hospital outcomes"), bold
+putdocx text ("AMI: Focus on acute MI in-hospital outcomes (Dofile: 1.3_heart_cvd_analysis.do)"), bold
 putdocx paragraph, halign(center)
 putdocx text ("Figure 1.4 Flow chart of vital status of acute MI patients admitted to the Queen Elizabeth Hospital in Barbados, 2020"), bold font(Helvetica,10,"blue")
 
@@ -577,7 +550,7 @@ putdocx table tbl1(1,1), bold shading(lightgray)
 putdocx table tbl1(1,2), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV08_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV09_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -594,7 +567,7 @@ putdocx pagebreak
 putdocx paragraph, style(Heading1)
 putdocx text ("AMI: Performance measures, 2020"), bold
 putdocx paragraph, style(Heading2)
-putdocx text ("AMI: Performance measures for acute care"), bold
+putdocx text ("AMI: Performance measures for acute care (Dofile: 1.3_heart_cvd_analysis.do)"), bold
 putdocx paragraph, halign(center)
 putdocx text ("PM 1: Documented aspirin use within the first 24 hours"), bold font(Helvetica,10,"blue")
 
@@ -613,7 +586,7 @@ local sum : display %3.0f `r(sum)'
 putdocx text (" and`sum'% in 2017, 2018 and 2019 respectively. Poor documentation of medications prescribed at admission and during care is one possible reason for low rates described.")
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV08_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV09_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -628,10 +601,8 @@ sort year
 putdocx clear
 putdocx begin
 
-putdocx paragraph, style(Heading1)
-putdocx text ("AMI: Performance measures, 2020"), bold
 putdocx paragraph, style(Heading2)
-putdocx text ("AMI: PM 2-Proportion of STEMI patients who received reperfusion via fibrinolysis"), bold
+putdocx text ("AMI: PM 2-Proportion of STEMI patients who received reperfusion via fibrinolysis (Dofile: 1.3_heart_cvd_analysis.do)"), bold
 putdocx paragraph, halign(center)
 putdocx text ("Table 1.6. Number of STEMI cases and proportion reperfused by gender"), bold font(Helvetica,10,"blue")
 
@@ -647,7 +618,7 @@ putdocx table tbl1(1,7), bold shading(lightgray)
 putdocx table tbl1(1,8), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV08_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV09_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -660,10 +631,8 @@ use "`datapath'\version02\2-working\pm3_door2needle_heart", clear
 putdocx clear
 putdocx begin
 
-putdocx paragraph, style(Heading1)
-putdocx text ("AMI: Performance measures, 2020"), bold
 putdocx paragraph, style(Heading2)
-putdocx text ("AMI: PM 3-Median time to reperfusion for STEMI"), bold
+putdocx text ("AMI: PM 3-Median time to reperfusion for STEMI (Dofile: 1.3_heart_cvd_analysis.do)"), bold
 putdocx paragraph, halign(center)
 putdocx text ("Table 1.7. 'Door to needle' times for hospitalised patients, 2018 - 2020"), bold font(Helvetica,10,"blue")
 
@@ -678,7 +647,7 @@ putdocx table tbl1(1,3), bold shading(lightgray)
 putdocx table tbl1(1,4), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV08_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV09_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -693,11 +662,8 @@ use "`datapath'\version02\2-working\pm4_ecg_heart", clear
 putdocx clear
 putdocx begin
 
-putdocx pagebreak
-putdocx paragraph, style(Heading1)
-putdocx text ("AMI: Performance measures, 2020"), bold
 putdocx paragraph, style(Heading2)
-putdocx text ("AMI: PM 4-Proportion of patients receiving an echocardiogram before discharge"), bold
+putdocx text ("AMI: PM 4-Proportion of patients receiving an echocardiogram before discharge (Dofile: 1.3_heart_cvd_analysis.do)"), bold
 putdocx paragraph, halign(center)
 putdocx text ("Table 1.8. Proportion of patients receiving echocardiogram, 2020"), bold font(Helvetica,10,"blue")
 
@@ -720,12 +686,76 @@ tab2docx decho if (sex==1 | sex==2) & decho==1
 
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV08_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV09_`listdate'.docx", append
+putdocx clear
+restore
+
+clear
+
+preserve
+use "`datapath'\version02\2-working\pm5_asp_heart", clear
+
+putdocx clear
+putdocx begin
+
+putdocx paragraph, style(Heading2)
+putdocx text ("AMI: PM 5-Documented aspirin prescribed at discharge (Dofile: 1.3_heart_cvd_analysis.do)"), bold
+putdocx paragraph, halign(center)
+putdocx text ("Proportion of patients receiving aspirin at discharge, 2017-2020"), bold font(Helvetica,10,"blue")
+putdocx paragraph
+putdocx text ("2019 annual report for this PM states: 'Aspirin which is critical for secondary prevention was prescribed to 78% of patients in 2019. This is a reduction from previous years 2017 and 2018 of 85%.' This differs from the proportions in the 2020 heart dofile: 1.3_heart_cvd_analysis.do, as noted below. The proportion is calculated as 'Aspirin at discharge (of alive pts)/Total*100' according to comments by AH in this dofile.")
+
+putdocx paragraph, halign(center)
+putdocx text ("2017"), bold font(Helvetica,10,"blue")
+tab2docx aspdis if vstatus==1 & year==2017
+putdocx paragraph, halign(center)
+putdocx text ("2018"), bold font(Helvetica,10,"blue")
+tab2docx aspdis if vstatus==1 & year==2018
+putdocx paragraph, halign(center)
+putdocx text ("2019"), bold font(Helvetica,10,"blue")
+tab2docx aspdis if vstatus==1 & year==2019
+putdocx paragraph, halign(center)
+putdocx text ("2020"), bold font(Helvetica,10,"blue")
+tab2docx aspdis if vstatus==1 & year==2020
+
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV09_`listdate'.docx", append
+putdocx clear
+restore
+
+clear
+
+
+preserve
+use "`datapath'\version02\2-working\pm6_statin_heart", clear
+
+putdocx clear
+putdocx begin
+
+putdocx pagebreak
+putdocx paragraph, style(Heading2)
+putdocx text ("AMI: PM 6-Documented statins prescribed at discharge (Dofile: 1.3_heart_cvd_analysis.do)"), bold
+putdocx paragraph, halign(center)
+putdocx text ("Proportion of patients receiving statins at discharge, 2019 & 2020"), bold font(Helvetica,10,"blue")
+putdocx paragraph
+putdocx text ("2019 annual report for this PM states: 'There were 71% of patients discharged home on a statin in 2019.' This matches the proportions in the 2020 heart dofile: 1.3_heart_cvd_analysis.do, as noted below. The proportion is calculated as 'Statins at discharge (of alive pts)/Total*100' according to comments by AH in this dofile.")
+
+putdocx paragraph, halign(center)
+putdocx text ("2019"), bold font(Helvetica,10,"blue")
+tab2docx statdis if vstatus==1 & year==2019
+putdocx paragraph, halign(center)
+putdocx text ("2020"), bold font(Helvetica,10,"blue")
+tab2docx statdis if vstatus==1 & year==2020
+
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV09_`listdate'.docx", append
 putdocx clear
 restore
 
 clear
 stop
-save "`datapath'\version02\2-working\2015_cases_parish+site.dta" ,replace
-label data "BNR-Cancer 2015 Cases by Parish"
-notes _dta :These data prepared for Natasha Sobers - 2015 annual report
+//stroke 2020 outputs to be added to this dofile
+
+save "`datapath'\version02\2-working\2020_cvd_results" ,replace
+label data "BNR-CVD 2020 Analysis Outputs to MS Word"
+notes _dta :These data prepared for Natasha Sobers and Shelly-Ann Forde - 2020 annual report
