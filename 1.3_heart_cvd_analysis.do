@@ -5,7 +5,7 @@ cls
     //  project:                BNR Heart
     //  analysts:               Ashley HENRY and Jacqueline CAMPBELL
     //  date first created:     26-Jan-2022
-    //  date last modified:     15-Mar-2022
+    //  date last modified:     17-Mar-2022
 	//  analysis:               Heart 2020 dataset for Annual Report
     //  algorithm task          Performing Heart 2020 Data Analysis
     //  status:                 Pending
@@ -56,7 +56,7 @@ count
 
 ** JC 17feb2022: Sex updated for 2018 pid that has sex=99 using MedData
 replace sex=1 if anon_pid==596 & record_id=="20181197" //1 change
-
+/*
 ** Number of BNR Regsitrations by year
 ** 547 BNR Reg for year 2020
 bysort year :tab abstracted hosp
@@ -599,6 +599,7 @@ tab aspach aspacs if year==2020, miss
 ** Of those with information on Aspirin given acutely to hosp admission/ symptom (291), 161 had either received aspirin acute of symptoms/ acute of hospital arrival.
 dis ((144+114)-97)/291   //55%
 
+
 tab aspach aspacs if year==2019, miss
 tab aspach aspacs if year==2018, miss
 tab aspach aspacs if year==2017, miss
@@ -683,7 +684,7 @@ keep percent*
 collapse percent*
 order percent_pm1heart_2020 percent_pm1heart_2017 percent_pm1heart_2018 percent_pm1heart_2019
 
-erase "`datapath'\version02\2-working\pm1_asp24h_heart_ar.dta"
+//erase "`datapath'\version02\2-working\pm1_asp24h_heart_ar.dta"
 save "`datapath'\version02\2-working\pm1_asp24h_heart" ,replace
 
 restore
@@ -701,6 +702,7 @@ tab ecgste sex if year==2020 & diagnosis==2 ,m
 ** 48/51 reperfusions were STEMI 
 ** 48/103 STEMIs by ecg result were reperfused
 
+tab repertype if year==2020
 
 ** JC update: Save these results as a dataset for reporting Table 1.6
 preserve
@@ -854,7 +856,212 @@ save "`datapath'\version02\2-working\pm2_stemi_heart" ,replace
 
 restore
 
+*/
 
+/* 
+	JC 17mar2022: PM3 was missing code in 2020 analysis dofile so code for below Table 1.7 Timings 
+	was taken from 2019 analysis dofile: 1_heart_cvd_median_times.do, adjusted for 2017-2019 and written for 2020.
+	
+	- Median time from scene to arrival at A&E
+	- Median time from admission to first ECG
+	- Median time from onset to fibrinolysis
+*/
+
+
+****************************************
+**PM3: Time from scene to arrival at A&E  
+************************2***0****2***0**
+
+*************************************************
+** 2017 PICK-UP  from scene to Hospital Arrival
+*************************************************
+/* 
+	JC 17mar2022 made some changes to how this is calculated as AH was using time variable 
+	to generate minutes for this PM3 timing but more accurate to use datetime variable 
+	since cases where from scene was before midnight of one day and 
+	admission was after midnight the next day would be incorrectly calculated.
+*/
+//preserve
+** Remove non-2017 cases
+drop if year!=2017 //4327 deleted
+
+** Check for and remove cases wherein AMI occurred after admission to hospital
+count if year==2017 & dom>doh //8
+list record_id doh dom locami olocami initdiag oadmhdx* ambulance if year==2017 & dom>doh
+list record_id if year==2017 & dom>doh
+drop if (record_id=="20171089" | record_id=="20171658" | record_id=="20171888" | record_id=="20172102" | record_id=="2017871" | record_id=="2017890" | record_id=="2017893" | record_id=="2017981") //8 deleted
+
+** Check for and remove cases that were not abstracted
+count if year==2017 & abstracted!=1 //189
+drop if year==2017 & abstracted!=1 //189 deleted
+
+** Create variable to assess timing (AH's code)
+/*
+gen mins_ambhosp=round(minutes(round(t_hosp-frmscnt))) if year==2017 & (t_hosp!=. & frmscnt!=.)
+replace mins_ambhosp=31 if pid==1922
+replace mins_ambhosp=13 if pid==519 (JC 17mar2022: this should be 35 mins not 13)
+gen hrs_ambhosp=(mins_ambhosp/60)
+label var mins_ambhosp "Total minutes from patient pickup to hospital" 
+label var hrs_ambhosp "Total hours from patient pickup to hospital"
+
+tab mins_ambhosp if year==2017 & ambulance==1 ,miss
+tab hrs_ambhosp if year==2017 & ambulance==1,miss
+** 2 cases with negative information documented
+list pid mins_ambhosp hrs_ambhosp pid doh t_hosp frmscnd frmscnt if mins_ambhosp<1
+** will make corrections above.
+
+gen k=1
+
+table k, c(p50 mins_ambhosp p25 mins_ambhosp p75 mins_ambhosp min mins_ambhosp max mins_ambhosp)
+
+table k, c(p50 hrs_ambhosp p25 hrs_ambhosp p75 hrs_ambhosp min hrs_ambhosp max hrs_ambhosp)
+
+ameans hrs_ambhosp 
+ameans mins_ambhosp 
+
+list pid frmscnt t_hosp if year==2017 & (hrs_ambhosp==0 & mins_ambhosp==0)
+** none seen
+*/
+
+
+** JC 17mar2022 using a different method from AH for this as it's best to use datetime variable instead of time variable only when calculating timing
+** JC 17mar2022 cleaning check for if admission date after at scene or from scene dates as error noted from below minutes variable
+count if doh<frmscnd & doh!=. & frmscnd!=. //1
+count if doh<d_amb_atscn & doh!=. & d_amb_atscn!=. //1
+replace doh=frmscnd if record_id=="2017446" //1 change
+
+** First check if datetime variables for 'from scene' and 'admission' are not missing
+count if dohtoh==. & doh!=. & toh!=. //5
+list record_id doh toh dohtoh if dohtoh==. & doh!=. & toh!=.
+gen double dohtoh_pm3 = dhms(doh,hh(toh),mm(toh),ss(toh))
+format dohtoh_pm3 %tcNN/DD/CCYY_HH:MM:SS
+//format dohtoh_pm3 %tCDDmonCCYY_HH:MM:SS - when using this is changes the mm:ss part of the time
+//list record_id dohtoh_pm3 doh toh if dohtoh_pm3!=.
+
+count if frmscnt_dtime==. & frmscnd!=. & frmscnt!=. //0
+gen double frmscndt_pm3 = dhms(frmscnd,hh(frmscnt),mm(frmscnt),ss(frmscnt))
+format frmscndt_pm3 %tcNN/DD/CCYY_HH:MM:SS
+//list record_id frmscndt_pm3 frmscnd frmscnt if frmscndt_pm3!=.
+
+count if dohtoh_pm3==. //12
+count if frmscndt_pm3==. //120
+
+gen mins_ambhosp=round(minutes(round(dohtoh_pm3-frmscndt_pm3))) if (dohtoh_pm3!=. & frmscndt_pm3!=.)
+replace mins_ambhosp=round(minutes(round(t_hosp-frmscnt))) if mins_ambhosp==. & (t_hosp!=. & frmscnt!=.) //0 changes
+count if mins_ambhosp<0 //0 - checking to ensure this has been correctly generated
+count if mins_ambhosp==. //120 - ask NS if to drop these before calculating minutes for PM3 Timing since these are missing datetime so will automatically be missing
+stop
+gen hrs_ambhosp=(mins_ambhosp/60)
+label var mins_ambhosp "Total minutes from patient pickup to hospital" 
+label var hrs_ambhosp "Total hours from patient pickup to hospital"
+
+gen k=1
+
+** Below code runs in Stata 16 (used by AH) but not in Stata 17 (used by JC)
+//table k, c(p50 mins_door2needle p25 mins_door2needle p75 mins_door2needle min mins_door2needle max mins_door2needle)
+//table k, c(p50 hrs_door2needle p25 hrs_door2needle p75 hrs_door2needle min hrs_door2needle max hrs_door2needle)
+
+ameans mins_ambhosp
+ameans hrs_ambhosp
+
+//table k, c(p50 hrs_door2needle p25 hrs_door2needle p75 hrs_door2needle min hrs_door2needle max hrs_door2needle)
+** 1.7 hours seen - 1 hr 42 mins
+
+** This code will run in Stata 17
+table k, stat(q2 mins_ambhosp) stat(q1 mins_ambhosp) stat(q3 mins_ambhosp) stat(min mins_ambhosp) stat(max mins_ambhosp)
+table k, stat(q2 hrs_ambhosp) stat(q1 hrs_ambhosp) stat(q3 hrs_ambhosp) stat(min hrs_ambhosp) stat(max hrs_ambhosp)
+
+
+restore
+
+*************************************************
+** 2018 PICK-UP  from scene to Hospital Arrival
+*************************************************
+list pid doh dom locami olocami initdiag oadmhdx* ambulance if year==2018 & dom>doh
+preserve
+drop if (pid==1000| pid==1868)
+drop if year==2018 & abstracted!=1
+
+gen mins_ambhosp=round(minutes(round(t_hosp-frmscnt))) if year==2018 & (t_hosp!=. & frmscnt!=.) 
+replace mins_ambhosp=18 if pid==174
+replace mins_ambhosp=11 if pid==2081
+gen hrs_ambhosp=(mins_ambhosp/60)
+label var mins_ambhosp "Total minutes from patient pickup to hospital" 
+label var hrs_ambhosp "Total hours from patient pickup to hospital"
+
+tab mins_ambhosp if year==2018 & ambulance==1 ,miss
+tab hrs_ambhosp if year==2018 & ambulance==1,miss
+** 2 cases with negative information documented
+list pid mins_ambhosp hrs_ambhosp pid doh t_hosp frmscnd frmscnt if mins_ambhosp<1
+** 4  seen; 174 corrected above.
+**PID 1000 seems from scenen timing incorrect, timing after even some meds given timing but unsure what should be correct value, will drop
+** PID 1868 case has same time documented for from scene and arrival at hospital. so will drop.
+
+gen k=1
+
+table k, c(p50 mins_ambhosp p25 mins_ambhosp p75 mins_ambhosp min mins_ambhosp max mins_ambhosp)
+
+table k, c(p50 hrs_ambhosp p25 hrs_ambhosp p75 hrs_ambhosp min hrs_ambhosp max hrs_ambhosp)
+
+ameans hrs_ambhosp 
+ameans mins_ambhosp 
+
+list pid frmscnt t_hosp if year==2018 & (hrs_ambhosp==0 & mins_ambhosp==0)
+** none seen
+restore
+
+*************************************************
+** 2019 PICK-UP  from scene to Hospital Arrival
+*************************************************
+list pid doh dom locami olocami initdiag oadmhdx* ambulance if year==2019 & dom>doh
+preserve
+drop if ( pid==89| pid==1737 | pid==1674 | pid==1224 )
+drop if year==2019 & abstracted!=1
+
+gen mins_ambhosp=round(minutes(round(t_hosp-frmscnt))) if year==2019 & (t_hosp!=. & frmscnt!=.) 
+replace mins_ambhosp=18 if pid==174
+replace mins_ambhosp=11 if pid==2081
+gen hrs_ambhosp=(mins_ambhosp/60)
+label var mins_ambhosp "Total minutes from patient pickup to hospital" 
+label var hrs_ambhosp "Total hours from patient pickup to hospital"
+
+tab mins_ambhosp if year==2019 & ambulance==1 ,miss
+tab hrs_ambhosp if year==2019 & ambulance==1,miss
+** 2 cases with negative information documented
+list pid gidcf mins_ambhosp hrs_ambhosp pid doh t_hosp frmscnd frmscnt if mins_ambhosp<1
+** 4  seen; 1224, 1674, 1737, 89 corrected above.
+**PID 1000 seems from scenen timing incorrect, timing after even some meds given timing but unsure what should be correct value, will drop
+** PID 1868 case has same time documented for from scene and arrival at hospital. so will drop.
+
+gen k=1
+
+table k, c(p50 mins_ambhosp p25 mins_ambhosp p75 mins_ambhosp min mins_ambhosp max mins_ambhosp)
+
+table k, c(p50 hrs_ambhosp p25 hrs_ambhosp p75 hrs_ambhosp min hrs_ambhosp max hrs_ambhosp)
+
+ameans hrs_ambhosp 
+ameans mins_ambhosp 
+
+list pid frmscnt t_hosp if year==2019 & (hrs_ambhosp==0 & mins_ambhosp==0)
+** none seen
+restore
+
+***************************************
+**PM3: Time from admission to first ECG  
+************************2***0****2***0*
+
+
+
+******************************************************************
+**PM3: STEMI pts onset2needle time for those who were thrombolysed
+************************2***0*******2******0**********************
+
+
+
+
+
+stop
+** JC 17mar2022: Below was the only code for PM3 in the 2020 analysis dofile
 
 **********************************************************************
 **PM3: STEMI pts door2needle time for those who were thrombolysed
@@ -1060,7 +1267,7 @@ save "`datapath'\version02\2-working\pm3_door2needle_heart" ,replace
 
 restore
 
-
+stop
 **********************************************************************
 **PM4: PTs who received ECHO before discharge
 ************************2***0*******2******0**************************
@@ -1161,6 +1368,14 @@ tab aspdis if year==2020
 tab vstatus if  abstracted==1 & year==2020
 ** Of those discharged( 222), 184 had aspirin at discharge.
 dis 184/222  //83%
+
+** JC 17mar2022: per discussion with NS, check for cases wherein [aspdis]!=yes/at discharge but antiplatelets [pladis]=yes/at discharge and same for aspirin used chronically [aspchr]
+tab pladis if year==2020 & (aspdis==99|aspdis==2)
+tab aspchr if year==2020 & (aspdis==99|aspdis==2)
+bysort year :tab pladis if aspdis==99|aspdis==2
+bysort year :tab aspchr if aspdis==99|aspdis==2
+bysort year :tab aspdis pladis
+bysort year :tab aspdis aspchr
 
 ** JC update: Save these results as a dataset for reporting PM5 "Documented aspirin prescribed at discharge"
 preserve
