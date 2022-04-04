@@ -4,7 +4,7 @@
     //  project:                BNR-Heart
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      15-FEB-2022
-    // 	date last modified      17-MAR-2022
+    // 	date last modified      04-APR-2022
     //  algorithm task          Creating MS Word document with statistical + figure outputs for 2020 annual report
     //  status                  Pending
     //  objective               To have methods, tables, figures and text in an easy-to-use format for the report writer
@@ -36,9 +36,9 @@
 ** HEADER -----------------------------------------------------
 
 
-*************************
-**  SUMMARY STATISTICS **
-*************************
+*********************************
+**  SUMMARY STATISTICS - HEART **
+*********************************
 ** Annual report: Table 1.1
 ** Load the heart cleaned dataset AH used in 1.0_heart_cvd_analysis.do
 use "`datapath'\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022)", clear
@@ -153,7 +153,258 @@ keep id title hregtot_2020
 rename hregtot_2020 Myocardial_Infarction
 rename title Title
  
+** Create dataset with summary stats for heart (Table 1.1.)
+save "`datapath'\version02\3-output\summstats_heart", replace
 
+clear
+
+
+**********************************
+**  SUMMARY STATISTICS - STROKE **
+**********************************
+** Annual report: Table 1.1
+** Load the stroke cleaned dataset AH used (and JC updated) in 1.0_stroke_cvd_analysis.do
+use "`datapath'\version02\3-output\stroke_2009-2020_v9_names_Stata_v16_clean", clear
+
+count //7649
+
+** POPULATION
+gen poptot_2020=277814
+
+******************
+** STROKE (ALL) **
+******************
+
+** REGISTRATIONS (Number of registrations)
+egen sregtot_2020=count(anon_pid) if year==2020
+gen sregtotper_2020=sregtot_2020/poptot_2020*100
+format sregtotper_2020 %04.2f
+
+** HOSPITAL ADMISSIONS (Hospital admissions (percentage admitted))
+egen sreghosptot_2020=count(anon_pid) if year==2020 & hosp==1
+gen sreghosptotper_2020=sreghosptot_2020/sregtot_2020*100
+format sreghosptotper_2020 %02.0f
+
+** DECEASED AT 28-DAY (% Deceased at 28 day)
+egen sregdeadtot_2020=count(anon_pid) if abstracted==1 & year==2020 & f1vstatus==2
+gen sregdeadtotper_2020=sregdeadtot_2020/sreghosptot_2020*100
+format sregdeadtotper_2020 %02.0f
+
+** DCOs (% Cases who died + Death Certificate Only (DCO))
+egen sdcotot_2020=count(anon_pid) if abstracted==2 & year==2020
+gen sdcototper_2020=sdcotot_2020/sregtot_2020*100
+format sdcototper_2020 %02.0f
+
+** LOS (Median (range) length of hospital stay (days))
+**Median Legthn of stay in hospital (analysis performed in 1.0_stroke_cvd_analysis.do)
+append using "`datapath'\version02\2-working\los_stroke_all"
+
+** Re-arrange dataset
+gen id=_n
+keep id sregtot_2020 sregtotper_2020 sreghosptot_2020 sreghosptotper_2020 sregdeadtot_2020 sregdeadtotper_2020 sdcotot_2020 sdcototper_2020 medianlos_s range_lower_s range_upper_s
+
+gen title=1 if sregtot_2020!=. & id==5510
+order id title
+
+replace title=2 if sreghosptot_2020!=. & id==5512
+replace title=3 if sreghosptotper_2020!=. & id==5516
+replace title=4 if sregtotper_2020!=. & id==5511
+replace title=5 if sregdeadtotper_2020!=. & id==5521
+replace title=6 if sdcototper_2020!=. & id==5540
+replace title=7 if sdcotot_2020!=. & id==5541
+replace title=8 if medianlos_s!=. & id==7650
+
+expand=2 in 7650, gen (medianlos_s_dup1)
+replace id=7650 if medianlos_s_dup1==1
+replace title=9 if medianlos_s_dup1==1
+expand=2 in 7650, gen (medianlos_s_dup2)
+replace id=7650 if medianlos_s_dup2==1
+replace title=10 if medianlos_s_dup2==1
+
+label define title_lab 1 "Number of registrations(1)" 2 "Hospital admissions (percentage admitted)(2)" 3 "percentage admitted" 4 "Rate per population(3)" 5 "% Deceased at 28 day(4)" 6 "% Cases who died" 7 "Death Certificate Only (DCO)(5)" 8 "Median (range) length of hospital stay (days)(6)" 9 "Range (lower) length of hospital stay (days)" 10 "Range (upper) length of hospital stay (days)" ,modify
+label values title title_lab
+label var title "Title"
+
+*-------------------------------------------------------------------------------
+
+tab title ,m
+drop if title==. // deleted
+drop sregdeadtot_2020 medianlos_s_dup1 medianlos_s_dup2
+sort title
+drop id
+gen id=_n
+order id title sregtot_2020
+
+//tostring poptot_2020 ,replace
+tostring sregtot_2020 ,replace
+tostring sreghosptot_2020 ,replace
+gen sreghosptotper_2020_1=string(sreghosptotper_2020, "%02.0f")
+drop sreghosptotper_2020
+rename sreghosptotper_2020_1 sreghosptotper_2020
+gen sregtotper_2020_1=string(sregtotper_2020, "%04.2f")
+drop sregtotper_2020
+rename sregtotper_2020_1 sregtotper_2020
+gen sregdeadtotper_2020_1=string(sregdeadtotper_2020, "%02.0f")
+drop sregdeadtotper_2020
+rename sregdeadtotper_2020_1 sregdeadtotper_2020
+gen sdcototper_2020_1=string(sdcototper_2020, "%02.0f")
+drop sdcototper_2020
+rename sdcototper_2020_1 sdcototper_2020
+tostring sdcotot_2020 ,replace
+tostring medianlos_s ,replace
+tostring range_lower_s ,replace
+tostring range_upper_s ,replace
+
+replace sregtot_2020=sreghosptot_2020 if id==2
+replace sregtot_2020=sreghosptotper_2020 if id==3
+replace sregtot_2020=sregtotper_2020 if id==4
+replace sregtot_2020=sregdeadtotper_2020 if id==5
+replace sregtot_2020=sdcototper_2020 if id==6
+replace sregtot_2020=sdcotot_2020 if id==7
+replace sregtot_2020=medianlos_s if id==8
+replace sregtot_2020=range_lower_s if id==9
+replace sregtot_2020=range_upper_s if id==10
+
+gen medianrange_s=medianlos_s+" "+"("+range_lower_s+" "+"-"+" "+range_upper_s+")"
+replace sregtot_2020=medianrange_s if id==8
+
+gen hospadmpercent_s=sreghosptot_2020+" "+"("+sreghosptotper_2020+"%"+")"
+replace sregtot_2020=hospadmpercent_s if id==2
+drop if id==3|id==9|id==10
+drop id
+gen id=_n
+order id title sregtot_2020
+
+keep id title sregtot_2020
+rename sregtot_2020 Stroke_all
+rename title Title
+
+** Create dataset with summary stats for stroke (all) (Table 1.1.)
+save "`datapath'\version02\3-output\summstats_stroke_all", replace
+clear
+
+*************************
+** STROKE (FIRST EVER) **
+*************************
+** Annual report: Table 1.1
+** Load the stroke cleaned dataset AH used (and JC updated) in 1.0_stroke_cvd_analysis.do
+use "`datapath'\version02\3-output\stroke_2009-2020_v9_names_Stata_v16_clean", clear
+
+count //7649
+
+** POPULATION
+gen poptot_2020=277814
+
+** REGISTRATIONS (Number of registrations)
+egen fesregtot_2020=count(anon_pid) if year==2020 & np==1
+gen fesregtotper_2020=fesregtot_2020/poptot_2020*100
+format fesregtotper_2020 %04.2f
+
+** HOSPITAL ADMISSIONS (Hospital admissions (percentage admitted))
+egen fesreghosptot_2020=count(anon_pid) if year==2020 & hosp==1 & np==1
+gen fesreghosptotper_2020=fesreghosptot_2020/fesregtot_2020*100
+format fesreghosptotper_2020 %02.0f
+
+** DECEASED AT 28-DAY (% Deceased at 28 day)
+egen fesregdeadtot_2020=count(anon_pid) if abstracted==1 & year==2020 & f1vstatus==2 & np==1
+gen fesregdeadtotper_2020=fesregdeadtot_2020/fesreghosptot_2020*100
+format fesregdeadtotper_2020 %02.0f
+
+** DCOs (% Cases who died + Death Certificate Only (DCO))
+egen fesdcotot_2020=count(anon_pid) if abstracted==2 & year==2020 & np==1
+gen fesdcototper_2020=fesdcotot_2020/fesregtot_2020*100
+format fesdcototper_2020 %02.0f
+
+** LOS (Median (range) length of hospital stay (days))
+**Median Legthn of stay in hospital (analysis performed in 1.0_stroke_cvd_analysis.do)
+append using "`datapath'\version02\2-working\los_stroke_fes"
+
+** Re-arrange dataset
+gen id=_n
+keep id fesregtot_2020 fesregtotper_2020 fesreghosptot_2020 fesreghosptotper_2020 fesregdeadtot_2020 fesregdeadtotper_2020 fesdcotot_2020 fesdcototper_2020 medianlos_fes range_lower_fes range_upper_fes
+
+stop
+gen title=1 if fesregtot_2020!=. & id==5513
+order id title
+
+replace title=2 if fesreghosptot_2020!=. & id==5514
+replace title=3 if fesreghosptotper_2020!=. & id==5518
+replace title=4 if fesregtotper_2020!=. & id==5519
+replace title=5 if fesregdeadtotper_2020!=. & id==5539
+replace title=6 if fesdcototper_2020!=. & id==5536
+replace title=7 if fesdcotot_2020!=. & id==5566
+replace title=8 if medianlos_fes!=. & id==7650
+
+expand=2 in 7650, gen (medianlos_fes_dup1)
+replace id=7650 if medianlos_fes_dup1==1
+replace title=9 if medianlos_fes_dup1==1
+expand=2 in 7650, gen (medianlos_fes_dup2)
+replace id=7650 if medianlos_fes_dup2==1
+replace title=10 if medianlos_fes_dup2==1
+
+label define title_lab 1 "Number of registrations(1)" 2 "Hospital admissions (percentage admitted)(2)" 3 "percentage admitted" 4 "Rate per population(3)" 5 "% Deceased at 28 day(4)" 6 "% Cases who died" 7 "Death Certificate Only (DCO)(5)" 8 "Median (range) length of hospital stay (days)(6)" 9 "Range (lower) length of hospital stay (days)" 10 "Range (upper) length of hospital stay (days)" ,modify
+label values title title_lab
+label var title "Title"
+
+*-------------------------------------------------------------------------------
+
+tab title ,m
+drop if title==. //4797 deleted
+drop sregdeadtot_2020 medianlos_s_dup1 medianlos_s_dup2
+sort title
+drop id
+gen id=_n
+order id title sregtot_2020
+
+//tostring poptot_2020 ,replace
+tostring sregtot_2020 ,replace
+tostring sreghosptot_2020 ,replace
+gen sreghosptotper_2020_1=string(sreghosptotper_2020, "%02.0f")
+drop sreghosptotper_2020
+rename sreghosptotper_2020_1 sreghosptotper_2020
+gen sregtotper_2020_1=string(sregtotper_2020, "%04.2f")
+drop sregtotper_2020
+rename sregtotper_2020_1 sregtotper_2020
+gen sregdeadtotper_2020_1=string(sregdeadtotper_2020, "%02.0f")
+drop sregdeadtotper_2020
+rename sregdeadtotper_2020_1 sregdeadtotper_2020
+gen sdcototper_2020_1=string(sdcototper_2020, "%02.0f")
+drop sdcototper_2020
+rename sdcototper_2020_1 sdcototper_2020
+tostring sdcotot_2020 ,replace
+tostring medianlos_s ,replace
+tostring range_lower_s ,replace
+tostring range_upper_s ,replace
+
+replace sregtot_2020=sreghosptot_2020 if id==2
+replace sregtot_2020=sreghosptotper_2020 if id==3
+replace sregtot_2020=sregtotper_2020 if id==4
+replace sregtot_2020=sregdeadtotper_2020 if id==5
+replace sregtot_2020=sdcototper_2020 if id==6
+replace sregtot_2020=sdcotot_2020 if id==7
+replace sregtot_2020=medianlos_s if id==8
+replace sregtot_2020=range_lower_s if id==9
+replace sregtot_2020=range_upper_s if id==10
+
+gen medianrange_s=medianlos_s+" "+"("+range_lower_s+" "+"-"+" "+range_upper_s+")"
+replace sregtot_2020=medianrange_s if id==8
+
+gen hospadmpercent_s=sreghosptot_2020+" "+"("+sreghosptotper_2020+"%"+")"
+replace sregtot_2020=hospadmpercent_s if id==2
+drop if id==3|id==9|id==10
+drop id
+gen id=_n
+order id title sregtot_2020
+
+keep id title sregtot_2020
+rename sregtot_2020 Stroke_first_ever
+rename title Title
+
+** Create dataset with summary stats for stroke (first ever) (Table 1.1.)
+save "`datapath'\version02\3-output\summstats_stroke_fes", replace
+
+append using...
+stop
 
 preserve
 				****************************
@@ -188,22 +439,25 @@ putdocx textblock end
 putdocx paragraph, halign(center)
 putdocx text ("Methods"), bold font(Helvetica,10,"blue")
 putdocx textblock begin
-(1) Incidence dataset used for heart analyses: "p116\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022)") - Note: one record with unknown sex for 2018 case was corrected and other corrections to be done were noted but not performed in light of pending CVD DM re-engineer process.
+(1) Incidence dataset used for heart analyses: "p116\version02\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022)" - Note: one record with unknown sex for 2018 case was corrected and other corrections to be done were noted but not performed in light of pending CVD DM re-engineer process.
 putdocx textblock end
 putdocx textblock begin
-(2) Population datasets used for heart analyses: WPP populations generated for each year from 2010-2020 (see: sync-stata-statadofiles-datareview-2019-pop_cmpile) + ("p116\version02\3-output\pop_wpp_yyyy-10")
+(2) Incidence dataset used for stroke analyses: "p116\version02\3-output\stroke_2009-2020_v9_names_Stata_v16_clean".
+putdocx textblock end
+putdocx textblock begin
+(3) Population datasets used for heart and stroke analyses: WPP populations generated for each year from 2010-2020 (see: sync-stata-statadofiles-datareview-2019-pop_cmpile) + ("p116\version02\3-output\pop_wpp_yyyy-10")
 putdocx textblock end
 putdocx textblock begin
 The above population datasets were used in conjunction with this WHO dataset when using distrate for ASIRs and ASMRs: "p116\version02\3-output\who2000_10-2".
 putdocx textblock end
 putdocx textblock begin
-(3) Dofiles used for heart analyses: VS Code branch 2020AnnualReport for p116. Each dofile used in the below tables and outputs is listed below each title. 
+(4) Dofiles used for heart and stroke analyses: VS Code branch 2020AnnualReport for p116. Each dofile used in the below tables and outputs is listed below each title. 
 putdocx textblock end
 
 
 putdocx pagebreak
 putdocx paragraph, style(Heading1)
-putdocx text ("Summary Statistics (Dofile: 1.0_heart_cvd_analysis.do)"), bold
+putdocx text ("Summary Statistics (Dofile: 1.0_heart_cvd_analysis.do + 1.0_stroke_cvd_analysis.do)"), bold
 putdocx paragraph, halign(center)
 putdocx text ("Table 1.1 Summary Statistics for BNR-CVD, 2020 (Population=277,814)"), bold font(Helvetica,10,"blue")
 
@@ -216,12 +470,32 @@ putdocx textblock begin
 putdocx textblock end
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV10_`listdate'.docx", replace
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV11_`listdate'.docx", replace
 putdocx clear
 
+save "`datapath'\version02\3-output\summstats_heart+stroke", replace
 restore
 
 clear
+
+stop
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 preserve
 use "`datapath'\version02\2-working\ASIRs_heart", clear
@@ -258,7 +532,7 @@ putdocx table tbl1(1,2), bold shading(lightgray)
 putdocx table tbl1(1,3), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV10_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV11_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -285,7 +559,7 @@ putdocx table tbl1(1,2), bold shading(lightgray)
 putdocx table tbl1(1,3), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV10_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV11_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -316,7 +590,7 @@ putdocx table tbl1(1,5), bold shading(lightgray)
 putdocx table tbl1(1,6), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV10_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV11_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -345,7 +619,7 @@ putdocx table tbl1(1,5), bold shading(lightgray)
 putdocx table tbl1(1,6), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV10_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV11_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -363,7 +637,7 @@ putdocx paragraph
 putdocx image "`datapath'\version02\3-output\2020_age-sex graph_heart.png", width(5.5) height(2.0)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV10_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV11_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -380,7 +654,7 @@ putdocx paragraph
 putdocx image "`datapath'\version02\3-output\2019_age-sex graph_heart.png", width(5.5) height(2.0)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV10_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV11_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -395,7 +669,7 @@ putdocx paragraph
 putdocx image "`datapath'\version02\3-output\2018_age-sex graph_heart.png", width(5.5) height(2.0)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV10_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV11_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -455,7 +729,7 @@ putdocx text ("Totals –The total number and percentage of patients (men & wome
 
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV10_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV11_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -486,7 +760,7 @@ putdocx table tbl1(1,4), bold shading(lightgray)
 putdocx table tbl1(1,5), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV10_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV11_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -524,7 +798,7 @@ putdocx table tbl1(1,10), bold shading(lightgray)
 putdocx table tbl1(1,11), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV10_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV11_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -552,7 +826,7 @@ putdocx table tbl1(1,1), bold shading(lightgray)
 putdocx table tbl1(1,2), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV10_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV11_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -604,7 +878,7 @@ putdocx text ("2020"), bold font(Helvetica,10,"blue")
 tab2docx aspact if year==2020
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV10_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV11_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -636,7 +910,7 @@ putdocx table tbl1(1,7), bold shading(lightgray)
 putdocx table tbl1(1,8), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV10_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV11_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -665,7 +939,7 @@ putdocx table tbl1(1,3), bold shading(lightgray)
 putdocx table tbl1(1,4), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV10_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV11_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -704,7 +978,7 @@ tab2docx decho if (sex==1 | sex==2) & decho==1
 
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV10_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV11_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -767,7 +1041,7 @@ putdocx text ("2020-Chronic Aspirin"), bold font(Helvetica,10,"blue")
 tab2docx aspchr if year==2020 & (aspdis==99|aspdis==2)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV10_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV11_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -796,7 +1070,7 @@ putdocx text ("2020"), bold font(Helvetica,10,"blue")
 tab2docx statdis if vstatus==1 & year==2020
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV10_`listdate'.docx", append
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV11_`listdate'.docx", append
 putdocx clear
 restore
 
