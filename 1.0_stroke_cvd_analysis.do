@@ -3,16 +3,16 @@ cls
 **  DO-FILE METADATA
     //  algorithm name          1.0_stroke_cvd_analysis.do
     //  project:                BNR Stroke
-    //  analysts:               Ashley HENRY
+    //  analysts:               Ashley HENRY and Jacqueline CAMPBELL
     //  date first created:     23-Feb-2022
-    //  date last modified:     04-Apr-2022
+    //  date last modified:     05-Apr-2022
 	//  analysis:               Stroke 2020 dataset for Annual Report
     //  algorithm task          Performing Stroke 2020 Data Analysis
     //  status:                 Pending
     //  objective:              To analyse data to calculate summary statistics and Crude Incidence Rates by year
     //  methods:1:              Run analysis on cleaned 2009-2020 BNR-S data.
 	//  version:                Version01 for weeks 01-52
-	//  support:                Natasha Sobers, Jacqueline Campbell and Ian R Hambleton  
+	//  support:                Natasha Sobers and Ian R Hambleton  
 
     ** General algorithm set-up
     version 17.0
@@ -51,6 +51,28 @@ count
 
 ** JC added sex check below on 04apr2022 as heart had a case missing sex
 tab sex ,m //none missing
+
+** JC added age check below on 05apr2022 as age+gender stratified graphs showed 692 cases for 2020 instead of 700
+tab age ,m //12 missing - 2 from 2016; 2 from 2017 and 8 from 2020.
+//no first or last names for 2016 and 2017 cases but will correct 2020 cases as these have names
+//Corrected missing age and age_10 variables for 2020 cases using the field in CF form [Age at CF (DA to enter)] from BNRCVD_CORE REDCap db - these were missing DOB
+replace age=69 if anon_pid==5589
+replace age=87 if anon_pid==5703
+replace age=61 if anon_pid==6266
+replace age=60 if anon_pid==6331
+replace age=52 if anon_pid==6556
+replace age=79 if anon_pid==6892
+replace age=54 if anon_pid==6981
+replace age=65 if anon_pid==7535
+
+replace age_10=7 if anon_pid==5589
+replace age_10=9 if anon_pid==5703
+replace age_10=6 if anon_pid==6266
+replace age_10=6 if anon_pid==6331
+replace age_10=5 if anon_pid==6556
+replace age_10=8 if anon_pid==6892
+replace age_10=5 if anon_pid==6981
+replace age_10=7 if anon_pid==7535
 
 ** JC 04apr2022: This stroke dataset is missing PID variable [anon_pid] in 2,140 cases so need to create it.
 sort anon_pid

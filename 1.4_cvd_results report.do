@@ -4,7 +4,7 @@
     //  project:                BNR-Heart
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      15-FEB-2022
-    // 	date last modified      04-APR-2022
+    // 	date last modified      05-APR-2022
     //  algorithm task          Creating MS Word document with statistical + figure outputs for 2020 annual report
     //  status                  Pending
     //  objective               To have methods, tables, figures and text in an easy-to-use format for the report writer
@@ -228,7 +228,7 @@ label var title "Title"
 *-------------------------------------------------------------------------------
 
 tab title ,m
-drop if title==. // deleted
+drop if title==. //7642 deleted
 drop sregdeadtot_2020 medianlos_s_dup1 medianlos_s_dup2
 sort title
 drop id
@@ -323,16 +323,18 @@ append using "`datapath'\version02\2-working\los_stroke_fes"
 gen id=_n
 keep id fesregtot_2020 fesregtotper_2020 fesreghosptot_2020 fesreghosptotper_2020 fesregdeadtot_2020 fesregdeadtotper_2020 fesdcotot_2020 fesdcototper_2020 medianlos_fes range_lower_fes range_upper_fes
 
-stop
-gen title=1 if fesregtot_2020!=. & id==5513
+
+gen title=1 if fesregtot_2020!=. & id==5510
 order id title
 
-replace title=2 if fesreghosptot_2020!=. & id==5514
-replace title=3 if fesreghosptotper_2020!=. & id==5518
-replace title=4 if fesregtotper_2020!=. & id==5519
-replace title=5 if fesregdeadtotper_2020!=. & id==5539
-replace title=6 if fesdcototper_2020!=. & id==5536
-replace title=7 if fesdcotot_2020!=. & id==5566
+replace title=2 if fesreghosptot_2020!=. & id==5516
+replace title=3 if fesreghosptotper_2020!=. & id==5521
+replace title=4 if fesregtotper_2020!=. & id==5535
+replace title=5 if fesregdeadtotper_2020!=. & id==5550
+//replace title=6 if fesdcototper_2020!=. & id==5536
+replace title=6 if id==5560
+//replace title=7 if fesdcotot_2020!=. & id==5566
+replace title=7 if id==5564
 replace title=8 if medianlos_fes!=. & id==7650
 
 expand=2 in 7650, gen (medianlos_fes_dup1)
@@ -349,62 +351,74 @@ label var title "Title"
 *-------------------------------------------------------------------------------
 
 tab title ,m
-drop if title==. //4797 deleted
-drop sregdeadtot_2020 medianlos_s_dup1 medianlos_s_dup2
+drop if title==. //7642 deleted
+drop fesregdeadtot_2020 medianlos_fes_dup1 medianlos_fes_dup2
 sort title
 drop id
 gen id=_n
-order id title sregtot_2020
+order id title fesregtot_2020
 
 //tostring poptot_2020 ,replace
-tostring sregtot_2020 ,replace
-tostring sreghosptot_2020 ,replace
-gen sreghosptotper_2020_1=string(sreghosptotper_2020, "%02.0f")
-drop sreghosptotper_2020
-rename sreghosptotper_2020_1 sreghosptotper_2020
-gen sregtotper_2020_1=string(sregtotper_2020, "%04.2f")
-drop sregtotper_2020
-rename sregtotper_2020_1 sregtotper_2020
-gen sregdeadtotper_2020_1=string(sregdeadtotper_2020, "%02.0f")
-drop sregdeadtotper_2020
-rename sregdeadtotper_2020_1 sregdeadtotper_2020
-gen sdcototper_2020_1=string(sdcototper_2020, "%02.0f")
-drop sdcototper_2020
-rename sdcototper_2020_1 sdcototper_2020
-tostring sdcotot_2020 ,replace
-tostring medianlos_s ,replace
-tostring range_lower_s ,replace
-tostring range_upper_s ,replace
+tostring fesregtot_2020 ,replace
+tostring fesreghosptot_2020 ,replace
+gen fesreghosptotper_2020_1=string(fesreghosptotper_2020, "%02.0f")
+drop fesreghosptotper_2020
+rename fesreghosptotper_2020_1 fesreghosptotper_2020
+gen fesregtotper_2020_1=string(fesregtotper_2020, "%04.2f")
+drop fesregtotper_2020
+rename fesregtotper_2020_1 fesregtotper_2020
+gen fesregdeadtotper_2020_1=string(fesregdeadtotper_2020, "%02.0f")
+drop fesregdeadtotper_2020
+rename fesregdeadtotper_2020_1 fesregdeadtotper_2020
+gen fesdcototper_2020_1=string(fesdcototper_2020, "%02.0f")
+drop fesdcototper_2020
+rename fesdcototper_2020_1 fesdcototper_2020
+tostring fesdcotot_2020 ,replace
+tostring medianlos_fes ,replace
+tostring range_lower_fes ,replace
+tostring range_upper_fes ,replace
 
-replace sregtot_2020=sreghosptot_2020 if id==2
-replace sregtot_2020=sreghosptotper_2020 if id==3
-replace sregtot_2020=sregtotper_2020 if id==4
-replace sregtot_2020=sregdeadtotper_2020 if id==5
-replace sregtot_2020=sdcototper_2020 if id==6
-replace sregtot_2020=sdcotot_2020 if id==7
-replace sregtot_2020=medianlos_s if id==8
-replace sregtot_2020=range_lower_s if id==9
-replace sregtot_2020=range_upper_s if id==10
+replace fesregtot_2020=fesreghosptot_2020 if id==2
+replace fesregtot_2020=fesreghosptotper_2020 if id==3
+replace fesregtot_2020=fesregtotper_2020 if id==4
+replace fesregtot_2020=fesregdeadtotper_2020 if id==5
+replace fesregtot_2020=fesdcototper_2020 if id==6
+replace fesregtot_2020=fesdcotot_2020 if id==7
+replace fesregtot_2020=medianlos_fes if id==8
+replace fesregtot_2020=range_lower_fes if id==9
+replace fesregtot_2020=range_upper_fes if id==10
 
-gen medianrange_s=medianlos_s+" "+"("+range_lower_s+" "+"-"+" "+range_upper_s+")"
-replace sregtot_2020=medianrange_s if id==8
+gen medianrange_fes=medianlos_fes+" "+"("+range_lower_fes+" "+"-"+" "+range_upper_fes+")"
+replace fesregtot_2020=medianrange_fes if id==8
 
-gen hospadmpercent_s=sreghosptot_2020+" "+"("+sreghosptotper_2020+"%"+")"
-replace sregtot_2020=hospadmpercent_s if id==2
+gen hospadmpercent_fes=fesreghosptot_2020+" "+"("+fesreghosptotper_2020+"%"+")"
+replace fesregtot_2020=hospadmpercent_fes if id==2
 drop if id==3|id==9|id==10
+replace fesregtot_2020="n/a" if id==7
 drop id
 gen id=_n
-order id title sregtot_2020
+order id title fesregtot_2020
 
-keep id title sregtot_2020
-rename sregtot_2020 Stroke_first_ever
+keep id title fesregtot_2020
+rename fesregtot_2020 Stroke_first_ever
 rename title Title
 
 ** Create dataset with summary stats for stroke (first ever) (Table 1.1.)
 save "`datapath'\version02\3-output\summstats_stroke_fes", replace
 
-append using...
-stop
+merge 1:1 id using "`datapath'\version02\3-output\summstats_heart"
+drop _merge
+merge 1:1 id using "`datapath'\version02\3-output\summstats_stroke_all"
+drop _merge id
+order Title Myocardial_Infarction Stroke_all Stroke_first_ever
+
+** Remove datasets to save on SharePoint storage space
+erase "`datapath'\version02\3-output\summstats_heart.dta"
+erase "`datapath'\version02\3-output\summstats_stroke_all.dta"
+erase "`datapath'\version02\3-output\summstats_stroke_fes.dta"
+
+** Create dataset with summary stats for stroke (first ever) (Table 1.1.)
+save "`datapath'\version02\2-working\summstats", replace
 
 preserve
 				****************************
@@ -461,9 +475,11 @@ putdocx text ("Summary Statistics (Dofile: 1.0_heart_cvd_analysis.do + 1.0_strok
 putdocx paragraph, halign(center)
 putdocx text ("Table 1.1 Summary Statistics for BNR-CVD, 2020 (Population=277,814)"), bold font(Helvetica,10,"blue")
 
-putdocx table tbl1 = data(Title Myocardial_Infarction), halign(center) varnames
+putdocx table tbl1 = data(Title Myocardial_Infarction Stroke_all Stroke_first_ever), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
 putdocx table tbl1(1,2), bold shading(lightgray)
+putdocx table tbl1(1,3), bold shading(lightgray)
+putdocx table tbl1(1,4), bold shading(lightgray)
 
 putdocx textblock begin
 (1) Total numbers of persons who had events registered or entered into the BNR database; (2) Total number of hospital admissions as a proportion of registrations; (3) Total number of registrations as a proportion of the population; (4) Total number of patients as a proportion of hospital admission who were deceased 28 days after their event; (5) Total number of deaths collected from death registry as a proportion of registrations; (6) Median and range of length of hospital stay (in days).
@@ -473,30 +489,11 @@ local listdate = string( d(`c(current_date)'), "%dCYND" )
 putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV11_`listdate'.docx", replace
 putdocx clear
 
-save "`datapath'\version02\3-output\summstats_heart+stroke", replace
 restore
 
 clear
 
-stop
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+********************************************************* HEART *******************************************************************
 preserve
 use "`datapath'\version02\2-working\ASIRs_heart", clear
 drop percent asir ui_range
@@ -579,7 +576,7 @@ putdocx pagebreak
 putdocx paragraph, style(Heading2)
 putdocx text ("AMI: Age-standardised Incidence + Mortality Rates (Dofile: 1.1_heart_cvd_analysis.do)"), bold
 putdocx paragraph, halign(center)
-putdocx text ("Table 1.2 ASIRs (INCIDENCE) of men and women with acute MI or sudden cardiac death by year in Barbados. 2010-2020"), bold font(Helvetica,10,"blue")
+putdocx text ("Table 1.2 ASIRs (INCIDENCE) of men and women per 100,000 population with acute MI or sudden cardiac death by year in Barbados. 2010-2020"), bold font(Helvetica,10,"blue")
 
 putdocx table tbl1 = data(year sex number percent asir ui_range), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
@@ -608,7 +605,7 @@ putdocx pagebreak
 putdocx paragraph, style(Heading2)
 putdocx text ("AMI: Age-standardised Incidence + Mortality Rates (Dofile: 1.1_heart_cvd_analysis.do)"), bold
 putdocx paragraph, halign(center)
-putdocx text ("Table 1.2 ASMRs (MORATLITY) of men and women with acute MI or sudden cardiac death by year in Barbados. 2010-2020"), bold font(Helvetica,10,"blue")
+putdocx text ("Table 1.2 ASMRs (MORATLITY) of men and women per 100,000 population with acute MI or sudden cardiac death by year in Barbados. 2010-2020"), bold font(Helvetica,10,"blue")
 
 putdocx table tbl1 = data(year sex number percent asmr ui_range), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
@@ -1075,9 +1072,229 @@ putdocx clear
 restore
 
 clear
-stop
-//stroke 2020 outputs to be added to this dofile
 
+***************************************************** STROKE *************************************************************
+
+preserve
+use "`datapath'\version02\2-working\ASIRs_stroke", clear
+drop percent asir ui_range
+
+append using "`datapath'\version02\2-working\CIRs_total_stroke"
+
+replace sex=3 if sex==.
+replace number=totnumber if number==.
+drop totnumber
+
+label drop sex_
+label define sex_lab 1 "Female" 2 "Male" 3 "Total"
+label values sex sex_lab
+
+sort year sex
+save "`datapath'\version02\2-working\CIRs_stroke", replace
+drop cir
+
+putdocx clear
+putdocx begin
+
+putdocx pagebreak
+putdocx paragraph, style(Heading1)
+putdocx text ("Stroke: Burden"), bold
+putdocx paragraph, style(Heading2)
+putdocx text ("Stroke: Cases and Crude Incidence Rates (Dofile: 1.1_stroke_cvd_analysis.do)"), bold
+putdocx paragraph, halign(center)
+putdocx text ("Figure 2.1 Number of men and women with stroke by year in Barbados. 2010-2020"), bold font(Helvetica,10,"blue")
+
+putdocx table tbl1 = data(year sex number), halign(center) varnames
+putdocx table tbl1(1,1), bold shading(lightgray)
+putdocx table tbl1(1,2), bold shading(lightgray)
+putdocx table tbl1(1,3), bold shading(lightgray)
+
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV11_`listdate'.docx", append
+putdocx clear
+restore
+
+clear
+
+preserve
+use "`datapath'\version02\2-working\CIRs_stroke", clear
+
+drop number
+sort year sex
+
+putdocx clear
+putdocx begin
+
+putdocx pagebreak
+putdocx paragraph, style(Heading2)
+putdocx text ("Stroke: Cases and Crude Incidence Rates (Dofile: 1.1_stroke_cvd_analysis.do)"), bold
+putdocx paragraph, halign(center)
+putdocx text ("Figure 2.2 Crude incidence rate of men and women with stroke by year in Barbados. 2010-2020"), bold font(Helvetica,10,"blue")
+
+putdocx table tbl1 = data(year sex cir), halign(center) varnames
+putdocx table tbl1(1,1), bold shading(lightgray)
+putdocx table tbl1(1,2), bold shading(lightgray)
+putdocx table tbl1(1,3), bold shading(lightgray)
+
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV11_`listdate'.docx", append
+putdocx clear
+restore
+
+
+preserve
+use "`datapath'\version02\2-working\ASIRs_stroke", clear
+drop cir
+
+
+sort sex year
+//gsort -sex -year
+
+putdocx clear
+putdocx begin
+
+putdocx pagebreak
+putdocx paragraph, style(Heading2)
+putdocx text ("Stroke: Age-standardised Incidence + Mortality Rates (Dofile: 1.1_stroke_cvd_analysis.do)"), bold
+putdocx paragraph, halign(center)
+putdocx text ("Table 2.1 ASIRs (INCIDENCE) of men and women per 100,000 population with stroke by year in Barbados. 2010-2020"), bold font(Helvetica,10,"blue")
+
+putdocx table tbl1 = data(year sex number percent asir ui_range), halign(center) varnames
+putdocx table tbl1(1,1), bold shading(lightgray)
+putdocx table tbl1(1,2), bold shading(lightgray)
+putdocx table tbl1(1,3), bold shading(lightgray)
+putdocx table tbl1(1,4), bold shading(lightgray)
+putdocx table tbl1(1,5), bold shading(lightgray)
+putdocx table tbl1(1,6), bold shading(lightgray)
+
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV11_`listdate'.docx", append
+putdocx clear
+restore
+
+clear
+
+preserve
+use "`datapath'\version02\2-working\ASMRs_stroke", clear
+
+sort sex year
+
+putdocx clear
+putdocx begin
+
+putdocx pagebreak
+putdocx paragraph, style(Heading2)
+putdocx text ("Stroke: Age-standardised Incidence + Mortality Rates (Dofile: 1.1_stroke_cvd_analysis.do)"), bold
+putdocx paragraph, halign(center)
+putdocx text ("Table 2.1 ASMRs (MORATLITY) of men and women per 100,000 population with stroke by year in Barbados. 2010-2020"), bold font(Helvetica,10,"blue")
+
+putdocx table tbl1 = data(year sex number percent asmr ui_range), halign(center) varnames
+putdocx table tbl1(1,1), bold shading(lightgray)
+putdocx table tbl1(1,2), bold shading(lightgray)
+putdocx table tbl1(1,3), bold shading(lightgray)
+putdocx table tbl1(1,4), bold shading(lightgray)
+putdocx table tbl1(1,5), bold shading(lightgray)
+putdocx table tbl1(1,6), bold shading(lightgray)
+
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV11_`listdate'.docx", append
+putdocx clear
+restore
+
+preserve
+putdocx clear
+putdocx begin
+
+putdocx pagebreak
+putdocx paragraph, style(Heading2)
+putdocx text ("Stroke: Age and Gender Stratified Incidence Rates (Dofile: 1.1_stroke_cvd_analysis.do)"), bold
+putdocx paragraph, halign(center)
+putdocx text ("Figure 2.3a Age and gender stratified incidence rate per 100,000 population of stroke, Barbados, 2020 (N=700)"), bold font(Helvetica,10,"blue")
+putdocx paragraph
+
+putdocx image "`datapath'\version02\3-output\2020_age-sex graph_stroke.png", width(5.5) height(2.0)
+
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV11_`listdate'.docx", append
+putdocx clear
+restore
+
+clear
+
+preserve
+putdocx clear
+putdocx begin
+
+putdocx paragraph, halign(center)
+putdocx text ("Figure 2.3b Age and gender stratified incidence rate per 100,000 population of stroke, Barbados, 2019 (N=758)"), bold font(Helvetica,10,"blue")
+putdocx paragraph
+
+putdocx image "`datapath'\version02\3-output\2019_age-sex graph_stroke.png", width(5.5) height(2.0)
+
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV11_`listdate'.docx", append
+putdocx clear
+restore
+
+preserve
+putdocx clear
+putdocx begin
+
+putdocx paragraph, halign(center)
+putdocx text ("Figure 2.3c Age and gender stratified incidence rate per 100,000 population of stroke, Barbados, 2018 (N=682)"), bold font(Helvetica,10,"blue")
+putdocx paragraph
+
+putdocx image "`datapath'\version02\3-output\2018_age-sex graph_stroke.png", width(5.5) height(2.0)
+
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV11_`listdate'.docx", append
+putdocx clear
+restore
+
+
+preserve
+use "`datapath'\version02\2-working\subtypes_stroke", clear
+
+putdocx clear
+putdocx begin
+
+putdocx pagebreak
+putdocx paragraph, style(Heading2)
+putdocx text ("Stroke: Category/Subtypes (Dofile: 1.2_stroke_cvd_analysis.do)"), bold
+putdocx paragraph, halign(center)
+putdocx text ("Table 2.2 Stroke subtypes in Barbados, 2018, 2019 & 2020 "), bold font(Helvetica,10,"blue")
+
+qui sum total_abs_2018
+local sum : display %3.0f `r(sum)'
+putdocx text ("(N=`sum',"), bold font(Helvetica,10,"blue")
+qui sum total_abs_2019
+local sum : display %3.0f `r(sum)'
+putdocx text (" N=`sum',"), bold font(Helvetica,10,"blue")
+qui sum total_abs_2020
+local sum : display %3.0f `r(sum)'
+putdocx text (" N=`sum', respectively)"), bold font(Helvetica,10,"blue")
+
+putdocx table tbl1 = data(Stroke_Category num_f_2018 percent_f_2018 num_m_2018 percent_m_2018 num_f_2019 percent_f_2019 num_m_2019 percent_m_2019 num_f_2020 percent_f_2020 num_m_2020 percent_m_2020), halign(center) varnames
+putdocx table tbl1(1,1), bold shading(lightgray)
+putdocx table tbl1(1,2), bold shading(lightgray)
+putdocx table tbl1(1,3), bold shading(lightgray)
+putdocx table tbl1(1,4), bold shading(lightgray)
+putdocx table tbl1(1,5), bold shading(lightgray)
+putdocx table tbl1(1,6), bold shading(lightgray)
+putdocx table tbl1(1,7), bold shading(lightgray)
+putdocx table tbl1(1,8), bold shading(lightgray)
+putdocx table tbl1(1,9), bold shading(lightgray)
+putdocx table tbl1(1,10), bold shading(lightgray)
+putdocx table tbl1(1,11), bold shading(lightgray)
+putdocx table tbl1(1,12), bold shading(lightgray)
+putdocx table tbl1(1,13), bold shading(lightgray)
+
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV11_`listdate'.docx", append
+putdocx clear
+restore
+
+stop
 save "`datapath'\version02\2-working\2020_cvd_results" ,replace
 label data "BNR-CVD 2020 Analysis Outputs to MS Word"
 notes _dta :These data prepared for Natasha Sobers and Shelly-Ann Forde - 2020 annual report

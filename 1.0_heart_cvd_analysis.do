@@ -3,7 +3,7 @@ cls
 **  DO-FILE METADATA
     //  algorithm name          1.0_heart_cvd_analysis.do
     //  project:                BNR Heart
-    //  analysts:               Ashley HENRY
+    //  analysts:               Ashley HENRY and Jacqueline CAMPBELL
     //  date first created:     26-Jan-2022
     //  date last modified:     22-Feb-2022
 	//  analysis:               Heart 2020 dataset for Annual Report
@@ -12,7 +12,7 @@ cls
     //  objective:              To analyse data to calculate summary statistics and Crude Incidence Rates by year
     //  methods:1:              Run analysis on cleaned 2009-2020 BNR-H data.
 	//  version:                Version01 for weeks 01-52
-	//  support:                Natasha Sobers, Jacqueline Campbell and Ian R Hambleton  
+	//  support:                Natasha Sobers and Ian R Hambleton  
 
     ** General algorithm set-up
     version 17.0
