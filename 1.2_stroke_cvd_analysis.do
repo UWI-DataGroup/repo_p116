@@ -5,7 +5,7 @@ cls
     //  project:                BNR Stroke
     //  analysts:               Ashley HENRY and Jacqueline CAMPBELL
     //  date first created:     23-Feb-2022
-    //  date last modified:     05-Apr-2022
+    //  date last modified:     06-Apr-2022
 	//  analysis:               Stroke 2020 dataset for Annual Report
     //  algorithm task          Performing Stroke 2020 Data Analysis
     //  status:                 Pending
@@ -216,12 +216,13 @@ erase "`datapath'\version02\2-working\2018_subtypes_stroke.dta"
 erase "`datapath'\version02\2-working\2019_subtypes_stroke.dta"
 save "`datapath'\version02\2-working\subtypes_stroke" ,replace
 restore
-stop
+
 
 ******************************************
 ** TABLE 2.3: STROKE ssymS & SIGNS 2020 **
 ******************************************
 tab symp_slur if abstracted==1 & hosp==1 &  year==2020, miss
+tab symp_slur if abstracted==1 & year==2020, miss //JC added 06apr2022 as heart dofile only uses these options in the 'if' part of the code whereas AH includes 'hosp' in the 'if' condition
 
 tab symp_coma if abstracted==1 & hosp==1 &  year==2020, miss
 
@@ -266,13 +267,13 @@ tab cssym sex if abstracted==1 & hosp==1 &   year==2020
 ********************************** OTHER STROKE SYMPTOMS ************************************
 ** tab1 ossym*
 tab1 ossym if abstracted!=2 & year==2020, miss //561/700
-list hosp ossym1 ossym2 eligible if ossym==. & abstracted!=2 & year==2020 
+//list hosp ossym1 ossym2 eligible if ossym==. & abstracted!=2 & year==2020 
 // confirmed incomplete case.
 sort ossym1
 replace ossym1 = upper(rtrim(ltrim(itrim(ossym1))))
 replace ossym2 = upper(rtrim(ltrim(itrim(ossym2))))
 replace ossym3 = upper(rtrim(ltrim(itrim(ossym3))))
-list ossym1 ossym2 ossym3 if abstracted!=2 &( ossym1!="" | ossym2!="" | ossym3!="")
+//list ossym1 ossym2 ossym3 if abstracted!=2 &( ossym1!="" | ossym2!="" | ossym3!="")
 
 
 ** trying to tabulate the most common of these "other" hsyms going from the table
@@ -381,6 +382,154 @@ count if (regexm(ossym1, "DISORIENTED") | regexm(ossym2, "DISORIENTED") | ///
 		 & sex==2 & abstracted!=2 & year==2020 & ( ossym1!="" |  ossym2!=""| ossym3!="") // 26
 		 
 		 
+
+** JC update: Save these results as a dataset for reporting Table 2.3
+preserve
+tab cssym if year==2020 & abstracted==1
+count if abstracted==1 & year==2020 //563
+tab sex if abstracted==1 & year==2020
+/*
+        Sex |      Freq.     Percent        Cum.
+------------+-----------------------------------
+     Female |        288       51.15       51.15
+       Male |        275       48.85      100.00
+------------+-----------------------------------
+      Total |        563      100.00
+*/
+
+** Create variable to capture the highest count of the other symptom variable
+gen symp_oth=1 if (regexm(ossym1, "HEADACHE") | regexm(ossym2, "HEADACHE") | ///
+				  regexm(ossym3, "HEADACHE")) & abstracted!=2 & year==2020 & ///
+				  ( ossym1!="" |  ossym2!=""| ossym3!="")
+//103
+
+
+save "`datapath'\version02\2-working\symptoms_stroke" ,replace
+
+contract sex if abstracted==1 & year==2020 & symp_face==1
+gen ssym_ar=1
+save "`datapath'\version02\2-working\symptoms_stroke_ar" ,replace
+
+clear
+
+use "`datapath'\version02\2-working\symptoms_stroke" ,clear
+contract sex if abstracted==1 & year==2020 & symp_slur==1
+gen ssym_ar=2
+
+append using "`datapath'\version02\2-working\symptoms_stroke_ar"
+
+save "`datapath'\version02\2-working\symptoms_stroke_ar" ,replace
+
+clear
+
+use "`datapath'\version02\2-working\symptoms_stroke" ,clear
+contract sex if abstracted==1 & year==2020 & symp_coma==1
+gen ssym_ar=3
+
+append using "`datapath'\version02\2-working\symptoms_stroke_ar"
+
+save "`datapath'\version02\2-working\symptoms_stroke_ar" ,replace
+
+clear
+
+use "`datapath'\version02\2-working\symptoms_stroke" ,clear
+contract sex if abstracted==1 & year==2020 & symp_difswal==1
+gen ssym_ar=4
+
+append using "`datapath'\version02\2-working\symptoms_stroke_ar"
+
+save "`datapath'\version02\2-working\symptoms_stroke_ar" ,replace
+
+clear
+
+use "`datapath'\version02\2-working\symptoms_stroke" ,clear
+contract sex if abstracted==1 & year==2020 & symp_oth==1
+gen ssym_ar=5
+
+append using "`datapath'\version02\2-working\symptoms_stroke_ar"
+
+save "`datapath'\version02\2-working\symptoms_stroke_ar" ,replace
+
+clear
+
+** Create variables for totals for all patients (combined and separately for sex) with info for 2020
+use "`datapath'\version02\2-working\symptoms_stroke" ,clear
+egen totsympts=count(anon_pid) if abstracted==1 & year==2020
+egen totsympts_f=count(anon_pid) if abstracted==1 & year==2020 & sex==1
+egen totsympts_m=count(anon_pid) if abstracted==1 & year==2020 & sex==2
+gen ssym_ar=6
+collapse totsympts totsympts_f totsympts_m
+
+append using "`datapath'\version02\2-working\symptoms_stroke_ar"
+
+replace ssym_ar=6 if ssym_ar==.
+sort sex ssym_ar
+gen id=_n
+order id ssym_ar sex _freq totsympts
+fillmissing totsympts totsympts_f totsympts_m
+rename _freq number
+
+
+label define ssym_lab 1 "Unilateral Weakness" 2 "Difficulty speaking" 3 "Diminished responsiveness" 4 "Difficulty or inability to swallow" 5 "Headache" 6 "Total Patients" ,modify
+label values ssym_ar ssym_lab
+label var ssym_ar "Symptom"
+
+** Create variables for totals for each symptom
+gen number_total=sum(number) if ssym_ar==1
+replace number_total=sum(number) if ssym_ar==2
+replace number_total=sum(number) if ssym_ar==3
+replace number_total=sum(number) if ssym_ar==4
+replace number_total=sum(number) if ssym_ar==5
+replace number_total=. if sex==1
+
+** Create variables for % of totals for each symptom
+gen percent_total=number_tot/totsympts*100 if ssym_ar==1 & number_total!=.
+replace percent_total=number_tot/totsympts*100 if ssym_ar==2 & number_total!=.
+replace percent_total=number_tot/totsympts*100 if ssym_ar==3 & number_total!=.
+replace percent_total=number_tot/totsympts*100 if ssym_ar==4 & number_total!=.
+replace percent_total=number_tot/totsympts*100 if ssym_ar==5 & number_total!=.
+replace percent_total=round(percent_total,1.0)
+
+** Create variables for % of totals for each symptom by sex
+gen percent_female=number/totsympts_f*100 if sex==1
+replace percent_female=round(percent_female,1.0)
+
+gen percent_male=number/totsympts_m*100 if sex==2
+replace percent_male=round(percent_male,1.0)
+
+** Organize dataset to mirror layout of Table 1.3 of annual report
+order id ssym_ar sex number percent_female percent_male number_total percent_total totsympts totsympts_f totsympts_m 
+replace percent_female=percent_male if percent_female==. & ssym_ar!=6
+drop percent_male
+rename percent_female percent
+drop if ssym_ar==6
+replace number_total=number_total[_n+5] if number_total==.
+replace percent_total=percent_total[_n+5] if percent_total==.
+
+reshape wide ssym_ar number percent, i(id)  j(sex)
+rename ssym_ar1 ssym_ar
+rename number1 number_female
+rename percent1 percent_female
+rename number2 number_male
+rename percent2 percent_male
+replace number_male=number_male[_n+5] if number_male==.
+replace percent_male=percent_male[_n+5] if percent_male==.
+drop if id>5
+drop ssym_ar2
+
+label var number_female "Women #"
+label var percent_female "Women %"
+label var number_male "Men #"
+label var percent_male "Men %"
+label var number_total "Total #"
+label var percent_total "Total %"
+
+** Remove the temp database created above to reduce space used on SharePoint
+erase "`datapath'\version02\2-working\symptoms_stroke_ar.dta"
+save "`datapath'\version02\2-working\symptoms_stroke" ,replace
+restore
+
+
 		 
 ***********************************************
 ** Table 2.4   RISK FACTOR PREVALENCE
@@ -395,7 +544,7 @@ count if (regexm(ossym1, "DISORIENTED") | regexm(ossym2, "DISORIENTED") | ///
 ** cont'd: 2 to "N" & 99 to "U".
 
 ** AR to AH - use preserve and restore so that you get the right denominators
-preserve
+//preserve
 drop if abstracted!=1
 
 sort ovrf1 ovrf2 ovrf3 ovrf4
@@ -495,14 +644,14 @@ tab np if year==2020,m
 gen npnew=2 if np==1
 replace npnew=0 if np==2
 replace npnew=1 if np==0
-label define newnp_lab 1"had prior stroke" 2"first ever stroke"
+label define newnp_lab 1"had prior stroke" 2"first ever stroke" //JC 06apr2022 - it's easier if label and variable naming structure are matching.
 label values npnew newnp_lab
 codebook np
 
 tab af if year==2020 ,m
 
 local i=1
-foreach var in npnew af hcl smoker diab htn  drugs tia ccf dvt scd pami car_all alco {
+foreach var in npnew af hcl smoker diab htn drugs tia ccf dvt scd pami car_all alco {
 	gen risk`i' = 1 if `var'==1 & year==2020
 	replace risk`i' = 0 if `var'==2 & year==2020
 	label define risk`i'_lab 1 "yes" 0 "no", modify
@@ -531,6 +680,7 @@ foreach var in risk1 risk2 risk3 risk4 risk5 risk6 risk7 risk8 risk9 risk10 risk
 	local i = `i'+1
 	}
 
+tab risk8 ,m
 
 	egen crisk1 = rsum(risk1 risk2 risk3 risk4 risk5 risk6 risk7 risk8 risk9 risk10 risk11 risk12 risk13 risk14)
 label var crisk1 "Number of standard risk factors"
@@ -577,11 +727,11 @@ foreach var in famstroke pami {
 	replace risk`i' = 0 if `var'==3    
 	local i = `i'+1
 	}
-	
+//JC 06apr2022 unsure why [pami] is used as this is the previous AMI variable - shouldn't it be [pstroke] i.e. previous stroke?
 egen crisk2 = rsum(risk15 risk16) if year==2020
 label var crisk2 "Number of family history risk factors"
 tab crisk2
-drop risk*
+//drop risk*
 
 ** Family history in detail
 list mumstroke dadstroke sibstroke if mumstroke!=. & dadstroke!=. & sibstroke!=.
@@ -598,6 +748,165 @@ gen risk = crisk1 + crisk2 if year==2020
 label var risk "Number of all risk factors combined"
 tab1 risk if year==2020 ,miss
 tab1 risk if abstracted==1 & year==2020 ,miss
-restore
 
 ** denominator 622-31=591
+
+
+** JC update: Save these results as a dataset for reporting Table 2.4
+save "`datapath'\version02\2-working\riskfactors_stroke_ar" ,replace
+
+** JC 24feb2022: 
+stop - determine how best to report prior stroke or tia category because this method is not making sense to JC 06apr2022 when checking 2019 annual report figures in 2019 dofile and using the method from the heart 2020 dofile.
+//Prior stroke or TIA
+tab risk1 if year==2020 & abstracted==1 ,m
+tab risk8 if year==2020 & abstracted==1 ,m
+stop
+contract risk1 risk8 if year==2020 & abstracted==1 & (risk1!=. | risk8!=.)
+sort risk*
+gen id=_n
+gen rftype_ar=1
+gen rf_ar=1
+rename _freq number
+gen denominator=sum(number)
+replace denominator=. if id!=3
+replace denominator=denominator[_n+2] if denominator==.
+drop if id!=1
+gen rf_percent=number/denominator*100
+save "`datapath'\version02\2-working\riskfactors_stroke" ,replace
+
+clear
+
+//Prior stroke
+use "`datapath'\version02\2-working\riskfactors_stroke_ar" ,clear
+tab risk3 if year==2020 & abstracted==1 ,m
+contract risk3 if year==2020 & abstracted==1 & risk3!=.
+gen id=_n
+gen rftype_ar=1
+gen rf_ar=2
+rename _freq number
+gen denominator=sum(number)
+replace denominator=. if id!=2
+replace denominator=denominator[_n+1] if denominator==.
+drop if id!=1
+replace id=2
+gen rf_percent=number/denominator*100
+append using "`datapath'\version02\2-working\riskfactors_stroke"
+save "`datapath'\version02\2-working\riskfactors_stroke" ,replace
+
+clear
+
+//Hypertension
+use "`datapath'\version02\2-working\riskfactors_stroke_ar" ,clear
+tab risk6 if year==2020 & abstracted==1 ,m
+contract risk6 if year==2020 & abstracted==1 & risk6!=.
+gen id=_n
+gen rftype_ar=2
+gen rf_ar=3
+rename _freq number
+gen denominator=sum(number)
+replace denominator=. if id!=2
+replace denominator=denominator[_n+1] if denominator==.
+drop if id!=1
+replace id=3
+gen rf_percent=number/denominator*100
+
+append using "`datapath'\version02\2-working\riskfactors_stroke"
+save "`datapath'\version02\2-working\riskfactors_stroke" ,replace
+
+clear
+
+//Diabetes
+use "`datapath'\version02\2-working\riskfactors_stroke_ar" ,clear
+tab risk8 if year==2020 & abstracted==1 ,m
+contract risk8 if year==2020 & abstracted==1 & risk8!=.
+gen id=_n
+gen rftype_ar=2
+gen rf_ar=4
+rename _freq number
+gen denominator=sum(number)
+replace denominator=. if id!=2
+replace denominator=denominator[_n+1] if denominator==.
+drop if id!=1
+replace id=4
+gen rf_percent=number/denominator*100
+
+append using "`datapath'\version02\2-working\riskfactors_stroke"
+save "`datapath'\version02\2-working\riskfactors_stroke" ,replace
+
+clear
+
+//Obesity - JC 24feb2022: NS indciated that after discussion during re-engineer process this should be collected as an enhanced var since it's poorly collected so can exclude in 2020 annual rpt
+/*
+** Create variable with combined risk factors from the other risk factor fields
+replace ovrf1 = upper(rtrim(ltrim(itrim(ovrf1)))) //51 changes
+replace ovrf2 = upper(rtrim(ltrim(itrim(ovrf2)))) //13 changes
+replace ovrf3 = upper(rtrim(ltrim(itrim(ovrf3)))) //3 changes
+replace ovrf4 = upper(rtrim(ltrim(itrim(ovrf4)))) //1 changes
+gen risk_oth=ovrf1+" "+ovrf2+" "+ovrf3+" "+ovrf4 if ovrf!=99 & ovrf!=5 & ovrf!=. //85
+
+** Create variable to capture the highest count of the other symptom variable
+count if (regexm(risk_oth, "OBES") | regexm(risk_oth, "OBESITY") | regexm(risk_oth, "OBESE") | ///
+          regexm(risk_oth, "OVERW")) & abstracted==1 & year==2020 & ///
+		 (risk_oth!=""|risk_oth!=""|risk_oth!="") //5
+*/
+
+//Alcohol use
+use "`datapath'\version02\2-working\riskfactors_stroke_ar" ,clear
+tab risk11 if year==2020 & abstracted==1 ,m
+contract risk11 if year==2020 & abstracted==1 & risk11!=.
+gen id=_n
+gen rftype_ar=3
+gen rf_ar=5
+rename _freq number
+gen denominator=sum(number)
+replace denominator=. if id!=2
+replace denominator=denominator[_n+1] if denominator==.
+drop if id!=1
+replace id=5
+gen rf_percent=number/denominator*100
+
+append using "`datapath'\version02\2-working\riskfactors_stroke"
+save "`datapath'\version02\2-working\riskfactors_stroke" ,replace
+
+clear
+
+//Smoking
+use "`datapath'\version02\2-working\riskfactors_stroke_ar" ,clear
+tab risk9 if year==2020 & abstracted==1 ,m
+contract risk9 if year==2020 & abstracted==1 & risk9!=.
+gen id=_n
+gen rftype_ar=3
+gen rf_ar=6
+rename _freq number
+gen denominator=sum(number)
+replace denominator=. if id!=2
+replace denominator=denominator[_n+1] if denominator==.
+drop if id!=1
+replace id=6
+gen rf_percent=number/denominator*100
+
+append using "`datapath'\version02\2-working\riskfactors_stroke"
+
+
+** format
+replace rf_percent=round(rf_percent,1.0)
+
+order id rftype_ar rf_ar number rf_percent denominator
+
+label define rftype_ar_lab 1 "Prior CVD event/disease" 2 "Current co-morbidity" 3 "Lifestyle-related" ,modify
+label values rftype_ar rftype_ar_lab
+label var rftype_ar "Risk factor type"
+
+label define rf_ar_lab 1 "Prior acute MI" 2 "Prior stroke" 3 "Hypertension" 4 "Diabetes" 5 "Alcohol use" 6 "Smoking" ,modify
+label values rf_ar rf_ar_lab
+label var rf_ar "Risk factor"
+
+drop risk*
+sort rf_ar
+
+** Remove the temp database created above to reduce space used on SharePoint
+erase "`datapath'\version02\2-working\riskfactors_stroke_ar.dta"
+save "`datapath'\version02\2-working\riskfactors_stroke" ,replace
+restore
+
+
