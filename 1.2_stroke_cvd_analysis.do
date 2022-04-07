@@ -5,7 +5,7 @@ cls
     //  project:                BNR Stroke
     //  analysts:               Ashley HENRY and Jacqueline CAMPBELL
     //  date first created:     23-Feb-2022
-    //  date last modified:     06-Apr-2022
+    //  date last modified:     07-Apr-2022
 	//  analysis:               Stroke 2020 dataset for Annual Report
     //  algorithm task          Performing Stroke 2020 Data Analysis
     //  status:                 Pending
@@ -544,7 +544,7 @@ restore
 ** cont'd: 2 to "N" & 99 to "U".
 
 ** AR to AH - use preserve and restore so that you get the right denominators
-//preserve
+preserve
 drop if abstracted!=1
 
 sort ovrf1 ovrf2 ovrf3 ovrf4
@@ -755,40 +755,52 @@ tab1 risk if abstracted==1 & year==2020 ,miss
 ** JC update: Save these results as a dataset for reporting Table 2.4
 save "`datapath'\version02\2-working\riskfactors_stroke_ar" ,replace
 
-** JC 24feb2022: 
-stop - determine how best to report prior stroke or tia category because this method is not making sense to JC 06apr2022 when checking 2019 annual report figures in 2019 dofile and using the method from the heart 2020 dofile.
-//Prior stroke or TIA
-tab risk1 if year==2020 & abstracted==1 ,m
-tab risk8 if year==2020 & abstracted==1 ,m
-stop
-contract risk1 risk8 if year==2020 & abstracted==1 & (risk1!=. | risk8!=.)
+//stop - JC 07apr2022 need clarification from NS re method for these combined variables as AH's method differs between prior stroke/TIA vs prior IHD/CVD/PVD/AMI
+//Prior stroke or TIA (using same method as seen in 2019 annual report - 1_stroke_cvd_reports_extras.do)
+tab tia np if abstracted!=. & year==2020 ,m
+tab risk1 risk8 if abstracted!=. & year==2020 ,m
+contract risk1 risk8 if abstracted!=. & year==2020
 sort risk*
 gen id=_n
 gen rftype_ar=1
 gen rf_ar=1
 rename _freq number
-gen denominator=sum(number)
-replace denominator=. if id!=3
-replace denominator=denominator[_n+2] if denominator==.
+egen denom=total(number)
+gen denominator=denom-number if risk1==. & risk8==.
+drop denom
+fillmissing denominator
+egen tot_pstroke=total(number) if risk1==1
+egen tot_tia=total(number) if risk8==1 & risk1!=1
+fillmissing tot_*
+gen tot_pstia=tot_pstroke + tot_tia
 drop if id!=1
+keep id rftype_ar rf_ar tot_pstia denominator
+rename tot_pstia number
 gen rf_percent=number/denominator*100
 save "`datapath'\version02\2-working\riskfactors_stroke" ,replace
 
 clear
 
-//Prior stroke
+//Prior/current IHD/CVD/PVD/AMI
 use "`datapath'\version02\2-working\riskfactors_stroke_ar" ,clear
-tab risk3 if year==2020 & abstracted==1 ,m
-contract risk3 if year==2020 & abstracted==1 & risk3!=.
+tab risk12 risk13 if abstracted!=. & year==2020 ,m
+contract risk12 risk13 if abstracted!=. & year==2020
 gen id=_n
 gen rftype_ar=1
 gen rf_ar=2
 rename _freq number
-gen denominator=sum(number)
-replace denominator=. if id!=2
-replace denominator=denominator[_n+1] if denominator==.
+egen denom=total(number)
+gen denominator=denom-number if risk12==. & risk13==.
+drop denom
+fillmissing denominator
+egen tot_pami=total(number) if risk12==1
+egen tot_pihd=total(number) if risk13==1 & risk12!=1
+fillmissing tot_*
+gen tot_pamipihd=tot_pami + tot_pihd
 drop if id!=1
 replace id=2
+keep id rftype_ar rf_ar tot_pamipihd denominator
+rename tot_pamipihd number
 gen rf_percent=number/denominator*100
 append using "`datapath'\version02\2-working\riskfactors_stroke"
 save "`datapath'\version02\2-working\riskfactors_stroke" ,replace
@@ -797,16 +809,16 @@ clear
 
 //Hypertension
 use "`datapath'\version02\2-working\riskfactors_stroke_ar" ,clear
-tab risk6 if year==2020 & abstracted==1 ,m
-contract risk6 if year==2020 & abstracted==1 & risk6!=.
+tab risk6 if abstracted!=. & year==2020 & risk6!=.
+contract risk6 if abstracted!=. & year==2020 & risk6!=.
 gen id=_n
 gen rftype_ar=2
 gen rf_ar=3
 rename _freq number
 gen denominator=sum(number)
-replace denominator=. if id!=2
-replace denominator=denominator[_n+1] if denominator==.
-drop if id!=1
+replace denominator=. if risk6!=1
+drop if denominator==.
+drop risk6
 replace id=3
 gen rf_percent=number/denominator*100
 
@@ -817,16 +829,16 @@ clear
 
 //Diabetes
 use "`datapath'\version02\2-working\riskfactors_stroke_ar" ,clear
-tab risk8 if year==2020 & abstracted==1 ,m
-contract risk8 if year==2020 & abstracted==1 & risk8!=.
+tab risk5 if abstracted!=. & year==2020 & risk5!=.
+contract risk5 if abstracted!=. & year==2020 & risk5!=.
 gen id=_n
 gen rftype_ar=2
 gen rf_ar=4
 rename _freq number
 gen denominator=sum(number)
-replace denominator=. if id!=2
-replace denominator=denominator[_n+1] if denominator==.
-drop if id!=1
+replace denominator=. if risk5!=1
+drop if denominator==.
+drop risk5
 replace id=4
 gen rf_percent=number/denominator*100
 
@@ -852,16 +864,16 @@ count if (regexm(risk_oth, "OBES") | regexm(risk_oth, "OBESITY") | regexm(risk_o
 
 //Alcohol use
 use "`datapath'\version02\2-working\riskfactors_stroke_ar" ,clear
-tab risk11 if year==2020 & abstracted==1 ,m
-contract risk11 if year==2020 & abstracted==1 & risk11!=.
+tab risk14 if abstracted!=. & year==2020 & risk14!=.
+contract risk14 if abstracted!=. & year==2020 & risk14!=.
 gen id=_n
 gen rftype_ar=3
 gen rf_ar=5
 rename _freq number
 gen denominator=sum(number)
-replace denominator=. if id!=2
-replace denominator=denominator[_n+1] if denominator==.
-drop if id!=1
+replace denominator=. if risk14!=1
+drop if denominator==.
+drop risk14
 replace id=5
 gen rf_percent=number/denominator*100
 
@@ -872,36 +884,72 @@ clear
 
 //Smoking
 use "`datapath'\version02\2-working\riskfactors_stroke_ar" ,clear
-tab risk9 if year==2020 & abstracted==1 ,m
-contract risk9 if year==2020 & abstracted==1 & risk9!=.
+tab risk4 if abstracted!=. & year==2020 & risk4!=.
+contract risk4 if abstracted!=. & year==2020 & risk4!=.
 gen id=_n
 gen rftype_ar=3
 gen rf_ar=6
 rename _freq number
 gen denominator=sum(number)
-replace denominator=. if id!=2
-replace denominator=denominator[_n+1] if denominator==.
-drop if id!=1
+replace denominator=. if risk4!=1
+drop if denominator==.
+drop risk4
 replace id=6
 gen rf_percent=number/denominator*100
 
 append using "`datapath'\version02\2-working\riskfactors_stroke"
+save "`datapath'\version02\2-working\riskfactors_stroke" ,replace
 
+clear
+
+//Family history
+use "`datapath'\version02\2-working\riskfactors_stroke_ar" ,clear
+tab famstroke if abstracted!=. & year==2020 & famstroke!=.
+contract famstroke if abstracted!=. & year==2020 & famstroke!=.
+gen id=_n
+gen rftype_ar=4
+gen rf_ar=7
+rename _freq number
+egen denominator=total(number)
+drop if famstroke!=1
+drop famstroke
+replace id=7
+gen rf_percent=number/denominator*100
+
+append using "`datapath'\version02\2-working\riskfactors_stroke"
+save "`datapath'\version02\2-working\riskfactors_stroke" ,replace
+
+//clear
+
+/* Total case with risk factors not properly calculated so leave out as not in Table 1.4 (heart risk factors) for 2019 annual report
+//Total cases with risk factors
+use "`datapath'\version02\2-working\riskfactors_stroke_ar" ,clear
+tab1 risk if abstracted==1 & year==2020 ,miss
+tab risk if abstracted!=. & year==2020 ,m
+contract risk if abstracted!=. & year==2020
+rename _freq number
+egen total=total(number)
+gen id=_n
+drop if id!=1
+replace id=8
+keep id total
+
+append using "`datapath'\version02\2-working\riskfactors_stroke"
+*/
 
 ** format
 replace rf_percent=round(rf_percent,1.0)
 
 order id rftype_ar rf_ar number rf_percent denominator
 
-label define rftype_ar_lab 1 "Prior CVD event/disease" 2 "Current co-morbidity" 3 "Lifestyle-related" ,modify
+label define rftype_ar_lab 1 "Prior CVD event/disease" 2 "Current co-morbidity" 3 "Lifestyle-related" 4 "Family history of stroke" ,modify
 label values rftype_ar rftype_ar_lab
 label var rftype_ar "Risk factor type"
 
-label define rf_ar_lab 1 "Prior acute MI" 2 "Prior stroke" 3 "Hypertension" 4 "Diabetes" 5 "Alcohol use" 6 "Smoking" ,modify
+label define rf_ar_lab 1 "Prior stroke or TIA" 2 "Prior/current IHD/CVD/PVD/acute MI" 3 "Hypertension" 4 "Diabetes" 5 "Alcohol use" 6 "Smoking" 7 "Mother, father or sibling" ,modify
 label values rf_ar rf_ar_lab
 label var rf_ar "Risk factor"
 
-drop risk*
 sort rf_ar
 
 ** Remove the temp database created above to reduce space used on SharePoint

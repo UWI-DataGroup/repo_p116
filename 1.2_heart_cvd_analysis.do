@@ -5,7 +5,7 @@ cls
     //  project:                BNR Heart
     //  analysts:               Ashley HENRY and Jacqueline CAMPBELL
     //  date first created:     27-Jan-2022
-    //  date last modified:     24-Feb-2022
+    //  date last modified:     07-Apr-2022
 	//  analysis:               Heart 2020 dataset for Annual Report
     //  algorithm task          Performing Heart 2020 Data Analysis
     //  status:                 Pending
@@ -476,6 +476,66 @@ foreach var in risk1 risk2 risk3 risk4 risk5 risk6 risk7 risk8 risk9 risk10 risk
 ** Alcohol Use 
 ** Drug Use 
 
+
+** JC 24feb2022: NS indicated this can be commented out as not currently used
+** JC 24feb2022: changed below year from 2019 to 2020 and added abstracted==1
+egen crisk2020 = rsum(risk1 risk2 risk3 risk4 risk5 risk6 risk7 risk8 risk9 risk10 risk11 risk12 ) if year==2020 & abstracted==1
+label var crisk2020 "Number of standard risk factors"
+tab1 crisk2020
+
+
+** Next, Family History risk factors
+local i=13
+foreach var in famami famstroke {
+	gen risk`i' = 1 if `var'==1 & year==2020
+	replace risk`i' = 0 if `var'==2 & year==2020
+	replace risk`i' = 0 if `var'==99  & year==2020  
+	local i = `i'+1
+	}
+
+egen crisk20202 = rsum(risk13 risk14) if  year==2020
+label var crisk20202 "Number of family history risk factors"
+tab1 crisk20202
+//drop risk*
+
+
+** JC 24feb2022: changed below year from 2019 to 2020
+** Family history in detail
+list org_id mumami dadami sibami famami if (famami==1 |mumami==1|dadami==1| sibami==1) & year==2020
+replace famami=1 if mumami!=.| dadami!=. |sibami!=. & year==2020
+count  if (famami==1 | mumami==1 | dadami==1) & year==2020 
+count  if (sibami==1 | mumami==1 | dadami==1) & year==2020 
+
+tab famami  if abstracted==1 & year==2020  ,miss
+tab dadami  if abstracted==1 & year==2020  ,miss
+tab mumami  if abstracted==1 & year==2020  ,miss
+tab sibami if abstracted==1 & year==2020 , miss
+tab famami if (dadami==1 | mumami==1) & year==2020
+** Fam History 28/ (28+86)114
+display 20/114
+//JC 24feb2022: unsure where the above figures came from as not seeing these in the outputs; Now checked 2019 analysis dofile and found the above display figures pertain to 2019 outputs not 2020.
+
+tab famstroke if org_id!=.  & year==2020  , miss
+list mumstroke dadstroke sibstroke if famstroke==1  & year==2020
+
+** for denominator info.
+tab famami year ,miss
+tab famstroke year ,miss
+
+** Other Risk Factors
+tab ovrf year ,m
+sort ovrf*
+list ovrf* if ovrf==1  & year==2020
+list ovrf1 ovrf2 ovrf3 ovrf4 if ovrf1!=""  & year==2020
+
+** Now count all risk factors together
+gen risk2020 = crisk2020 + crisk20202 
+label var risk2020 "2020 Number of all risk factors combined"
+tab1 risk  ,miss
+tab1 risk2020 if abstracted==1 & year==2020  ,miss
+** No RF 10/ 257
+
+
 ** JC update: Save these results as a dataset for reporting Table 1.4
 save "`datapath'\version02\2-working\riskfactors_heart_ar" ,replace
 
@@ -608,18 +668,55 @@ replace id=6
 gen rf_percent=number/denominator*100
 
 append using "`datapath'\version02\2-working\riskfactors_heart"
+save "`datapath'\version02\2-working\riskfactors_heart" ,replace
 
+clear
+
+//Family history
+use "`datapath'\version02\2-working\riskfactors_heart_ar" ,clear
+tab famami if abstracted!=. & year==2020 & famami!=.
+contract famami if abstracted!=. & year==2020 & famami!=.
+gen id=_n
+gen rftype_ar=4
+gen rf_ar=7
+rename _freq number
+egen denominator=total(number)
+drop if famami!=1
+drop famami
+replace id=7
+gen rf_percent=number/denominator*100
+
+append using "`datapath'\version02\2-working\riskfactors_heart"
+save "`datapath'\version02\2-working\riskfactors_heart" ,replace
+
+//clear
+
+/* Total case with risk factors not properly calculated so leave out as not in Table 1.4 (heart risk factors) for 2019 annual report
+//Total cases with risk factors
+use "`datapath'\version02\2-working\riskfactors_heart_ar" ,clear
+tab1 risk if abstracted==1 & year==2020 ,miss
+tab risk if abstracted!=. & year==2020 ,m
+contract risk if abstracted!=. & year==2020
+rename _freq number
+egen total=total(number)
+gen id=_n
+drop if id!=1
+replace id=8
+keep id total
+
+append using "`datapath'\version02\2-working\riskfactors_heart"
+*/
 
 ** format
 replace rf_percent=round(rf_percent,1.0)
 
 order id rftype_ar rf_ar number rf_percent denominator
 
-label define rftype_ar_lab 1 "Prior CVD event/disease" 2 "Current co-morbidity" 3 "Lifestyle-related" ,modify
+label define rftype_ar_lab 1 "Prior CVD event/disease" 2 "Current co-morbidity" 3 "Lifestyle-related" 4 "Family history of AMI" ,modify
 label values rftype_ar rftype_ar_lab
 label var rftype_ar "Risk factor type"
 
-label define rf_ar_lab 1 "Prior acute MI" 2 "Prior stroke" 3 "Hypertension" 4 "Diabetes" 5 "Alcohol use" 6 "Smoking" ,modify
+label define rf_ar_lab 1 "Prior acute MI" 2 "Prior stroke" 3 "Hypertension" 4 "Diabetes" 5 "Alcohol use" 6 "Smoking" 7 "Mother, father or sibling" ,modify
 label values rf_ar rf_ar_lab
 label var rf_ar "Risk factor"
 
@@ -629,64 +726,4 @@ sort rf_ar
 ** Remove the temp database created above to reduce space used on SharePoint
 erase "`datapath'\version02\2-working\riskfactors_heart_ar.dta"
 save "`datapath'\version02\2-working\riskfactors_heart" ,replace
-
-/*
-** JC 24feb2022: NS indicated this can be commented out as not currently used
-** JC 24feb2022: changed below year from 2019 to 2020 and added abstracted==1
-egen crisk2020 = rsum(risk1 risk2 risk3 risk4 risk5 risk6 risk7 risk8 risk9 risk10 risk11 risk12 ) if year==2020 & abstracted==1
-label var crisk2020 "Number of standard risk factors"
-tab1 crisk2020
-
-
-** Next, Family History risk factors
-local i=13
-foreach var in famami famstroke {
-	gen risk`i' = 1 if `var'==1 & year==2020
-	replace risk`i' = 0 if `var'==2 & year==2020
-	replace risk`i' = 0 if `var'==99  & year==2020  
-	local i = `i'+1
-	}
-
-egen crisk20202 = rsum(risk13 risk14) if  year==2020
-label var crisk20202 "Number of family history risk factors"
-tab1 crisk20202
-drop risk*
-
-
-** JC 24feb2022: changed below year from 2019 to 2020
-** Family history in detail
-list org_id mumami dadami sibami famami if (famami==1 |mumami==1|dadami==1| sibami==1) & year==2020
-replace famami=1 if mumami!=.| dadami!=. |sibami!=. & year==2020
-count  if (famami==1 | mumami==1 | dadami==1) & year==2020 
-count  if (sibami==1 | mumami==1 | dadami==1) & year==2020 
-
-tab famami  if abstracted==1 & year==2020  ,miss
-tab dadami  if abstracted==1 & year==2020  ,miss
-tab mumami  if abstracted==1 & year==2020  ,miss
-tab sibami if abstracted==1 & year==2020 , miss
-tab famami if (dadami==1 | mumami==1) & year==2020
-** Fam History 28/ (28+86)114
-display 20/114
-//JC 24feb2022: unsure where the above figures came from as not seeing these in the outputs; Now checked 2019 analysis dofile and found the above display figures pertain to 2019 outputs not 2020.
-
-tab famstroke if org_id!=.  & year==2020  , miss
-list mumstroke dadstroke sibstroke if famstroke==1  & year==2020
-
-** for denominator info.
-tab famami year ,miss
-tab famstroke year ,miss
-
-** Other Risk Factors
-tab ovrf year ,m
-sort ovrf*
-list ovrf* if ovrf==1  & year==2020
-list ovrf1 ovrf2 ovrf3 ovrf4 if ovrf1!=""  & year==2020
-
-** Now count all risk factors together
-gen risk2020 = crisk2020 + crisk20202 
-label var risk2020 "2020 Number of all risk factors combined"
-tab1 risk  ,miss
-tab1 risk2020 if abstracted==1 & year==2020  ,miss
-** No RF 10/ 257
-*/
 restore 
