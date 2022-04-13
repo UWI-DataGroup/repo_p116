@@ -5,7 +5,7 @@ cls
     //  project:                BNR Heart
     //  analysts:               Ashley HENRY and Jacqueline CAMPBELL
     //  date first created:     26-Jan-2022
-    //  date last modified:     17-Mar-2022
+    //  date last modified:     13-Apr-2022
 	//  analysis:               Heart 2020 dataset for Annual Report
     //  algorithm task          Performing Heart 2020 Data Analysis
     //  status:                 Pending
@@ -56,7 +56,7 @@ count
 
 ** JC 17feb2022: Sex updated for 2018 pid that has sex=99 using MedData
 replace sex=1 if anon_pid==596 & record_id=="20181197" //1 change
-/*
+
 ** Number of BNR Regsitrations by year
 ** 547 BNR Reg for year 2020
 bysort year :tab abstracted hosp
@@ -87,7 +87,6 @@ tab abstracted year,miss
 dis 79/291
 
 ** JC update: Save these results as a dataset for reporting Table 1.5
-
 preserve
 save "`datapath'\version02\2-working\mort_heart_ar" ,replace
 /* Another option for doing this - for 2021 annual report need to find way to save tabulate totals as a dataset (bysort year :tab abstracted hosp)
@@ -562,10 +561,14 @@ append using "`datapath'\version02\2-working\outcomes_heart"
 sort id
 rename id outcomes_heart_ar
 
+set obs `=_N+1'
+replace outcomes_heart_ar=9 if outcomes_heart_ar==.
+replace year_2020=0 if outcomes_heart_ar==9
+
 
 label define outcomes_heart_ar_lab 1 "Admitted to QEH" 2 "Data abstracted by BNR team" 3 "Died in hospital" ///
 							   4 "Discharged alive" 5 "Unknown Outcome" 6 "Death record only (place of death QEH)" 7 "Post mortem conducted" ///
-							   8 "No Post Mortem" ,modify
+							   8 "No Post Mortem"  9 "Unknown Outcome" ,modify
 label values outcomes_heart_ar outcomes_heart_ar_lab
 label var outcomes_heart_ar "In-hospital Outcomes Stats Category"
 
@@ -856,7 +859,7 @@ save "`datapath'\version02\2-working\pm2_stemi_heart" ,replace
 
 restore
 
-*/
+
 
 /* 
 	JC 17mar2022: PM3 was missing code in 2020 analysis dofile so code for below Table 1.7 Timings 
@@ -871,112 +874,17 @@ restore
 ****************************************
 **PM3: Time from scene to arrival at A&E  
 ************************2***0****2***0**
-
-*************************************************
-** 2017 PICK-UP  from scene to Hospital Arrival
-*************************************************
 /* 
 	JC 17mar2022 made some changes to how this is calculated as AH was using time variable 
 	to generate minutes for this PM3 timing but more accurate to use datetime variable 
 	since cases where from scene was before midnight of one day and 
 	admission was after midnight the next day would be incorrectly calculated.
 */
-//preserve
-** Remove non-2017 cases
-drop if year!=2017 //4327 deleted
-
-** Check for and remove cases wherein AMI occurred after admission to hospital
-count if year==2017 & dom>doh //8
-list record_id doh dom locami olocami initdiag oadmhdx* ambulance if year==2017 & dom>doh
-list record_id if year==2017 & dom>doh
-drop if (record_id=="20171089" | record_id=="20171658" | record_id=="20171888" | record_id=="20172102" | record_id=="2017871" | record_id=="2017890" | record_id=="2017893" | record_id=="2017981") //8 deleted
-
-** Check for and remove cases that were not abstracted
-count if year==2017 & abstracted!=1 //189
-drop if year==2017 & abstracted!=1 //189 deleted
-
-** Create variable to assess timing (AH's code)
-/*
-gen mins_ambhosp=round(minutes(round(t_hosp-frmscnt))) if year==2017 & (t_hosp!=. & frmscnt!=.)
-replace mins_ambhosp=31 if pid==1922
-replace mins_ambhosp=13 if pid==519 (JC 17mar2022: this should be 35 mins not 13)
-gen hrs_ambhosp=(mins_ambhosp/60)
-label var mins_ambhosp "Total minutes from patient pickup to hospital" 
-label var hrs_ambhosp "Total hours from patient pickup to hospital"
-
-tab mins_ambhosp if year==2017 & ambulance==1 ,miss
-tab hrs_ambhosp if year==2017 & ambulance==1,miss
-** 2 cases with negative information documented
-list pid mins_ambhosp hrs_ambhosp pid doh t_hosp frmscnd frmscnt if mins_ambhosp<1
-** will make corrections above.
-
-gen k=1
-
-table k, c(p50 mins_ambhosp p25 mins_ambhosp p75 mins_ambhosp min mins_ambhosp max mins_ambhosp)
-
-table k, c(p50 hrs_ambhosp p25 hrs_ambhosp p75 hrs_ambhosp min hrs_ambhosp max hrs_ambhosp)
-
-ameans hrs_ambhosp 
-ameans mins_ambhosp 
-
-list pid frmscnt t_hosp if year==2017 & (hrs_ambhosp==0 & mins_ambhosp==0)
-** none seen
-*/
-
-
-** JC 17mar2022 using a different method from AH for this as it's best to use datetime variable instead of time variable only when calculating timing
-** JC 17mar2022 cleaning check for if admission date after at scene or from scene dates as error noted from below minutes variable
-count if doh<frmscnd & doh!=. & frmscnd!=. //1
-count if doh<d_amb_atscn & doh!=. & d_amb_atscn!=. //1
-replace doh=frmscnd if record_id=="2017446" //1 change
-
-** First check if datetime variables for 'from scene' and 'admission' are not missing
-count if dohtoh==. & doh!=. & toh!=. //5
-list record_id doh toh dohtoh if dohtoh==. & doh!=. & toh!=.
-gen double dohtoh_pm3 = dhms(doh,hh(toh),mm(toh),ss(toh))
-format dohtoh_pm3 %tcNN/DD/CCYY_HH:MM:SS
-//format dohtoh_pm3 %tCDDmonCCYY_HH:MM:SS - when using this is changes the mm:ss part of the time
-//list record_id dohtoh_pm3 doh toh if dohtoh_pm3!=.
-
-count if frmscnt_dtime==. & frmscnd!=. & frmscnt!=. //0
-gen double frmscndt_pm3 = dhms(frmscnd,hh(frmscnt),mm(frmscnt),ss(frmscnt))
-format frmscndt_pm3 %tcNN/DD/CCYY_HH:MM:SS
-//list record_id frmscndt_pm3 frmscnd frmscnt if frmscndt_pm3!=.
-
-count if dohtoh_pm3==. //12
-count if frmscndt_pm3==. //120
-
-gen mins_ambhosp=round(minutes(round(dohtoh_pm3-frmscndt_pm3))) if (dohtoh_pm3!=. & frmscndt_pm3!=.)
-replace mins_ambhosp=round(minutes(round(t_hosp-frmscnt))) if mins_ambhosp==. & (t_hosp!=. & frmscnt!=.) //0 changes
-count if mins_ambhosp<0 //0 - checking to ensure this has been correctly generated
-count if mins_ambhosp==. //120 - ask NS if to drop these before calculating minutes for PM3 Timing since these are missing datetime so will automatically be missing
-stop
-gen hrs_ambhosp=(mins_ambhosp/60)
-label var mins_ambhosp "Total minutes from patient pickup to hospital" 
-label var hrs_ambhosp "Total hours from patient pickup to hospital"
-
-gen k=1
-
-** Below code runs in Stata 16 (used by AH) but not in Stata 17 (used by JC)
-//table k, c(p50 mins_door2needle p25 mins_door2needle p75 mins_door2needle min mins_door2needle max mins_door2needle)
-//table k, c(p50 hrs_door2needle p25 hrs_door2needle p75 hrs_door2needle min hrs_door2needle max hrs_door2needle)
-
-ameans mins_ambhosp
-ameans hrs_ambhosp
-
-//table k, c(p50 hrs_door2needle p25 hrs_door2needle p75 hrs_door2needle min hrs_door2needle max hrs_door2needle)
-** 1.7 hours seen - 1 hr 42 mins
-
-** This code will run in Stata 17
-table k, stat(q2 mins_ambhosp) stat(q1 mins_ambhosp) stat(q3 mins_ambhosp) stat(min mins_ambhosp) stat(max mins_ambhosp)
-table k, stat(q2 hrs_ambhosp) stat(q1 hrs_ambhosp) stat(q3 hrs_ambhosp) stat(min hrs_ambhosp) stat(max hrs_ambhosp)
-
-
-restore
 
 *************************************************
 ** 2018 PICK-UP  from scene to Hospital Arrival
 *************************************************
+/* AH's code
 list pid doh dom locami olocami initdiag oadmhdx* ambulance if year==2018 & dom>doh
 preserve
 drop if (pid==1000| pid==1868)
@@ -1009,10 +917,83 @@ ameans mins_ambhosp
 list pid frmscnt t_hosp if year==2018 & (hrs_ambhosp==0 & mins_ambhosp==0)
 ** none seen
 restore
+*/
+
+
+preserve
+** Remove non-2018 cases
+drop if year!=2018 //4311 deleted
+
+** Check for and remove cases wherein AMI occurred after admission to hospital
+count if year==2018 & dom>doh //17
+list record_id doh dom locami olocami initdiag oadmhdx* ambulance if year==2018 & dom>doh
+list record_id if year==2018 & dom>doh
+drop if year==2018 & dom>doh //17 deleted
+
+** Check for and remove cases that were not abstracted
+count if year==2018 & abstracted!=1 //226
+drop if year==2018 & abstracted!=1 //226 deleted
+
+** Create variable to assess timing
+** JC 17mar2022 using a different method from AH for this as it's best to use datetime variable instead of time variable only when calculating timing
+** JC 17mar2022 cleaning check for if admission date after at scene or from scene dates as error noted from below minutes variable
+count if doh<frmscnd & doh!=. & frmscnd!=. //0
+count if doh<d_amb_atscn & doh!=. & d_amb_atscn!=. //0
+//replace doh=frmscnd if record_id=="2017446" //1 change - JC 12apr2022 copied from 2017 code above: kept in for historical purposes.
+
+
+** First check if admission time and time from scene have not been mistakenly switched at abstraction
+count if toh<frmscnt & toh!=. & frmscnt!=. & doh==frmscnd //1
+list anon_pid record_id toh frmscnt if toh<frmscnt & toh!=. & frmscnt!=. & doh==frmscnd
+swapval toh frmscnt if anon_pid==515|record_id=="20181000"
+
+** Check if datetime variables for 'from scene' and 'admission' are not missing
+count if dohtoh==. & doh!=. & toh!=. //7
+list record_id doh toh dohtoh if dohtoh==. & doh!=. & toh!=.
+gen double dohtoh_pm3 = dhms(doh,hh(toh),mm(toh),ss(toh))
+format dohtoh_pm3 %tcNN/DD/CCYY_HH:MM:SS
+//format dohtoh_pm3 %tCDDmonCCYY_HH:MM:SS - when using this is changes the mm:ss part of the time
+//list record_id dohtoh_pm3 doh toh if dohtoh_pm3!=.
+
+count if frmscnt_dtime==. & frmscnd!=. & frmscnt!=. //0
+gen double frmscndt_pm3 = dhms(frmscnd,hh(frmscnt),mm(frmscnt),ss(frmscnt))
+format frmscndt_pm3 %tcNN/DD/CCYY_HH:MM:SS
+//list record_id frmscndt_pm3 frmscnd frmscnt if frmscndt_pm3!=.
+
+count if dohtoh_pm3==. //4
+count if frmscndt_pm3==. //91
+
+
+** Create variables to assess timing
+gen mins_scn2door=round(minutes(round(dohtoh_pm3-frmscndt_pm3))) if (dohtoh_pm3!=. & frmscndt_pm3!=.)
+replace mins_scn2door=round(minutes(round(t_hosp-frmscnt))) if mins_scn2door==. & (t_hosp!=. & frmscnt!=.) //0 changes
+count if mins_scn2door<0 //0 - checking to ensure this has been correctly generated
+count if mins_scn2door==. //91 - ask NS if to drop these before calculating minutes for PM3 Timing since these are missing datetime so will automatically be missing
+drop if mins_scn2door==. //JC 12apr2022: Timing still calculated the same as not removing the missing datetimes so doesn't matter if they're removed
+gen hrs_scn2door=(mins_scn2door/60)
+label var mins_scn2door "Total minutes from patient pickup to hospital" 
+label var hrs_scn2door "Total hours from patient pickup to hospital"
+
+tab mins_scn2door if year==2018 & ambulance==1 ,miss
+tab hrs_scn2door if year==2018 & ambulance==1,miss
+
+save "`datapath'\version02\2-working\pm3_scn2door_heart_2018" ,replace
+ 
+gen k=1
+
+ameans mins_scn2door
+ameans hrs_scn2door
+
+** This code will run in Stata 17
+table k, stat(q2 mins_scn2door) stat(q1 mins_scn2door) stat(q3 mins_scn2door) stat(min mins_scn2door) stat(max mins_scn2door)
+table k, stat(q2 hrs_scn2door) stat(q1 hrs_scn2door) stat(q3 hrs_scn2door) stat(min hrs_scn2door) stat(max hrs_scn2door)
+
+restore
 
 *************************************************
 ** 2019 PICK-UP  from scene to Hospital Arrival
 *************************************************
+/* AH's code
 list pid doh dom locami olocami initdiag oadmhdx* ambulance if year==2019 & dom>doh
 preserve
 drop if ( pid==89| pid==1737 | pid==1674 | pid==1224 )
@@ -1045,22 +1026,713 @@ ameans mins_ambhosp
 list pid frmscnt t_hosp if year==2019 & (hrs_ambhosp==0 & mins_ambhosp==0)
 ** none seen
 restore
+*/
+
+preserve
+** Remove non-2019 cases
+drop if year!=2019 //4247 deleted
+
+** Check for and remove cases wherein AMI occurred after admission to hospital
+count if year==2019 & dom>doh //22
+list record_id doh dom locami olocami initdiag oadmhdx* ambulance if year==2019 & dom>doh
+list record_id if year==2019 & dom>doh
+drop if year==2019 & dom>doh //22 deleted
+
+** Check for and remove cases that were not abstracted
+count if year==2019 & abstracted!=1 //236
+drop if year==2019 & abstracted!=1 //236 deleted
+
+** Create variable to assess timing
+** JC 17mar2022 using a different method from AH for this as it's best to use datetime variable instead of time variable only when calculating timing
+** JC 17mar2022 cleaning check for if admission date after at scene or from scene dates as error noted from below minutes variable
+count if doh<frmscnd & doh!=. & frmscnd!=. //0
+count if doh<d_amb_atscn & doh!=. & d_amb_atscn!=. //0
+//replace doh=frmscnd if record_id=="2017446" //1 change - JC 12apr2022 copied from 2017 code above: kept in for historical purposes.
+
+
+** First check if admission time and time from scene have not been mistakenly switched at abstraction
+count if toh<frmscnt & toh!=. & frmscnt!=. & doh==frmscnd //0
+list anon_pid record_id toh frmscnt if toh<frmscnt & toh!=. & frmscnt!=. & doh==frmscnd
+//swapval toh frmscnt if anon_pid==515|record_id=="20181000" - JC 12apr2022 copied from 2018 code above: kept in for historical purposes.
+
+
+** Check if admission time and time from scene have not been mistakenly assigned as AM and PM, respectively, at abstraction
+generate double toh_pm3=hms(hh(toh), mm(toh), ss(toh))
+format toh_pm3 %tcHH:MM:SS
+generate double frmscnt_pm3=hms(hh(frmscnt), mm(frmscnt), ss(frmscnt))
+format frmscnt_pm3 %tcHH:MM:SS
+count if toh_pm3<frmscnt_pm3 & toh!=. & frmscnt!=. & doh==frmscnd //1
+list anon_pid record_id toh frmscnt if toh_pm3<frmscnt_pm3 & toh!=. & frmscnt!=. & doh==frmscnd
+di clock("09:35:00.000", "hms") //34500000
+di clock("21:35:00.000", "hms") //77700000
+di clock("21:07:00.000", "hms") //76020000
+replace toh=77700000 if anon_pid==544|record_id=="20191083"
+replace t_hosp=77700000 if anon_pid==544|record_id=="20191083"
+replace ambcallt=76020000 if anon_pid==544|record_id=="20191083"
+
+
+** Check if datetime variables for 'from scene' and 'admission' are not missing
+count if dohtoh==. & doh!=. & toh!=. //7
+list record_id doh toh dohtoh if dohtoh==. & doh!=. & toh!=.
+gen double dohtoh_pm3 = dhms(doh,hh(toh),mm(toh),ss(toh))
+format dohtoh_pm3 %tcNN/DD/CCYY_HH:MM:SS
+//format dohtoh_pm3 %tCDDmonCCYY_HH:MM:SS - when using this is changes the mm:ss part of the time
+//list record_id dohtoh_pm3 doh toh if dohtoh_pm3!=.
+
+count if frmscnt_dtime==. & frmscnd!=. & frmscnt!=. //0
+gen double frmscndt_pm3 = dhms(frmscnd,hh(frmscnt),mm(frmscnt),ss(frmscnt))
+format frmscndt_pm3 %tcNN/DD/CCYY_HH:MM:SS
+//list record_id frmscndt_pm3 frmscnd frmscnt if frmscndt_pm3!=.
+
+count if dohtoh_pm3==. //20
+count if frmscndt_pm3==. //121
+
+
+** Create variables to assess timing
+gen mins_scn2door=round(minutes(round(dohtoh_pm3-frmscndt_pm3))) if (dohtoh_pm3!=. & frmscndt_pm3!=.)
+replace mins_scn2door=round(minutes(round(t_hosp-frmscnt))) if mins_scn2door==. & (t_hosp!=. & frmscnt!=.) //0 changes
+count if mins_scn2door<0 //0 - checking to ensure this has been correctly generated
+count if mins_scn2door==. //91 - ask NS if to drop these before calculating minutes for PM3 Timing since these are missing datetime so will automatically be missing
+drop if mins_scn2door==. //JC 12apr2022: Timing still calculated the same as not removing the missing datetimes so doesn't matter if they're removed
+gen hrs_scn2door=(mins_scn2door/60)
+label var mins_scn2door "Total minutes from patient pickup to hospital" 
+label var hrs_scn2door "Total hours from patient pickup to hospital"
+
+tab mins_scn2door if year==2019 & ambulance==1 ,miss
+tab hrs_scn2door if year==2019 & ambulance==1,miss
+
+save "`datapath'\version02\2-working\pm3_scn2door_heart_2019" ,replace
+
+gen k=1
+
+ameans mins_scn2door
+ameans hrs_scn2door
+
+** This code will run in Stata 17
+table k, stat(q2 mins_scn2door) stat(q1 mins_scn2door) stat(q3 mins_scn2door) stat(min mins_scn2door) stat(max mins_scn2door)
+table k, stat(q2 hrs_scn2door) stat(q1 hrs_scn2door) stat(q3 hrs_scn2door) stat(min hrs_scn2door) stat(max hrs_scn2door)
+restore
+
+
+
+*************************************************
+** 2020 PICK-UP  from scene to Hospital Arrival
+*************************************************
+preserve
+** Remove non-2020 cases
+drop if year!=2020 //4247 deleted
+
+** Check for and remove cases wherein AMI occurred after admission to hospital
+count if year==2020 & dom>dae //18
+list record_id dae dom locami olocami initdiag oadmhdx* ambulance if year==2020 & dom>dae
+list record_id if year==2020 & dom>dae
+drop if year==2020 & dom>dae //18 deleted
+
+** Check for and remove cases that were not abstracted
+count if year==2020 & abstracted!=1 //256
+drop if year==2020 & abstracted!=1 //256 deleted
+
+** Create variable to assess timing
+** JC 17mar2022 using a different method from AH for this as it's best to use datetime variable instead of time variable only when calculating timing
+** JC 17mar2022 cleaning check for if admission date after at scene or from scene dates as error noted from below minutes variable
+count if dae<frmscnd & dae!=. & frmscnd!=. //1
+list anon_pid record_id dae frmscnd if dae<frmscnd & dae!=. & frmscnd!=.
+count if dae<d_amb_atscn & dae!=. & d_amb_atscn!=. //1
+list anon_pid record_id dae d_amb_atscn if dae<d_amb_atscn & dae!=. & d_amb_atscn!=.
+replace ambcalld=dae if anon_pid==2517|record_id=="2020284"
+replace d_amb_atscn=dae if anon_pid==2517|record_id=="2020284"
+replace frmscnd=dae if anon_pid==2517|record_id=="2020284"
+replace d_hosp=dae if anon_pid==2517|record_id=="2020284"
+//replace dae=frmscnd if record_id=="2017446" //1 change - JC 12apr2022 copied from 2017 code above: kept in for historical purposes.
+
+
+** First check if admission time and time from scene have not been mistakenly switched at abstraction
+count if tae<frmscnt & tae!=. & frmscnt!=. & dae==frmscnd //3
+list anon_pid record_id org_id tae frmscnt dae frmscnd if tae<frmscnt & tae!=. & frmscnt!=. & dae==frmscnd
+di clock("13:55:00.000", "hms") //50100000
+replace tae=50100000 if anon_pid==1935|record_id=="2020896"
+swapval tae t_hosp if anon_pid==2924|record_id=="2020211"
+replace tae=t_hosp if anon_pid==1468|record_id=="2020706"
+
+
+** Check if admission time and time from scene have not been mistakenly assigned as AM and PM, respectively, at abstraction
+generate double tae_pm3=hms(hh(tae), mm(tae), ss(tae))
+format tae_pm3 %tcHH:MM:SS
+generate double frmscnt_pm3=hms(hh(frmscnt), mm(frmscnt), ss(frmscnt))
+format frmscnt_pm3 %tcHH:MM:SS
+count if tae_pm3<frmscnt_pm3 & tae!=. & frmscnt!=. & dae==frmscnd //0
+list anon_pid record_id tae frmscnt if tae_pm3<frmscnt_pm3 & tae!=. & frmscnt!=. & dae==frmscnd
+
+/*
+** JC 12apr2022 below copied from 2019 code above - kept in for historical purposes.
+di clock("09:35:00.000", "hms") //34500000
+di clock("21:35:00.000", "hms") //77700000
+di clock("21:07:00.000", "hms") //76020000
+replace tae=77700000 if anon_pid==544|record_id=="20191083"
+replace t_hosp=77700000 if anon_pid==544|record_id=="20191083"
+replace ambcallt=76020000 if anon_pid==544|record_id=="20191083"
+*/
+
+** Check if datetime variables for 'from scene' and 'admission' are not missing
+count if daetae==. & dae!=. & tae!=. //5
+list record_id dae tae daetae if daetae==. & dae!=. & tae!=.
+gen double daetae_pm3 = dhms(dae,hh(tae),mm(tae),ss(tae))
+format daetae_pm3 %tcNN/DD/CCYY_HH:MM:SS
+//format daetae_pm3 %tCDDmonCCYY_HH:MM:SS - when using this is changes the mm:ss part of the time
+//list record_id daetae_pm3 dae tae if daetae_pm3!=.
+
+count if frmscnt_dtime==. & frmscnd!=. & frmscnt!=. //0
+gen double frmscndt_pm3 = dhms(frmscnd,hh(frmscnt),mm(frmscnt),ss(frmscnt))
+format frmscndt_pm3 %tcNN/DD/CCYY_HH:MM:SS
+//list record_id frmscndt_pm3 frmscnd frmscnt if frmscndt_pm3!=.
+
+count if daetae_pm3==. //10
+count if frmscndt_pm3==. //108
+
+
+** Create variables to assess timing
+gen mins_scn2door=round(minutes(round(daetae_pm3-frmscndt_pm3))) if (daetae_pm3!=. & frmscndt_pm3!=.)
+replace mins_scn2door=round(minutes(round(t_hosp-frmscnt))) if mins_scn2door==. & (t_hosp!=. & frmscnt!=.) //0 changes
+count if mins_scn2door<0 //0 - checking to ensure this has been correctly generated
+count if mins_scn2door==. //110 - ask NS if to drop these before calculating minutes for PM3 Timing since these are missing datetime so will automatically be missing
+drop if mins_scn2door==. //JC 12apr2022: Timing still calculated the same as not removing the missing datetimes so doesn't matter if they're removed
+gen hrs_scn2door=(mins_scn2door/60)
+label var mins_scn2door "Total minutes from patient pickup to hospital" 
+label var hrs_scn2door "Total hours from patient pickup to hospital"
+
+tab mins_scn2door if year==2020 ,miss
+tab hrs_scn2door if year==2020 ,miss
+
+save "`datapath'\version02\2-working\pm3_scn2door_heart_2020" ,replace
+
+gen k=1
+
+ameans mins_scn2door
+ameans hrs_scn2door
+
+** This code will run in Stata 17
+table k, stat(q2 mins_scn2door) stat(q1 mins_scn2door) stat(q3 mins_scn2door) stat(min mins_scn2door) stat(max mins_scn2door)
+table k, stat(q2 hrs_scn2door) stat(q1 hrs_scn2door) stat(q3 hrs_scn2door) stat(min hrs_scn2door) stat(max hrs_scn2door)
+restore
+
+
+** JC update: Save these 'p50' results as a dataset for reporting Table 1.7
+preserve
+
+use "`datapath'\version02\2-working\pm3_scn2door_heart_2018" ,clear
+append using "`datapath'\version02\2-working\pm3_scn2door_heart_2019"
+append using "`datapath'\version02\2-working\pm3_scn2door_heart_2020"
+
+drop mins_scn2door hrs_scn2door
+gen mins_scn2door=round(minutes(round(daetae_pm3-frmscndt_pm3))) if year==2020 & (daetae_pm3!=. & frmscndt_pm3!=.) // changes
+replace mins_scn2door=round(minutes(round(daetae_pm3-frmscndt_pm3))) if year==2020 & mins_scn2door==. & (t_hosp!=. & frmscnt!=.) // changes
+
+replace mins_scn2door=round(minutes(round(dohtoh_pm3-frmscndt_pm3))) if year==2019 & (dohtoh_pm3!=. & frmscndt_pm3!=.) // changes
+replace mins_scn2door=round(minutes(round(t_hosp-frmscnt))) if year==2019 & mins_scn2door==. & (t_hosp!=. & frmscnt!=.) // changes
+
+replace mins_scn2door=round(minutes(round(dohtoh_pm3-frmscndt_pm3))) if year==2018 & (dohtoh_pm3!=. & frmscndt_pm3!=.) // changes
+replace mins_scn2door=round(minutes(round(t_hosp-frmscnt))) if year==2018 & mins_scn2door==. & (t_hosp!=. & frmscnt!=.) // changes
+
+gen hrs_scn2door=(mins_scn2door/60) // changes
+label var mins_scn2door "Total minutes from patient pickup to hospital (scene-to-door)"
+label var hrs_scn2door "Total hours from patient pickup to hospital (scene-to-door)"
+
+gen k=1
+
+table k, stat(q2 mins_scn2door) stat(q1 mins_scn2door) stat(q3 mins_scn2door) stat(min mins_scn2door) stat(max mins_scn2door), if year==2020
+table k, stat(q2 hrs_scn2door) stat(q1 hrs_scn2door) stat(q3 hrs_scn2door) stat(min hrs_scn2door) stat(max hrs_scn2door), if year==2020
+
+table k, stat(q2 mins_scn2door) stat(q1 mins_scn2door) stat(q3 mins_scn2door) stat(min mins_scn2door) stat(max mins_scn2door), if year==2019
+table k, stat(q2 hrs_scn2door) stat(q1 hrs_scn2door) stat(q3 hrs_scn2door) stat(min hrs_scn2door) stat(max hrs_scn2door), if year==2019
+
+table k, stat(q2 mins_scn2door) stat(q1 mins_scn2door) stat(q3 mins_scn2door) stat(min mins_scn2door) stat(max mins_scn2door), if year==2018
+table k, stat(q2 hrs_scn2door) stat(q1 hrs_scn2door) stat(q3 hrs_scn2door) stat(min hrs_scn2door) stat(max hrs_scn2door), if year==2018
+
+drop if year<2018
+drop if k!=1
+
+save "`datapath'\version02\2-working\pm3_scn2door_heart_ar" ,replace
+
+sum mins_scn2door if year==2020
+sum mins_scn2door ,detail, if year==2020
+gen mins_scn2door_2020=r(p50) if year==2020
+
+tostring mins_scn2door_2020 ,replace
+replace mins_scn2door_2020=mins_scn2door_2020+" "+"minutes"
+
+
+sum mins_scn2door if year==2019
+sum mins_scn2door ,detail, if year==2019
+gen mins_scn2door_2019=r(p50) if year==2019
+
+tostring mins_scn2door_2019 ,replace
+replace mins_scn2door_2019=mins_scn2door_2019+" "+"minutes"
+
+
+sum mins_scn2door if year==2018
+sum mins_scn2door ,detail, if year==2018
+gen mins_scn2door_2018=r(p50) if year==2018
+
+tostring mins_scn2door_2018 ,replace
+replace mins_scn2door_2018=mins_scn2door_2018+" "+"minutes"
+
+replace mins_scn2door_2018="" if mins_scn2door_2018==". minutes"
+replace mins_scn2door_2019="" if mins_scn2door_2019==". minutes"
+replace mins_scn2door_2020="" if mins_scn2door_2020==". minutes"
+fillmissing mins_scn2door_2018 mins_scn2door_2019 mins_scn2door_2020
+
+keep mins_scn2door_2018 mins_scn2door_2019 mins_scn2door_2020
+order mins_scn2door_2018 mins_scn2door_2019 mins_scn2door_2020
+save "`datapath'\version02\2-working\pm3_scn2door_heart" ,replace
+
+use "`datapath'\version02\2-working\pm3_scn2door_heart_ar" ,clear
+
+sum hrs_scn2door if year==2020
+sum hrs_scn2door ,detail, if year==2020
+gen hours_2020=r(p50) if year==2020
+
+sum hrs_scn2door if year==2019
+sum hrs_scn2door ,detail, if year==2019
+gen hours_2019=r(p50) if year==2019
+
+sum hrs_scn2door if year==2018
+sum hrs_scn2door ,detail, if year==2018
+gen hours_2018=r(p50) if year==2018
+
+collapse hours_2018 hours_2019 hours_2020
+
+gen double fullhour_2018=int(hours_2018)
+gen double fraction_2018=hours_2018-fullhour_2018
+gen minutes_2018=round(fraction_2018*60,1)
+
+tostring fullhour_2018 ,replace
+tostring minutes_2018 ,replace
+replace fullhour_2018=minutes_2018+" "+"minutes"
+rename fullhour_2018 hrs_scn2door_2018
+
+
+gen double fullhour_2019=int(hours_2019)
+gen double fraction_2019=hours_2019-fullhour_2019
+gen minutes_2019=round(fraction_2019*60,1)
+
+tostring fullhour_2019 ,replace
+tostring minutes_2019 ,replace
+replace fullhour_2019=minutes_2019+" "+"minutes"
+rename fullhour_2019 hrs_scn2door_2019
+
+
+gen double fullhour_2020=int(hours_2020)
+gen double fraction_2020=hours_2020-fullhour_2020
+gen minutes_2020=round(fraction_2020*60,1)
+
+tostring fullhour_2020 ,replace
+tostring minutes_2020 ,replace
+replace fullhour_2020=minutes_2020+" "+"minutes"
+rename fullhour_2020 hrs_scn2door_2020
+
+keep hrs_scn2door_2018 hrs_scn2door_2019 hrs_scn2door_2020
+
+append using "`datapath'\version02\2-working\pm3_scn2door_heart"
+
+fillmissing mins_scn2door*
+gen id=_n
+drop if id>1 
+drop id
+gen median_2018=mins_scn2door_2018
+gen median_2019=mins_scn2door_2019
+gen median_2020=mins_scn2door_2020
+keep median_2018 median_2019 median_2020
+gen pm3_category=1
+
+label var pm3_category "PM3 Category"
+label define pm3_category_lab 1 "Median time from scene to arrival at A&E" 2 "Median time from admission to first ECG" ///
+							  3 "Median time from admission to fibrinolysis" 4 "Median time from onset to fibrinolysis" , modify
+label values pm3_category pm3_category_lab
+
+order pm3_category median_2018 median_2019 median_2020
+erase "`datapath'\version02\2-working\pm3_scn2door_heart_ar.dta"
+save "`datapath'\version02\2-working\pm3_scn2door_heart" ,replace
+restore
 
 ***************************************
 **PM3: Time from admission to first ECG  
 ************************2***0****2***0*
 
 
+/* AH's code
+******* Hosp Admission - First ECG ****
 
-******************************************************************
-**PM3: STEMI pts onset2needle time for those who were thrombolysed
-************************2***0*******2******0**********************
+tab ecgdt if year==2019 & ecg==1 ,miss
+tab dohtoh if year==2019 & ecgdt!=., missing
+list pid if year==2019 & ecgdt==. & ecg==1
+list pid locami if year==2019 & doh>ecgd & ecg==1
+** 2 cases with date of hospitalisation  later than date of first ecg,AH TO CHECK.
+
+preserve 
+drop if year==2019 & ecgdt==.
+drop if year==2019 & dohtoh==. & ecgdt!=.
+drop if year==2019 & (pid==2124 | pid==523 | pid==939 | pid==1705| pid==1858) 
+drop if dohtoh>ecgdt // all cases have been checked and only cases where ecg was done prior to admission left.
+list dohtoh ecgdt if year==2019 & ecg==1
+gen mins_hospecg=round(minutes(round(ecgdt-dohtoh))) if year==2019 & (dohtoh!=. & ecgt!=.) 
+gen hrs_hospecg=(mins_hospecg/60)
+label var mins_hospecg "Total minutes from  hospital admission to ecg" 
+label var hrs_hospecg "Total hours from to hospital admission to ecg"
+
+ //NOT TO PRINT
+tab mins_hospecg if year==2019,miss
+tab hrs_hospecg if year==2019, miss
+
+list pid gidcf mins_hospecg hrs_hospecg ecgdt dohtoh locami if mins_hospecg<0
+** 37 cases where first ecg was done prior to hosp admission **37 cases seen**
+drop if mins_hospecg<0 
+**none seen
 
 
+gen k=1
+
+table k, c(p50 mins_hospecg p25 mins_hospecg p75 mins_hospecg min mins_hospecg max mins_hospecg)
+
+table k, c(p50 hrs_hospecg p25 hrs_hospecg p75 hrs_hospecg min hrs_hospecg max hrs_hospecg)
+
+ameans hrs_hospecg 
+ameans mins_hospecg
+
+list pid frmscnt t_hosp if year==2019 & (hrs_hospecg==0 & mins_hospecg==0)
+
+restore
+*/
+
+****************************************
+** 2018 Time from admission to first ECG
+****************************************
+preserve
+** Use corrected 2018 dataset from above (scene-to-door)
+use "`datapath'\version02\2-working\pm3_scn2door_heart_2018" ,clear
+
+** Remove non-2018 cases
+drop if year!=2018 //0 deleted
+
+** Check for and remove cases wherein ECG was performed before admission to hospital (different day)
+count if year==2018 & doh>ecgd //4
+list record_id ecgd ecgt doh toh ambulance if year==2018 & doh>ecgd
+list record_id if year==2018 & doh>ecgd
+drop if year==2018 & doh>ecgd //4 deleted
+
+** Check if datetime variables for 'from scene' and 'admission' are not missing
+count if ecgdt==. & ecgd!=. & ecgt!=. //0
+list record_id ecgd ecgt ecgdt if ecgdt==. & ecgd!=. & ecgt!=.
+gen double ecgdt_pm3 = dhms(ecgd,hh(ecgt),mm(ecgt),ss(ecgt))
+format ecgdt_pm3 %tcNN/DD/CCYY_HH:MM:SS
+//format ecgdtoh_pm3 %tCDDmonCCYY_HH:MM:SS - when using this is changes the mm:ss part of the time
+//list record_id ecgdtoh_pm3 ecgd toh if ecgdtoh_pm3!=.
+
+count if dohtoh==. & doh!=. & toh!=. //7 - already corrected in this dataset
+//gen double dohtoh_pm3 = dhms(doh,hh(toh),mm(toh),ss(toh))
+//format dohtoh_pm3 %tcNN/DD/CCYY_HH:MM:SS
+//list record_id dohtoh_pm3 frmscnd toh if dohtoh_pm3!=.
+
+count if ecgdt_pm3==. //43
+count if dohtoh_pm3==. //0
+
+** Check for and remove cases wherein ECG was performed before admission to hospital (same day different time)
+count if dohtoh_pm3>ecgdt_pm3 //26
+list record_id ecgd ecgt doh toh ambulance if dohtoh_pm3>ecgdt_pm3
+drop if dohtoh_pm3>ecgdt_pm3 //26 deleted
 
 
+** Create variables to assess timing
+gen mins_door2ecg=round(minutes(round(ecgdt_pm3-dohtoh_pm3))) if (ecgdt_pm3!=. & dohtoh_pm3!=.)
+replace mins_door2ecg=round(minutes(round(ecgt-toh))) if mins_door2ecg==. & (ecgt!=. & toh!=.) //0 changes
+count if mins_door2ecg<0 //0 - checking to ensure this has been correctly generated
+count if mins_door2ecg==. //43 - ask NS if to drop these before calculating minutes for PM3 Timing since these are missing datetime so will automatically be missing
+drop if mins_door2ecg==. //JC 12apr2022: Timing still calculated the same as not removing the missing datetimes so doesn't matter if they're removed
+gen hrs_door2ecg=(mins_door2ecg/60)
+label var mins_door2ecg "Total minutes from hospital admission to ECG" 
+label var hrs_door2ecg "Total hours from hospital admission to ECG"
 
-stop
+tab mins_door2ecg if year==2018 & ambulance==1 ,miss
+tab hrs_door2ecg if year==2018 & ambulance==1,miss
+
+save "`datapath'\version02\2-working\pm3_door2ecg_heart_2018" ,replace
+ 
+gen k=1
+
+ameans mins_door2ecg
+ameans hrs_door2ecg
+
+** This code will run in Stata 17
+table k, stat(q2 mins_door2ecg) stat(q1 mins_door2ecg) stat(q3 mins_door2ecg) stat(min mins_door2ecg) stat(max mins_door2ecg)
+table k, stat(q2 hrs_door2ecg) stat(q1 hrs_door2ecg) stat(q3 hrs_door2ecg) stat(min hrs_door2ecg) stat(max hrs_door2ecg)
+
+restore
+
+****************************************
+** 2019 Time from admission to first ECG
+****************************************
+preserve
+** Use corrected 2019 dataset from above (scene-to-door)
+use "`datapath'\version02\2-working\pm3_scn2door_heart_2019" ,clear
+
+** Remove non-2019 cases
+drop if year!=2019 //0 deleted
+
+** Check for and remove cases wherein ECG was performed before admission to hospital (different day)
+count if year==2019 & doh>ecgd //0
+list record_id ecgd ecgt doh toh ambulance if year==2019 & doh>ecgd
+list record_id if year==2019 & doh>ecgd
+drop if year==2019 & doh>ecgd //0 deleted
+
+** Check if datetime variables for 'from scene' and 'admission' are not missing
+count if ecgdt==. & ecgd!=. & ecgt!=. //5
+list record_id ecgd ecgt ecgdt if ecgdt==. & ecgd!=. & ecgt!=.
+gen double ecgdt_pm3 = dhms(ecgd,hh(ecgt),mm(ecgt),ss(ecgt))
+format ecgdt_pm3 %tcNN/DD/CCYY_HH:MM:SS
+//format ecgdtoh_pm3 %tCDDmonCCYY_HH:MM:SS - when using this is changes the mm:ss part of the time
+//list record_id ecgdtoh_pm3 ecgd toh if ecgdtoh_pm3!=.
+
+count if dohtoh==. & doh!=. & toh!=. //6 - already corrected in this dataset
+//gen double dohtoh_pm3 = dhms(doh,hh(toh),mm(toh),ss(toh))
+//format dohtoh_pm3 %tcNN/DD/CCYY_HH:MM:SS
+//list record_id dohtoh_pm3 frmscnd toh if dohtoh_pm3!=.
+
+count if ecgdt_pm3==. //86
+count if dohtoh_pm3==. //0
+
+** Check for and remove cases wherein ECG was performed before admission to hospital (same day different time)
+count if dohtoh_pm3>ecgdt_pm3 //18
+list record_id ecgd ecgt doh toh ambulance if dohtoh_pm3>ecgdt_pm3
+drop if dohtoh_pm3>ecgdt_pm3 //18 deleted
+
+
+** Create variables to assess timing
+gen mins_door2ecg=round(minutes(round(ecgdt_pm3-dohtoh_pm3))) if (ecgdt_pm3!=. & dohtoh_pm3!=.)
+replace mins_door2ecg=round(minutes(round(ecgt-toh))) if mins_door2ecg==. & (ecgt!=. & toh!=.) //0 changes
+count if mins_door2ecg<0 //0 - checking to ensure this has been correctly generated
+count if mins_door2ecg==. //86 - ask NS if to drop these before calculating minutes for PM3 Timing since these are missing datetime so will automatically be missing
+drop if mins_door2ecg==. //JC 12apr2022: Timing still calculated the same as not removing the missing datetimes so doesn't matter if they're removed
+gen hrs_door2ecg=(mins_door2ecg/60)
+label var mins_door2ecg "Total minutes from hospital admission to ECG" 
+label var hrs_door2ecg "Total hours from hospital admission to ECG"
+
+tab mins_door2ecg if year==2019 & ambulance==1 ,miss
+tab hrs_door2ecg if year==2019 & ambulance==1,miss
+
+save "`datapath'\version02\2-working\pm3_door2ecg_heart_2019" ,replace
+ 
+gen k=1
+
+ameans mins_door2ecg
+ameans hrs_door2ecg
+
+** This code will run in Stata 17
+table k, stat(q2 mins_door2ecg) stat(q1 mins_door2ecg) stat(q3 mins_door2ecg) stat(min mins_door2ecg) stat(max mins_door2ecg)
+table k, stat(q2 hrs_door2ecg) stat(q1 hrs_door2ecg) stat(q3 hrs_door2ecg) stat(min hrs_door2ecg) stat(max hrs_door2ecg)
+restore
+
+
+****************************************
+** 2020 Time from admission to first ECG
+****************************************
+preserve
+** Use corrected 2020 dataset from above (scene-to-door)
+use "`datapath'\version02\2-working\pm3_scn2door_heart_2020" ,clear
+
+** Remove non-2020 cases
+drop if year!=2020 //0 deleted
+
+** Check for and remove cases wherein ECG was performed before admission to hospital (different day)
+count if year==2020 & dae>ecgd //3
+list record_id ecgd ecgt dae tae ambulance if year==2020 & dae>ecgd
+list record_id if year==2020 & dae>ecgd
+drop if year==2020 & dae>ecgd //3 deleted
+
+** Check if datetime variables for 'from scene' and 'admission' are not missing
+count if ecgdt==. & ecgd!=. & ecgt!=. //5
+list record_id ecgd ecgt ecgdt if ecgdt==. & ecgd!=. & ecgt!=.
+gen double ecgdt_pm3 = dhms(ecgd,hh(ecgt),mm(ecgt),ss(ecgt))
+format ecgdt_pm3 %tcNN/DD/CCYY_HH:MM:SS
+//format ecgdtae_pm3 %tCDDmonCCYY_HH:MM:SS - when using this is changes the mm:ss part of the time
+//list record_id ecgdtae_pm3 ecgd tae if ecgdtae_pm3!=.
+
+count if daetae==. & dae!=. & tae!=. //5 - already corrected in this dataset
+//gen double daetae_pm3 = dhms(dae,hh(tae),mm(tae),ss(tae))
+//format daetae_pm3 %tcNN/DD/CCYY_HH:MM:SS
+//list record_id daetae_pm3 frmscnd tae if daetae_pm3!=.
+
+count if ecgdt_pm3==. //75
+count if daetae_pm3==. //0
+
+** Check for and remove cases wherein ECG was performed before admission to hospital (same day different time)
+count if daetae_pm3>ecgdt_pm3 //18
+list record_id ecgd ecgt dae tae ambulance if daetae_pm3>ecgdt_pm3
+drop if daetae_pm3>ecgdt_pm3 //18 deleted
+
+
+** Create variables to assess timing
+gen mins_door2ecg=round(minutes(round(ecgdt_pm3-daetae_pm3))) if (ecgdt_pm3!=. & daetae_pm3!=.)
+replace mins_door2ecg=round(minutes(round(ecgt-tae))) if mins_door2ecg==. & (ecgt!=. & tae!=.) //0 changes
+count if mins_door2ecg<0 //0 - checking to ensure this has been correctly generated
+count if mins_door2ecg==. //75 - ask NS if to drop these before calculating minutes for PM3 Timing since these are missing datetime so will automatically be missing
+drop if mins_door2ecg==. //JC 12apr2022: Timing still calculated the same as not removing the missing datetimes so doesn't matter if they're removed
+gen hrs_door2ecg=(mins_door2ecg/60)
+label var mins_door2ecg "Total minutes from hospital admission to ECG" 
+label var hrs_door2ecg "Total hours from hospital admission to ECG"
+
+tab mins_door2ecg if year==2020 & ambulance==1 ,miss
+tab hrs_door2ecg if year==2020 & ambulance==1,miss
+
+save "`datapath'\version02\2-working\pm3_door2ecg_heart_2020" ,replace
+ 
+gen k=1
+
+ameans mins_door2ecg
+ameans hrs_door2ecg
+
+** This code will run in Stata 17
+table k, stat(q2 mins_door2ecg) stat(q1 mins_door2ecg) stat(q3 mins_door2ecg) stat(min mins_door2ecg) stat(max mins_door2ecg)
+table k, stat(q2 hrs_door2ecg) stat(q1 hrs_door2ecg) stat(q3 hrs_door2ecg) stat(min hrs_door2ecg) stat(max hrs_door2ecg)
+restore
+
+
+** JC update: Save these 'p50' results as a dataset for reporting Table 1.7
+preserve
+use "`datapath'\version02\2-working\pm3_door2ecg_heart_2018" ,clear
+append using "`datapath'\version02\2-working\pm3_door2ecg_heart_2019"
+append using "`datapath'\version02\2-working\pm3_door2ecg_heart_2020"
+
+drop mins_door2ecg hrs_door2ecg
+gen mins_door2ecg=round(minutes(round(ecgdt_pm3-daetae_pm3))) if year==2020 & (ecgdt_pm3!=. & daetae_pm3!=.) // changes
+replace mins_door2ecg=round(minutes(round(ecgt-tae))) if year==2020 & mins_door2ecg==. & (ecgt!=. & tae!=.) // changes
+
+replace mins_door2ecg=round(minutes(round(ecgdt_pm3-dohtoh_pm3))) if year==2019 & (ecgdt_pm3!=. & dohtoh_pm3!=.) // changes
+replace mins_door2ecg=round(minutes(round(ecgt-toh))) if year==2019 & mins_door2ecg==. & (ecgt!=. & toh!=.) // changes
+
+replace mins_door2ecg=round(minutes(round(ecgdt_pm3-dohtoh_pm3))) if year==2018 & (ecgdt_pm3!=. & dohtoh_pm3!=.) // changes
+replace mins_door2ecg=round(minutes(round(ecgt-toh))) if year==2018 & mins_door2ecg==. & (ecgt!=. & toh!=.)  // changes
+
+gen hrs_door2ecg=(mins_door2ecg/60) // changes
+label var mins_door2ecg "Total minutes from hospital admission to ECG (door-to-ecg)"
+label var hrs_door2ecg "Total hours from hospital admission to ECG (door-to-ecg)"
+
+gen k=1
+
+table k, stat(q2 mins_door2ecg) stat(q1 mins_door2ecg) stat(q3 mins_door2ecg) stat(min mins_door2ecg) stat(max mins_door2ecg), if year==2020
+table k, stat(q2 hrs_door2ecg) stat(q1 hrs_door2ecg) stat(q3 hrs_door2ecg) stat(min hrs_door2ecg) stat(max hrs_door2ecg), if year==2020
+
+table k, stat(q2 mins_door2ecg) stat(q1 mins_door2ecg) stat(q3 mins_door2ecg) stat(min mins_door2ecg) stat(max mins_door2ecg), if year==2019
+table k, stat(q2 hrs_door2ecg) stat(q1 hrs_door2ecg) stat(q3 hrs_door2ecg) stat(min hrs_door2ecg) stat(max hrs_door2ecg), if year==2019
+
+table k, stat(q2 mins_door2ecg) stat(q1 mins_door2ecg) stat(q3 mins_door2ecg) stat(min mins_door2ecg) stat(max mins_door2ecg), if year==2018
+table k, stat(q2 hrs_door2ecg) stat(q1 hrs_door2ecg) stat(q3 hrs_door2ecg) stat(min hrs_door2ecg) stat(max hrs_door2ecg), if year==2018
+
+drop if year<2018
+drop if k!=1
+
+save "`datapath'\version02\2-working\pm3_door2ecg_heart_ar" ,replace
+
+sum mins_door2ecg if year==2020
+sum mins_door2ecg ,detail, if year==2020
+gen mins_door2ecg_2020=r(p50) if year==2020
+
+tostring mins_door2ecg_2020 ,replace
+replace mins_door2ecg_2020=mins_door2ecg_2020+" "+"minutes"
+
+
+sum mins_door2ecg if year==2019
+sum mins_door2ecg ,detail, if year==2019
+gen mins_door2ecg_2019=r(p50) if year==2019
+
+tostring mins_door2ecg_2019 ,replace
+replace mins_door2ecg_2019=mins_door2ecg_2019+" "+"minutes"
+
+
+sum mins_door2ecg if year==2018
+sum mins_door2ecg ,detail, if year==2018
+gen mins_door2ecg_2018=r(p50) if year==2018
+
+tostring mins_door2ecg_2018 ,replace
+replace mins_door2ecg_2018=mins_door2ecg_2018+" "+"minutes"
+
+replace mins_door2ecg_2018="" if mins_door2ecg_2018==". minutes"
+replace mins_door2ecg_2019="" if mins_door2ecg_2019==". minutes"
+replace mins_door2ecg_2020="" if mins_door2ecg_2020==". minutes"
+fillmissing mins_door2ecg_2018 mins_door2ecg_2019 mins_door2ecg_2020
+
+keep mins_door2ecg_2018 mins_door2ecg_2019 mins_door2ecg_2020
+order mins_door2ecg_2018 mins_door2ecg_2019 mins_door2ecg_2020
+save "`datapath'\version02\2-working\pm3_door2ecg_heart" ,replace
+
+use "`datapath'\version02\2-working\pm3_door2ecg_heart_ar" ,clear
+
+sum hrs_door2ecg if year==2020
+sum hrs_door2ecg ,detail, if year==2020
+gen hours_2020=r(p50) if year==2020
+
+sum hrs_door2ecg if year==2019
+sum hrs_door2ecg ,detail, if year==2019
+gen hours_2019=r(p50) if year==2019
+
+sum hrs_door2ecg if year==2018
+sum hrs_door2ecg ,detail, if year==2018
+gen hours_2018=r(p50) if year==2018
+
+collapse hours_2018 hours_2019 hours_2020
+
+gen double fullhour_2018=int(hours_2018)
+gen double fraction_2018=hours_2018-fullhour_2018
+gen minutes_2018=round(fraction_2018*60,1)
+
+tostring fullhour_2018 ,replace
+tostring minutes_2018 ,replace
+replace fullhour_2018=minutes_2018+" "+"minutes"
+rename fullhour_2018 hrs_door2ecg_2018
+
+
+gen double fullhour_2019=int(hours_2019)
+gen double fraction_2019=hours_2019-fullhour_2019
+gen minutes_2019=round(fraction_2019*60,1)
+
+tostring fullhour_2019 ,replace
+tostring minutes_2019 ,replace
+replace fullhour_2019=minutes_2019+" "+"minutes"
+rename fullhour_2019 hrs_door2ecg_2019
+
+
+gen double fullhour_2020=int(hours_2020)
+gen double fraction_2020=hours_2020-fullhour_2020
+gen minutes_2020=round(fraction_2020*60,1)
+
+tostring fullhour_2020 ,replace
+tostring minutes_2020 ,replace
+replace fullhour_2020=fullhour_2020+" "+"hour"+" "+minutes_2020+" "+"minutes"
+rename fullhour_2020 hrs_door2ecg_2020
+
+keep hrs_door2ecg_2018 hrs_door2ecg_2019 hrs_door2ecg_2020
+
+append using "`datapath'\version02\2-working\pm3_door2ecg_heart"
+
+fillmissing mins_door2ecg*
+gen id=_n
+drop if id>1 
+drop id
+gen median_2018=mins_door2ecg_2018
+gen median_2019=mins_door2ecg_2019
+gen median_2020=mins_door2ecg_2020+" "+"or"+" "+hrs_door2ecg_2020
+keep median_2018 median_2019 median_2020
+gen pm3_category=2
+
+label var pm3_category "PM3 Category"
+label define pm3_category_lab 1 "Median time from scene to arrival at A&E" 2 "Median time from admission to first ECG" ///
+							  3 "Median time from admission to fibrinolysis" 4 "Median time from onset to fibrinolysis" , modify
+label values pm3_category pm3_category_lab
+
+order pm3_category median_2018 median_2019 median_2020
+erase "`datapath'\version02\2-working\pm3_door2ecg_heart_ar.dta"
+save "`datapath'\version02\2-working\pm3_door2ecg_heart" ,replace
+restore
+
+
 ** JC 17mar2022: Below was the only code for PM3 in the 2020 analysis dofile
 
 **********************************************************************
@@ -1102,15 +1774,8 @@ list record_id frmscnt doh toh daetae reperfdt mins_door2needle hrs_door2needle 
 
 gen k=1
 
-** Below code runs in Stata 16 (used by AH) but not in Stata 17 (used by JC)
-//table k, c(p50 mins_door2needle p25 mins_door2needle p75 mins_door2needle min mins_door2needle max mins_door2needle)
-//table k, c(p50 hrs_door2needle p25 hrs_door2needle p75 hrs_door2needle min hrs_door2needle max hrs_door2needle)
-
 ameans mins_door2needle
 ameans hrs_door2needle
-
-//table k, c(p50 hrs_door2needle p25 hrs_door2needle p75 hrs_door2needle min hrs_door2needle max hrs_door2needle)
-** 1.7 hours seen - 1 hr 42 mins
 
 ** This code will run in Stata 17
 table k, stat(q2 mins_door2needle) stat(q1 mins_door2needle) stat(q3 mins_door2needle) stat(min mins_door2needle) stat(max mins_door2needle)
@@ -1229,7 +1894,7 @@ gen minutes_2019=round(fraction_2019*60,1)
 
 tostring fullhour_2019 ,replace
 tostring minutes_2019 ,replace
-replace fullhour_2019=fullhour_2019+" "+"hour"+" "+minutes_2019+" "+"minutes"
+replace fullhour_2019=fullhour_2019+" "+"hours"+" "+minutes_2019+" "+"minutes"
 rename fullhour_2019 hrs_door2needle_2019
 
 
@@ -1250,10 +1915,10 @@ fillmissing mins_door2needle*
 gen id=_n
 drop if id>1 
 drop id
-gen median_door2needle_2018=mins_door2needle_2018+" "+"or"+" "+hrs_door2needle_2018
-gen median_door2needle_2019=mins_door2needle_2019+" "+"or"+" "+hrs_door2needle_2019
-gen median_door2needle_2020=mins_door2needle_2020+" "+"or"+" "+hrs_door2needle_2020
-keep median_door2needle_2018 median_door2needle_2019 median_door2needle_2020
+gen median_2018=mins_door2needle_2018+" "+"or"+" "+hrs_door2needle_2018
+gen median_2019=mins_door2needle_2019+" "+"or"+" "+hrs_door2needle_2019
+gen median_2020=mins_door2needle_2020+" "+"or"+" "+hrs_door2needle_2020
+keep median_2018 median_2019 median_2020
 gen pm3_category=3
 
 label var pm3_category "PM3 Category"
@@ -1261,13 +1926,445 @@ label define pm3_category_lab 1 "Median time from scene to arrival at A&E" 2 "Me
 							  3 "Median time from admission to fibrinolysis" 4 "Median time from onset to fibrinolysis" , modify
 label values pm3_category pm3_category_lab
 
-order pm3_category median_door2needle_2018 median_door2needle_2019 median_door2needle_2020
+order pm3_category median_2018 median_2019 median_2020
+
+
 erase "`datapath'\version02\2-working\pm3_door2needle_heart_ar.dta"
 save "`datapath'\version02\2-working\pm3_door2needle_heart" ,replace
 
 restore
 
-stop
+
+******************************************************************
+**PM3: STEMI pts onset2needle time for those who were thrombolysed
+************************2***0*******2******0**********************
+
+
+
+**********************************
+** 2018 from Onset to Thrombolysis
+**********************************
+preserve
+** Use corrected 2018 dataset from above (scene-to-door)
+use "`datapath'\version02\2-working\pm3_scn2door_heart_2018" ,clear
+
+** Time of AMI (tom) is datetime variable (dom + tom) - create var that contains only time (below code kept for reference/historical value)
+/*
+gen tom_hrs = hhC(tom)
+gen tom_mins = mmC(tom)
+gen tom_secs = ssC(tom)
+
+tostring tom_hrs ,replace
+tostring tom_mins ,replace
+tostring tom_secs ,replace
+
+replace tom_hrs="" if tom_hrs=="."
+replace tom_mins="" if tom_mins=="."
+replace tom_mins="00" if tom_mins=="0"
+gen tom_str=tom_hrs+":"+tom_mins+":"+"00" if tom!=.
+
+list tom tom_str
+*/
+** Check if 'Time of AMI' (too) is missing and 'Time of chest pain' is NOT missing 
+count if too!=. & tom==. //2 - checked raw data and comments in both cases note the AMI was prior to seeking medical attention
+list anon_pid record_id doo too sob_date vom_date dizzy_date palp_date sweat_date dom tom if too!=. & tom==.
+generate double tom_pm3=hms(hhC(tom), mmC(tom), ssC(tom)) if tom!=.
+format tom_pm3 %tc_HH:MM:SS
+
+list tom tom_pm3
+
+** Remove non-2018 cases
+drop if year!=2018 //0 deleted
+
+** Check for and remove cases wherein reperf was performed before admission to hospital (different day)
+count if year==2018 & dom>reperfd //0
+list record_id reperfd reperft dom tom ambulance if year==2018 & dom>reperfd
+list record_id if year==2018 & dom>reperfd
+drop if year==2018 & dom>reperfd //0 deleted
+
+** Check if datetime variables for 'from scene' and 'admission' are not missing
+count if reperfdt==. & reperfd!=. & reperft!=. //0
+list record_id reperfd reperft reperfdt if reperfdt==. & reperfd!=. & reperft!=.
+gen double reperfdt_pm3 = dhms(reperfd,hh(reperft),mm(reperft),ss(reperft))
+format reperfdt_pm3 %tcNN/DD/CCYY_HH:MM:SS
+//format reperfdtom_pm3 %tCDDmonCCYY_HH:MM:SS - when using this is changes the mm:ss part of the time
+//list record_id reperfdtom_pm3 reperfd tom if reperfdtom_pm3!=.
+
+//count if domtom==. & dom!=. & tom!=. //7 - already corrected in this dataset
+gen double domtom_pm3 = dhms(dom,hh(tom_pm3),mm(tom_pm3),ss(tom_pm3))
+format domtom_pm3 %tcNN/DD/CCYY_HH:MM:SS
+count if domtom_pm3==. & tom!=. //0
+//list record_id domtom_pm3 reperfdt tom if domtom_pm3!=.
+
+count if reperfdt_pm3==. //120
+count if domtom_pm3==. //40
+
+** Check for and remove cases wherein reperf was performed before admission to hospital (same day different time)
+count if domtom_pm3>reperfdt_pm3 //0
+list record_id reperfd reperft dom tom if domtom_pm3>reperfdt_pm3
+drop if domtom_pm3>reperfdt_pm3 //0 deleted
+
+
+** Create variables to assess timing
+gen mins_onset2needle=round(minutes(round(reperfdt_pm3-domtom_pm3))) if (reperfdt_pm3!=. & domtom_pm3!=.)
+replace mins_onset2needle=round(minutes(round(reperft-tom))) if mins_onset2needle==. & (reperft!=. & tom!=.) //0 changes
+count if mins_onset2needle<0 //0 - checking to ensure this has been correctly generated
+count if mins_onset2needle==. //120 - ask NS if to drop these before calculating minutes for PM3 Timing since these are missing datetime so will automatically be missing
+drop if mins_onset2needle==. //JC 12apr2022: Timing still calculated the same as not removing the missing datetimes so doesn't matter if they're removed
+gen hrs_onset2needle=(mins_onset2needle/60)
+label var mins_onset2needle "Total minutes from onset to thrombolysis (onset-to-needle)" 
+label var hrs_onset2needle "Total hours from onset to thrombolysis (onset-to-needle)"
+
+tab mins_onset2needle if year==2018 ,miss
+tab hrs_onset2needle if year==2018 ,miss
+
+save "`datapath'\version02\2-working\pm3_onset2needle_heart_2018" ,replace
+ 
+gen k=1
+
+ameans mins_onset2needle
+ameans hrs_onset2needle
+
+** This code will run in Stata 17
+table k, stat(q2 mins_onset2needle) stat(q1 mins_onset2needle) stat(q3 mins_onset2needle) stat(min mins_onset2needle) stat(max mins_onset2needle)
+table k, stat(q2 hrs_onset2needle) stat(q1 hrs_onset2needle) stat(q3 hrs_onset2needle) stat(min hrs_onset2needle) stat(max hrs_onset2needle)
+restore
+
+**********************************
+** 2019 from Onset to Thrombolysis
+**********************************
+preserve
+** Use corrected 2018 dataset from above (scene-to-door)
+use "`datapath'\version02\2-working\pm3_scn2door_heart_2019" ,clear
+
+** Time of AMI (tom) is datetime variable (dom + tom) - create var that contains only time (below code kept for reference/historical value)
+count if too!=. & tom==. //3 - checked in raw data and 2 are correct as is but one to be changed
+list anon_pid record_id doo too sob_date vom_date dizzy_date palp_date sweat_date dom tom if too!=. & tom==.
+replace tom=too if anon_pid==498|record_id=="2019978"
+
+generate double tom_pm3=hms(hhC(tom), mmC(tom), ssC(tom)) if tom!=.
+format tom_pm3 %tc_HH:MM:SS
+
+list tom tom_pm3
+
+** Remove non-2019 cases
+drop if year!=2019 //0 deleted
+
+** Check for and remove cases wherein reperf was performed before admission to hospital (different day)
+count if year==2019 & dom>reperfd //0
+list record_id reperfd reperft dom tom ambulance if year==2019 & dom>reperfd
+list record_id if year==2019 & dom>reperfd
+drop if year==2019 & dom>reperfd //0 deleted
+
+** Check if datetime variables for 'from scene' and 'admission' are not missing
+count if reperfdt==. & reperfd!=. & reperft!=. //0
+list record_id reperfd reperft reperfdt if reperfdt==. & reperfd!=. & reperft!=.
+gen double reperfdt_pm3 = dhms(reperfd,hh(reperft),mm(reperft),ss(reperft))
+format reperfdt_pm3 %tcNN/DD/CCYY_HH:MM:SS
+//format reperfdtom_pm3 %tCDDmonCCYY_HH:MM:SS - when using this is changes the mm:ss part of the time
+//list record_id reperfdtom_pm3 reperfd tom if reperfdtom_pm3!=.
+
+//count if domtom==. & dom!=. & tom!=. //7 - already corrected in this dataset
+gen double domtom_pm3 = dhms(dom,hh(tom_pm3),mm(tom_pm3),ss(tom_pm3))
+format domtom_pm3 %tcNN/DD/CCYY_HH:MM:SS
+count if domtom_pm3==. & tom!=. //0
+//list record_id domtom_pm3 reperfdt tom if domtom_pm3!=.
+
+count if reperfdt_pm3==. //139
+count if domtom_pm3==. //55
+
+** Check for and remove cases wherein reperf was performed before admission to hospital (same day different time)
+count if domtom_pm3>reperfdt_pm3 //1
+list anon_pid record_id reperfd reperft dom tom tom_pm3 domtom_pm3 reperfdt_pm3 if domtom_pm3>reperfdt_pm3 & domtom_pm3!=. & reperfdt_pm3!=.
+drop if domtom_pm3>reperfdt_pm3 //1 deleted
+
+
+** Create variables to assess timing
+gen mins_onset2needle=round(minutes(round(reperfdt_pm3-domtom_pm3))) if (reperfdt_pm3!=. & domtom_pm3!=.)
+replace mins_onset2needle=round(minutes(round(reperft-tom_pm3))) if mins_onset2needle==. & (reperft!=. & tom_pm3!=.) //0 changes
+count if mins_onset2needle<0 //0 - checking to ensure this has been correctly generated
+count if mins_onset2needle==. //139 - ask NS if to drop these before calculating minutes for PM3 Timing since these are missing datetime so will automatically be missing
+drop if mins_onset2needle==. //JC 12apr2022: Timing still calculated the same as not removing the missing datetimes so doesn't matter if they're removed
+gen hrs_onset2needle=(mins_onset2needle/60)
+label var mins_onset2needle "Total minutes from onset to thrombolysis (onset-to-needle)" 
+label var hrs_onset2needle "Total hours from onset to thrombolysis (onset-to-needle)"
+
+tab mins_onset2needle if year==2019 ,miss
+tab hrs_onset2needle if year==2019 ,miss
+
+save "`datapath'\version02\2-working\pm3_onset2needle_heart_2019" ,replace
+ 
+gen k=1
+
+ameans mins_onset2needle
+ameans hrs_onset2needle
+
+** This code will run in Stata 17
+table k, stat(q2 mins_onset2needle) stat(q1 mins_onset2needle) stat(q3 mins_onset2needle) stat(min mins_onset2needle) stat(max mins_onset2needle)
+table k, stat(q2 hrs_onset2needle) stat(q1 hrs_onset2needle) stat(q3 hrs_onset2needle) stat(min hrs_onset2needle) stat(max hrs_onset2needle)
+restore
+
+
+**********************************
+** 2020 from Onset to Thrombolysis
+**********************************
+preserve
+** Use corrected 2018 dataset from above (scene-to-door)
+use "`datapath'\version02\2-working\pm3_scn2door_heart_2020" ,clear
+
+** Time of chest pain (too) created to match 2018, 2019
+gen too_pm3=hsym1t if hsym1t!="" & hsym1t!="88" & hsym1t!="99"
+gen too_pm3_am="January 1,1960"+" "+too_pm3+" "+"am" if substr(too_pm3, 1, 2) < "12" & too_pm3!=""
+
+generate double numtime = clock(too_pm3_am, "MDYhm")
+format numtime %tc_HH:MM:SS
+drop too_pm3_am
+rename numtime too_pm3_am
+
+gen too_pm3_pm="January 1,1960"+" "+too_pm3+" "+"am" if substr(too_pm3, 1, 2) > "12" & too_pm3!=""
+
+generate double numtime = clock(too_pm3_pm, "MDYhm")
+format numtime %tc_HH:MM:SS
+drop too_pm3_pm
+rename numtime too_pm3_pm
+replace too_pm3_am=too_pm3_pm if too_pm3_am==.
+drop too_pm3 too_pm3_pm
+rename too_pm3_am too_pm3
+
+** Time of AMI (tom) is datetime variable (dom + tom) - create var that contains only time (below code kept for reference/historical value)
+count if too!=. & tom==. //0
+list anon_pid record_id doo too sob_date vom_date dizzy_date palp_date sweat_date dom tom if too!=. & tom==.
+
+generate double tom_pm3=hms(hhC(tom), mmC(tom), ssC(tom)) if tom!=.
+format tom_pm3 %tc_HH:MM:SS
+
+list tom tom_pm3
+
+** Remove non-2020 cases
+drop if year!=2020 //0 deleted
+
+** Check for and remove cases wherein reperf was performed before admission to hospital (different day)
+count if year==2020 & dom>reperfd //0
+list record_id reperfd reperft dom tom ambulance if year==2020 & dom>reperfd
+list record_id if year==2020 & dom>reperfd
+drop if year==2020 & dom>reperfd //0 deleted
+
+** Check if datetime variables for 'from scene' and 'admission' are not missing
+count if reperfdt==. & reperfd!=. & reperft!=. //0
+list record_id reperfd reperft reperfdt if reperfdt==. & reperfd!=. & reperft!=.
+gen double reperfdt_pm3 = dhms(reperfd,hh(reperft),mm(reperft),ss(reperft))
+format reperfdt_pm3 %tcNN/DD/CCYY_HH:MM:SS
+//format reperfdtom_pm3 %tCDDmonCCYY_HH:MM:SS - when using this is changes the mm:ss part of the time
+//list record_id reperfdtom_pm3 reperfd tom if reperfdtom_pm3!=.
+
+//count if domtom==. & dom!=. & tom!=. //7 - already corrected in this dataset
+gen double domtom_pm3 = dhms(dom,hh(tom_pm3),mm(tom_pm3),ss(tom_pm3))
+format domtom_pm3 %tcNN/DD/CCYY_HH:MM:SS
+count if domtom_pm3==. & tom!=. //0
+//list record_id domtom_pm3 reperfdt tom if domtom_pm3!=.
+
+count if reperfdt_pm3==. //131
+count if domtom_pm3==. //47
+
+** Check for and remove cases wherein reperf was performed before admission to hospital (same day different time)
+count if domtom_pm3>reperfdt_pm3 //3
+list anon_pid record_id reperfd reperft dom tom tom_pm3 domtom_pm3 reperfdt_pm3 if domtom_pm3>reperfdt_pm3
+count if domtom_pm3>reperfdt_pm3 & domtom_pm3!=. & reperfdt_pm3!=. //1
+list anon_pid record_id reperfd reperft dom tom tom_pm3 domtom_pm3 reperfdt_pm3 if domtom_pm3>reperfdt_pm3 & domtom_pm3!=. & reperfdt_pm3!=.
+di %tc clock("12mar2020 14:58:00.000", "dmyhms")
+di clock("14:58:00.000", "hms") //
+replace reperft=53880000 if anon_pid==3944|record_id=="20202407"
+replace reperfdt=dhms(reperfd,hhC(reperft),mmC(reperft),ssC(reperft)) if anon_pid==3944|record_id=="20202407"
+replace reperfdt_pm3=reperfdt if anon_pid==3944|record_id=="20202407"
+
+drop if domtom_pm3>reperfdt_pm3 //2 deleted
+
+
+** Create variables to assess timing
+gen mins_onset2needle=round(minutes(round(reperfdt_pm3-domtom_pm3))) if (reperfdt_pm3!=. & domtom_pm3!=.)
+replace mins_onset2needle=round(minutes(round(reperft-tom_pm3))) if mins_onset2needle==. & (reperft!=. & tom_pm3!=.) //0 changes
+count if mins_onset2needle<0 //0 - checking to ensure this has been correctly generated
+count if mins_onset2needle==. //131 - ask NS if to drop these before calculating minutes for PM3 Timing since these are missing datetime so will automatically be missing
+drop if mins_onset2needle==. //JC 12apr2022: Timing still calculated the same as not removing the missing datetimes so doesn't matter if they're removed
+gen hrs_onset2needle=(mins_onset2needle/60)
+label var mins_onset2needle "Total minutes from onset to thrombolysis (onset-to-needle)" 
+label var hrs_onset2needle "Total hours from onset to thrombolysis (onset-to-needle)"
+
+tab mins_onset2needle if year==2020 ,miss
+tab hrs_onset2needle if year==2020 ,miss
+
+save "`datapath'\version02\2-working\pm3_onset2needle_heart_2020" ,replace
+ 
+gen k=1
+
+ameans mins_onset2needle
+ameans hrs_onset2needle
+
+** This code will run in Stata 17
+table k, stat(q2 mins_onset2needle) stat(q1 mins_onset2needle) stat(q3 mins_onset2needle) stat(min mins_onset2needle) stat(max mins_onset2needle)
+table k, stat(q2 hrs_onset2needle) stat(q1 hrs_onset2needle) stat(q3 hrs_onset2needle) stat(min hrs_onset2needle) stat(max hrs_onset2needle)
+restore
+
+
+** JC update: Save these 'p50' results as a dataset for reporting Table 1.7
+preserve
+use "`datapath'\version02\2-working\pm3_onset2needle_heart_2018" ,clear
+append using "`datapath'\version02\2-working\pm3_onset2needle_heart_2019"
+append using "`datapath'\version02\2-working\pm3_onset2needle_heart_2020"
+
+drop mins_onset2needle hrs_onset2needle
+gen mins_onset2needle=round(minutes(round(reperfdt_pm3-domtom_pm3))) if year==2020 & (reperfdt_pm3!=. & domtom_pm3!=.) // changes
+replace mins_onset2needle=round(minutes(round(reperft-tom_pm3))) if year==2020 & mins_onset2needle==. & (reperft!=. & tom_pm3!=.) // changes
+
+replace mins_onset2needle=round(minutes(round(reperfdt_pm3-domtom_pm3))) if year==2019 & (reperfdt_pm3!=. & domtom_pm3!=.) // changes
+replace mins_onset2needle=round(minutes(round(reperft-tom_pm3))) if year==2019 & mins_onset2needle==. & (reperft!=. & tom_pm3!=.) // changes
+
+replace mins_onset2needle=round(minutes(round(reperfdt_pm3-domtom_pm3))) if year==2018 & (reperfdt_pm3!=. & domtom_pm3!=.) // changes
+replace mins_onset2needle=round(minutes(round(reperft-tom_pm3))) if year==2018 & mins_onset2needle==. & (reperft!=. & tom_pm3!=.)  // changes
+
+gen hrs_onset2needle=(mins_onset2needle/60) // changes
+label var mins_onset2needle "Total minutes from onset to thrombolysis (onset-to-needle)"
+label var hrs_onset2needle "Total hours from onset to thrombolysis (onset-to-needle)"
+
+gen k=1
+
+table k, stat(q2 mins_onset2needle) stat(q1 mins_onset2needle) stat(q3 mins_onset2needle) stat(min mins_onset2needle) stat(max mins_onset2needle), if year==2020
+table k, stat(q2 hrs_onset2needle) stat(q1 hrs_onset2needle) stat(q3 hrs_onset2needle) stat(min hrs_onset2needle) stat(max hrs_onset2needle), if year==2020
+
+table k, stat(q2 mins_onset2needle) stat(q1 mins_onset2needle) stat(q3 mins_onset2needle) stat(min mins_onset2needle) stat(max mins_onset2needle), if year==2019
+table k, stat(q2 hrs_onset2needle) stat(q1 hrs_onset2needle) stat(q3 hrs_onset2needle) stat(min hrs_onset2needle) stat(max hrs_onset2needle), if year==2019
+
+table k, stat(q2 mins_onset2needle) stat(q1 mins_onset2needle) stat(q3 mins_onset2needle) stat(min mins_onset2needle) stat(max mins_onset2needle), if year==2018
+table k, stat(q2 hrs_onset2needle) stat(q1 hrs_onset2needle) stat(q3 hrs_onset2needle) stat(min hrs_onset2needle) stat(max hrs_onset2needle), if year==2018
+
+drop if year<2018
+drop if k!=1
+
+save "`datapath'\version02\2-working\pm3_onset2needle_heart_ar" ,replace
+
+sum mins_onset2needle if year==2020
+sum mins_onset2needle ,detail, if year==2020
+gen mins_onset2needle_2020=r(p50) if year==2020
+
+tostring mins_onset2needle_2020 ,replace
+replace mins_onset2needle_2020=mins_onset2needle_2020+" "+"minutes"
+
+
+sum mins_onset2needle if year==2019
+sum mins_onset2needle ,detail, if year==2019
+gen mins_onset2needle_2019=r(p50) if year==2019
+
+tostring mins_onset2needle_2019 ,replace
+replace mins_onset2needle_2019=mins_onset2needle_2019+" "+"minutes"
+
+
+sum mins_onset2needle if year==2018
+sum mins_onset2needle ,detail, if year==2018
+gen mins_onset2needle_2018=r(p50) if year==2018
+
+tostring mins_onset2needle_2018 ,replace
+replace mins_onset2needle_2018=mins_onset2needle_2018+" "+"minutes"
+
+replace mins_onset2needle_2018="" if mins_onset2needle_2018==". minutes"
+replace mins_onset2needle_2019="" if mins_onset2needle_2019==". minutes"
+replace mins_onset2needle_2020="" if mins_onset2needle_2020==". minutes"
+fillmissing mins_onset2needle_2018 mins_onset2needle_2019 mins_onset2needle_2020
+
+keep mins_onset2needle_2018 mins_onset2needle_2019 mins_onset2needle_2020
+order mins_onset2needle_2018 mins_onset2needle_2019 mins_onset2needle_2020
+save "`datapath'\version02\2-working\pm3_onset2needle_heart" ,replace
+
+use "`datapath'\version02\2-working\pm3_onset2needle_heart_ar" ,clear
+
+sum hrs_onset2needle if year==2020
+sum hrs_onset2needle ,detail, if year==2020
+gen hours_2020=r(p50) if year==2020
+
+sum hrs_onset2needle if year==2019
+sum hrs_onset2needle ,detail, if year==2019
+gen hours_2019=r(p50) if year==2019
+
+sum hrs_onset2needle if year==2018
+sum hrs_onset2needle ,detail, if year==2018
+gen hours_2018=r(p50) if year==2018
+
+collapse hours_2018 hours_2019 hours_2020
+
+gen double fullhour_2018=int(hours_2018)
+gen double fraction_2018=hours_2018-fullhour_2018
+gen minutes_2018=round(fraction_2018*60,1)
+
+tostring fullhour_2018 ,replace
+tostring minutes_2018 ,replace
+replace fullhour_2018=fullhour_2018+" "+"hours"+" "+minutes_2018+" "+"minutes"
+rename fullhour_2018 hrs_onset2needle_2018
+
+
+gen double fullhour_2019=int(hours_2019)
+gen double fraction_2019=hours_2019-fullhour_2019
+gen minutes_2019=round(fraction_2019*60,1)
+
+tostring fullhour_2019 ,replace
+tostring minutes_2019 ,replace
+replace fullhour_2019=fullhour_2019+" "+"hours"+" "+minutes_2019+" "+"minutes"
+rename fullhour_2019 hrs_onset2needle_2019
+
+
+gen double fullhour_2020=int(hours_2020)
+gen double fraction_2020=hours_2020-fullhour_2020
+gen minutes_2020=round(fraction_2020*60,1)
+
+tostring fullhour_2020 ,replace
+tostring minutes_2020 ,replace
+replace fullhour_2020=fullhour_2020+" "+"hours"+" "+minutes_2020+" "+"minutes"
+rename fullhour_2020 hrs_onset2needle_2020
+
+keep hrs_onset2needle_2018 hrs_onset2needle_2019 hrs_onset2needle_2020
+
+append using "`datapath'\version02\2-working\pm3_onset2needle_heart"
+
+fillmissing mins_onset2needle*
+gen id=_n
+drop if id>1 
+drop id
+gen median_2018=mins_onset2needle_2018+" "+"or"+" "+hrs_onset2needle_2018
+gen median_2019=mins_onset2needle_2019+" "+"or"+" "+hrs_onset2needle_2019
+gen median_2020=mins_onset2needle_2020+" "+"or"+" "+hrs_onset2needle_2020
+keep median_2018 median_2019 median_2020
+gen pm3_category=4
+
+label var pm3_category "PM3 Category"
+label define pm3_category_lab 1 "Median time from scene to arrival at A&E" 2 "Median time from admission to first ECG" ///
+							  3 "Median time from admission to fibrinolysis" 4 "Median time from onset to fibrinolysis" , modify
+label values pm3_category pm3_category_lab
+
+order pm3_category median_2018 median_2019 median_2020
+
+append using "`datapath'\version02\2-working\pm3_scn2door_heart"
+append using "`datapath'\version02\2-working\pm3_door2ecg_heart"
+append using "`datapath'\version02\2-working\pm3_door2needle_heart"
+
+sort pm3_category
+rename pm3_category category
+
+erase "`datapath'\version02\2-working\pm3_scn2door_heart_2018.dta"
+erase "`datapath'\version02\2-working\pm3_scn2door_heart_2019.dta"
+erase "`datapath'\version02\2-working\pm3_scn2door_heart_2020.dta"
+erase "`datapath'\version02\2-working\pm3_door2ecg_heart_2018.dta"
+erase "`datapath'\version02\2-working\pm3_door2ecg_heart_2019.dta"
+erase "`datapath'\version02\2-working\pm3_door2ecg_heart_2020.dta"
+erase "`datapath'\version02\2-working\pm3_onset2needle_heart_2018.dta"
+erase "`datapath'\version02\2-working\pm3_onset2needle_heart_2019.dta"
+erase "`datapath'\version02\2-working\pm3_onset2needle_heart_2020.dta"
+erase "`datapath'\version02\2-working\pm3_onset2needle_heart_ar.dta"
+erase "`datapath'\version02\2-working\pm3_scn2door_heart.dta"
+erase "`datapath'\version02\2-working\pm3_door2ecg_heart.dta"
+erase "`datapath'\version02\2-working\pm3_door2needle_heart.dta"
+
+save "`datapath'\version02\2-working\pm3_heart" ,replace
+restore
+
+
 **********************************************************************
 **PM4: PTs who received ECHO before discharge
 ************************2***0*******2******0**************************
