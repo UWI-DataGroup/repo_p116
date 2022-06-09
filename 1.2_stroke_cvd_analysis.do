@@ -5,7 +5,7 @@ cls
     //  project:                BNR Stroke
     //  analysts:               Ashley HENRY and Jacqueline CAMPBELL
     //  date first created:     23-Feb-2022
-    //  date last modified:     07-Apr-2022
+    //  date last modified:     08-Jun-2022
 	//  analysis:               Stroke 2020 dataset for Annual Report
     //  algorithm task          Performing Stroke 2020 Data Analysis
     //  status:                 Pending
@@ -634,6 +634,18 @@ list ovrf1 ovrf2 ovrf3 ovrf4 np if year==2020 & (regexm(ovrf1, "CEREBRAL") | reg
 list ovrf1 ovrf2 ovrf3 ovrf4 np if year==2020 & (regexm(ovrf1, "CRANIAL") | regexm(ovrf2, "CRANIAL") | regexm(ovrf3, "CRANIAL") | /// 
 											 regexm(ovrf4, "CRANIAL"))
 ** No changes required											 
+
+
+***********************************************************************************************************************************************
+** Data request for Simon Anderson 08jun2022										 
+list ovrf1 ovrf2 ovrf3 ovrf4 np year if (regexm(ovrf1,"RENAL")|regexm(ovrf2,"RENAL")|regexm(ovrf3,"RENAL")|regexm(ovrf4,"RENAL") ///	
+											|regexm(ovrf1, "KIDNEY")|regexm(ovrf2, "KIDNEY")|regexm(ovrf3, "KIDNEY")|regexm(ovrf4, "KIDNEY"))
+
+tab year if (regexm(ovrf1,"RENAL")|regexm(ovrf2,"RENAL")|regexm(ovrf3,"RENAL")|regexm(ovrf4,"RENAL") ///	
+											|regexm(ovrf1, "KIDNEY")|regexm(ovrf2, "KIDNEY")|regexm(ovrf3, "KIDNEY")|regexm(ovrf4, "KIDNEY"))
+
+tab year if regexm(ovrf1,"RENAL IMPAIRMENT")|regexm(ovrf2,"RENAL IMPAIRMENT")|regexm(ovrf3,"RENAL IMPAIRMENT")|regexm(ovrf4,"RENAL IMPAIRMENT")
+*************************************************************************************************************************************************
 
 codebook np
 codebook fes
