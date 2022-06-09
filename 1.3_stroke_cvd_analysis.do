@@ -5,7 +5,7 @@ cls
     //  project:                BNR Stroke
     //  analysts:               Ashley HENRY
     //  date first created:     23-Feb-2022
-    //  date last modified:     12-Apr-2022
+    //  date last modified:     09-Jun-2022
 	//  analysis:               Stroke 2020 dataset for Annual Report
     //  algorithm task          Performing Stroke 2020 Data Analysis
     //  status:                 Pending
@@ -577,7 +577,7 @@ replace percent_male=round(percent_male,1.0)
 sort year
 save "`datapath'\version02\2-working\pm2_stroke" ,replace
 clear
-*/
+
 
 use "`datapath'\version02\2-working\pm1_stroke" ,clear
  *****PM3-Vteact
@@ -867,3 +867,89 @@ replace percent_female=round(percent_female,1.0)
 replace percent_male=round(percent_male,1.0)
 sort year
 save "`datapath'\version02\2-working\pm4_stroke" ,replace
+
+
+**********************************************************************
+**Additional Analyses: % CTs for those discharged alive
+************************2***0*******2******0**************************
+** Requested by SF via email on 20may2022
+
+tab ct ,m
+tab ct year
+tab vstatus ct
+tab ct year if vstatus==1
+tab vstatus if abstracted==1
+tab vstatus if abstracted==1 & year==2020
+tab vstatus ct if abstracted==1 & year==2020
+
+** JC update: Save these results as a dataset for reporting Figure 1.4 
+preserve
+tab year if ct==1 & vstatus==1 & abstracted==1 & year==2020 ,m matcell(foo)
+mat li foo
+svmat foo
+egen total_alive=total(vstatus) if vstatus==1 & abstracted==1 & year==2020
+fillmissing total_alive
+drop if foo==.
+keep foo total_alive
+
+gen registry="stroke"
+gen category=1
+gen year=2020
+
+rename foo ct
+
+order registry category year ct total_alive
+gen ct_percent=ct/total_alive*100
+replace ct_percent=round(ct_percent,1.0)
+
+
+label define category_lab 1 "CT for those alive at discharge" 2 "Under age 70" ,modify
+label values category category_lab
+label var category "Additional Analyses Category"
+
+append using "`datapath'\version02\2-working\addanalyses_ct"
+drop id
+
+save "`datapath'\version02\2-working\addanalyses_ct" ,replace
+restore
+
+
+**********************************************************************
+**Additional Analyses: % persons <70 with AMI
+************************2***0*******2******0**************************
+** Requested by SF via email on 20may2022
+count if age<70 & year==2020 //all cases
+count if age<70 & year==2020 & abstracted==1 //cases abstracted by BNR
+count if year==2020
+count if year==2020 & abstracted==1
+
+preserve
+egen totcases=count(year) if year==2020
+egen totabs=count(year) if year==2020 & abstracted==1
+egen totagecases=count(year) if age<70 & year==2020
+egen totageabs=count(year) if age<70 & year==2020 & abstracted==1
+fillmissing totcases totabs totagecases totageabs
+gen id=_n
+drop if id!=1
+
+keep totcases totabs totagecases totageabs
+gen totagecases_percent=totagecases/totcases*100
+replace totagecases_percent=round(totagecases_percent,1.0)
+gen totageabs_percent=totageabs/totabs*100
+replace totageabs_percent=round(totageabs_percent,1.0)
+
+gen registry="stroke"
+gen category=2
+gen year=2020
+
+order registry category year totagecases totcases totagecases_percent totageabs totabs totageabs_percent
+
+label define category_lab 1 "CT for those alive at discharge" 2 "Under age 70" ,modify
+label values category category_lab
+label var category "Additional Analyses Category"
+
+append using "`datapath'\version02\2-working\addanalyses_age"
+drop id
+
+save "`datapath'\version02\2-working\addanalyses_age" ,replace
+restore

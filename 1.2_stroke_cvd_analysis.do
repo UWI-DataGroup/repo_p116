@@ -5,7 +5,7 @@ cls
     //  project:                BNR Stroke
     //  analysts:               Ashley HENRY and Jacqueline CAMPBELL
     //  date first created:     23-Feb-2022
-    //  date last modified:     08-Jun-2022
+    //  date last modified:     09-Jun-2022
 	//  analysis:               Stroke 2020 dataset for Annual Report
     //  algorithm task          Performing Stroke 2020 Data Analysis
     //  status:                 Pending
@@ -80,15 +80,20 @@ replace percent_intra_f=round(percent_intra_f,1.0)
 gen percent_intra_m=number/tot_m*100 if stype==2 & sex==2
 replace percent_intra_m=round(percent_intra_m,1.0)
 
-drop if stype>2|stype==.
+gen percent_sah_f=number/tot_f*100 if stype==3 & sex==1
+replace percent_sah_f=round(percent_sah_f,1.0)
+gen percent_sah_m=number/tot_m*100 if stype==3 & sex==2
+replace percent_sah_m=round(percent_sah_m,1.0)
+
+drop if stype>3|stype==.
 gen id=_n
 order id
 
-reshape wide stype number tot_f tot_m percent_isch_f percent_isch_m percent_intra_f percent_intra_m, i(id)  j(sex)
+reshape wide stype number tot_f tot_m percent_isch_f percent_isch_m percent_intra_f percent_intra_m percent_sah_f percent_sah_m, i(id)  j(sex)
 rename stype1 Stroke_Category
 
 label var Stroke_Category "Stroke Category"
-label define Stroke_Category_lab 1 "Ischaemic Stroke" 2 "Intracerebral Haemorrhage" , modify
+label define Stroke_Category_lab 1 "Ischaemic Stroke" 2 "Intracerebral Haemorrhage" 3 "Subarachnoid Haemorrhage" , modify
 label values Stroke_Category Stroke_Category_lab
 
 drop stype2 *_f2 *_m1
@@ -96,7 +101,8 @@ fillmissing tot_*
 replace number2=number2[_n+1] if number2==.
 replace percent_isch_m2=percent_isch_m2[_n+1] if percent_isch_m2==.
 replace percent_intra_m2=percent_intra_m2[_n+1] if percent_intra_m2==.
-drop if id==2|id==4
+replace percent_sah_m2=percent_sah_m2[_n+1] if percent_sah_m2==.
+drop if id==2|id==4|id==6
 gen total_abs_2018=tot_f+tot_m if Stroke_Category==1
 drop tot_*
 rename number1 num_f_2018
@@ -105,7 +111,9 @@ rename percent_isch_f1 percent_f_2018
 rename percent_isch_m2 percent_m_2018
 replace percent_f_2018=percent_intra_f1 if Stroke_Category==2
 replace percent_m_2018=percent_intra_m2 if Stroke_Category==2
-drop percent_intra*
+replace percent_f_2018=percent_sah_f1 if Stroke_Category==3
+replace percent_m_2018=percent_sah_m2 if Stroke_Category==3
+drop percent_intra* percent_sah*
 
 save "`datapath'\version02\2-working\2018_subtypes_stroke" ,replace
 restore
@@ -128,15 +136,20 @@ replace percent_intra_f=round(percent_intra_f,1.0)
 gen percent_intra_m=number/tot_m*100 if stype==2 & sex==2
 replace percent_intra_m=round(percent_intra_m,1.0)
 
-drop if stype>2|stype==.
+gen percent_sah_f=number/tot_f*100 if stype==3 & sex==1
+replace percent_sah_f=round(percent_sah_f,1.0)
+gen percent_sah_m=number/tot_m*100 if stype==3 & sex==2
+replace percent_sah_m=round(percent_sah_m,1.0)
+
+drop if stype>3|stype==.
 gen id=_n
 order id
 
-reshape wide stype number tot_f tot_m percent_isch_f percent_isch_m percent_intra_f percent_intra_m, i(id)  j(sex)
+reshape wide stype number tot_f tot_m percent_isch_f percent_isch_m percent_intra_f percent_intra_m percent_sah_f percent_sah_m, i(id)  j(sex)
 rename stype1 Stroke_Category
 
 label var Stroke_Category "Stroke Category"
-label define Stroke_Category_lab 1 "Ischaemic Stroke" 2 "Intracerebral Haemorrhage" , modify
+label define Stroke_Category_lab 1 "Ischaemic Stroke" 2 "Intracerebral Haemorrhage" 3 "Subarachnoid Haemorrhage" , modify
 label values Stroke_Category Stroke_Category_lab
 
 drop stype2 *_f2 *_m1
@@ -144,7 +157,8 @@ fillmissing tot_*
 replace number2=number2[_n+1] if number2==.
 replace percent_isch_m2=percent_isch_m2[_n+1] if percent_isch_m2==.
 replace percent_intra_m2=percent_intra_m2[_n+1] if percent_intra_m2==.
-drop if id==2|id==4
+replace percent_sah_m2=percent_sah_m2[_n+1] if percent_sah_m2==.
+drop if id==2|id==4|id==6
 gen total_abs_2019=tot_f+tot_m if Stroke_Category==1
 drop tot_*
 rename number1 num_f_2019
@@ -153,7 +167,9 @@ rename percent_isch_f1 percent_f_2019
 rename percent_isch_m2 percent_m_2019
 replace percent_f_2019=percent_intra_f1 if Stroke_Category==2
 replace percent_m_2019=percent_intra_m2 if Stroke_Category==2
-drop percent_intra*
+replace percent_f_2019=percent_sah_f1 if Stroke_Category==3
+replace percent_m_2019=percent_sah_m2 if Stroke_Category==3
+drop percent_intra* percent_sah*
 
 save "`datapath'\version02\2-working\2019_subtypes_stroke" ,replace
 restore
@@ -177,15 +193,20 @@ replace percent_intra_f=round(percent_intra_f,1.0)
 gen percent_intra_m=number/tot_m*100 if stype==2 & sex==2
 replace percent_intra_m=round(percent_intra_m,1.0)
 
-drop if stype>2|stype==.
+gen percent_sah_f=number/tot_f*100 if stype==3 & sex==1
+replace percent_sah_f=round(percent_sah_f,1.0)
+gen percent_sah_m=number/tot_m*100 if stype==3 & sex==2
+replace percent_sah_m=round(percent_sah_m,1.0)
+
+drop if stype>3|stype==.
 gen id=_n
 order id
 
-reshape wide stype number tot_f tot_m percent_isch_f percent_isch_m percent_intra_f percent_intra_m, i(id)  j(sex)
+reshape wide stype number tot_f tot_m percent_isch_f percent_isch_m percent_intra_f percent_intra_m percent_sah_f percent_sah_m, i(id)  j(sex)
 rename stype1 Stroke_Category
 
 label var Stroke_Category "Stroke Category"
-label define Stroke_Category_lab 1 "Ischaemic Stroke" 2 "Intracerebral Haemorrhage" , modify
+label define Stroke_Category_lab 1 "Ischaemic Stroke" 2 "Intracerebral Haemorrhage" 3 "Subarachnoid Haemorrhage" , modify
 label values Stroke_Category Stroke_Category_lab
 
 drop stype2 *_f2 *_m1
@@ -193,7 +214,8 @@ fillmissing tot_*
 replace number2=number2[_n+1] if number2==.
 replace percent_isch_m2=percent_isch_m2[_n+1] if percent_isch_m2==.
 replace percent_intra_m2=percent_intra_m2[_n+1] if percent_intra_m2==.
-drop if id==2|id==4
+replace percent_sah_m2=percent_sah_m2[_n+1] if percent_sah_m2==.
+drop if id==2|id==4|id==6
 gen total_abs_2020=tot_f+tot_m if Stroke_Category==1
 drop tot_*
 rename number1 num_f_2020
@@ -202,7 +224,9 @@ rename percent_isch_f1 percent_f_2020
 rename percent_isch_m2 percent_m_2020
 replace percent_f_2020=percent_intra_f1 if Stroke_Category==2
 replace percent_m_2020=percent_intra_m2 if Stroke_Category==2
-drop percent_intra*
+replace percent_f_2020=percent_sah_f1 if Stroke_Category==3
+replace percent_m_2020=percent_sah_m2 if Stroke_Category==3
+drop percent_intra* percent_sah*
 
 
 merge 1:1 id using "`datapath'\version02\2-working\2018_subtypes_stroke"

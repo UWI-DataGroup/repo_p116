@@ -5,7 +5,7 @@ cls
     //  project:                BNR Heart
     //  analysts:               Ashley HENRY and Jacqueline CAMPBELL
     //  date first created:     26-Jan-2022
-    //  date last modified:     13-Apr-2022
+    //  date last modified:     09-Jun-2022
 	//  analysis:               Heart 2020 dataset for Annual Report
     //  algorithm task          Performing Heart 2020 Data Analysis
     //  status:                 Pending
@@ -705,6 +705,9 @@ tab ecgste sex if year==2020 & diagnosis==2 ,m
 ** 48/51 reperfusions were STEMI 
 ** 48/103 STEMIs by ecg result were reperfused
 
+tab ecgste reperf if sex==1 & year==2020 & diagnosis==2 ,m //female
+tab ecgste reperf if sex==2 & year==2020 & diagnosis==2 ,m //male
+
 tab repertype if year==2020
 
 ** JC update: Save these results as a dataset for reporting Table 1.6
@@ -854,7 +857,7 @@ rename id year
 replace year=2020 if year==1
 replace year=2019 if year==2
 replace year=2018 if year==3
-erase "`datapath'\version02\2-working\pm2_stemi_heart_ar.dta"
+//erase "`datapath'\version02\2-working\pm2_stemi_heart_ar.dta"
 save "`datapath'\version02\2-working\pm2_stemi_heart" ,replace
 
 restore
@@ -2467,18 +2470,148 @@ tab vstatus if  abstracted==1 & year==2020
 dis 184/222  //83%
 
 ** JC 17mar2022: per discussion with NS, check for cases wherein [aspdis]!=yes/at discharge but antiplatelets [pladis]=yes/at discharge and same for aspirin used chronically [aspchr]
-tab pladis if year==2020 & (aspdis==99|aspdis==2)
-tab aspchr if year==2020 & (aspdis==99|aspdis==2)
 bysort year :tab pladis if aspdis==99|aspdis==2
 bysort year :tab aspchr if aspdis==99|aspdis==2
 bysort year :tab aspdis pladis
 bysort year :tab aspdis aspchr
+
+tab pladis if year==2020 & (aspdis==99|aspdis==2)
+tab aspchr if year==2020 & (aspdis==99|aspdis==2)
+tab aspdis pladis if year==2020
+tab aspdis aspchr if year==2020
 
 ** JC update: Save these results as a dataset for reporting PM5 "Documented aspirin prescribed at discharge"
 preserve
 tab vstatus aspdis if abstracted==1 & year==2020
 save "`datapath'\version02\2-working\pm5_asp_heart" ,replace
 restore
+
+** JC 09jun2022: NS requested combining aspirin and antiplatelets into one group called 'Aspirin/Antiplatelet therapy' which would include those not discharged on aspirin but discharged on antiplatelets and those chronically on aspirin
+preserve
+tab aspdis year if aspdis==1, matcell(foo)
+mat li foo
+svmat foo, names(year)
+egen total_alive=total(vstatus) if vstatus==1 & abstracted==1 & year==2020
+fillmissing total_alive
+gen id=_n
+keep id year9-year12 total_alive
+
+drop if id!=1
+gen category="aspirin"
+drop id
+expand 4 in 1
+gen id=_n
+
+gen year=1 if id==1
+replace year=2 if id==2
+replace year=3 if id==3
+replace year=4 if id==4
+rename year9 aspdis_2017
+rename year10 aspdis_2018
+rename year11 aspdis_2019
+rename year12 aspdis_2020
+reshape wide aspdis_*, i(id)  j(year)
+
+replace aspdis_20171=aspdis_20182 if id==2
+replace aspdis_20171=aspdis_20193 if id==3
+replace aspdis_20171=aspdis_20204 if id==4
+rename id year
+rename aspdis_20171 aspdis
+keep year aspdis total_alive
+
+label define year_lab 1 "2017" 2 "2018" 3 "2019" 4 "2020" ,modify
+label values year year_lab
+label var year "Year"
+
+save "`datapath'\version02\2-working\pm5_asppla_heart" ,replace
+restore
+
+preserve
+tab pladis year if pladis==1 & (aspdis==99|aspdis==2), matcell(foo)
+mat li foo
+svmat foo, names(year)
+gen id=_n
+keep id year7-year10
+
+drop if id!=1
+gen category="antiplatelets"
+drop id
+expand 4 in 1
+gen id=_n
+
+gen year=1 if id==1
+replace year=2 if id==2
+replace year=3 if id==3
+replace year=4 if id==4
+rename year7 pladis_2017
+rename year8 pladis_2018
+rename year9 pladis_2019
+rename year10 pladis_2020
+reshape wide pladis_*, i(id)  j(year)
+
+replace pladis_20171=pladis_20182 if id==2
+replace pladis_20171=pladis_20193 if id==3
+replace pladis_20171=pladis_20204 if id==4
+rename id year
+rename pladis_20171 pladis
+keep year pladis
+
+label define year_lab 1 "2017" 2 "2018" 3 "2019" 4 "2020" ,modify
+label values year year_lab
+label var year "Year"
+
+merge 1:1 year using "`datapath'\version02\2-working\pm5_asppla_heart"
+drop _merge
+
+save "`datapath'\version02\2-working\pm5_asppla_heart" ,replace
+restore
+
+preserve
+tab aspchr year if aspchr==1 & (aspdis==99|aspdis==2), matcell(foo)
+mat li foo
+svmat foo, names(year)
+gen id=_n
+keep id year7-year10
+
+drop if id!=1
+gen category="chronic aspirin"
+drop id
+expand 4 in 1
+gen id=_n
+
+gen year=1 if id==1
+replace year=2 if id==2
+replace year=3 if id==3
+replace year=4 if id==4
+rename year7 aspchr_2017
+rename year8 aspchr_2018
+rename year9 aspchr_2019
+rename year10 aspchr_2020
+reshape wide aspchr_*, i(id)  j(year)
+
+replace aspchr_20171=aspchr_20182 if id==2
+replace aspchr_20171=aspchr_20193 if id==3
+replace aspchr_20171=aspchr_20204 if id==4
+rename id year
+rename aspchr_20171 aspchr
+keep year aspchr
+
+label define year_lab 1 "2017" 2 "2018" 3 "2019" 4 "2020" ,modify
+label values year year_lab
+label var year "Year"
+
+merge 1:1 year using "`datapath'\version02\2-working\pm5_asppla_heart"
+drop _merge
+
+gen asppla = aspdis + pladis + aspchr
+gen asppla_percent=asppla/total_alive*100
+replace asppla_percent=round(asppla_percent,1.0)
+
+order year aspchr pladis aspdis asppla total_alive asppla_percent
+save "`datapath'\version02\2-working\pm5_asppla_heart" ,replace
+restore
+
+
 
 **********************************************************************
 **PM6: PTs prescribed Statin at discharge
@@ -2503,4 +2636,86 @@ dis 181/222  //82%
 preserve
 tab vstatus statdis if abstracted==1 & year==2020
 save "`datapath'\version02\2-working\pm6_statin_heart" ,replace
+restore
+
+
+
+**********************************************************************
+**Additional Analyses: % CTs for those discharged alive
+************************2***0*******2******0**************************
+** Requested by SF via email on 20may2022
+
+tab ct ,m
+tab ct year
+tab vstatus ct
+tab ct year if vstatus==1
+tab vstatus if abstracted==1
+tab vstatus ct if abstracted==1 & year==2020
+
+
+** JC update: Save these results as a dataset for reporting Figure 1.4 
+preserve
+tab year if ct==1 & vstatus==1 & abstracted==1 ,m matcell(foo)
+mat li foo
+svmat foo
+egen total_alive=total(vstatus) if vstatus==1 & abstracted==1 & year==2020
+fillmissing total_alive
+drop if foo==.
+keep foo total_alive
+
+gen id=1
+gen registry="heart"
+gen category=1
+gen year=2020
+
+rename foo ct
+
+order id registry category year ct total_alive
+gen ct_percent=ct/total_alive*100
+replace ct_percent=round(ct_percent,1.0)
+
+
+label define category_lab 1 "CT for those alive at discharge" 2 "Under age 70" ,modify
+label values category category_lab
+label var category "Additional Analyses Category"
+
+save "`datapath'\version02\2-working\addanalyses_ct" ,replace
+restore
+
+
+**********************************************************************
+**Additional Analyses: % persons <70 with AMI
+************************2***0*******2******0**************************
+** Requested by SF via email on 20may2022
+count if age<70 & year==2020 //all cases
+count if age<70 & year==2020 & abstracted==1 //cases abstracted by BNR
+count if year==2020
+count if year==2020 & abstracted==1
+
+preserve
+egen totcases=count(year) if year==2020
+egen totabs=count(year) if year==2020 & abstracted==1
+egen totagecases=count(year) if age<70 & year==2020
+egen totageabs=count(year) if age<70 & year==2020 & abstracted==1
+fillmissing totcases totabs totagecases totageabs
+gen id=_n
+drop if id!=1
+
+keep totcases totabs totagecases totageabs
+gen totagecases_percent=totagecases/totcases*100
+replace totagecases_percent=round(totagecases_percent,1.0)
+gen totageabs_percent=totageabs/totabs*100
+replace totageabs_percent=round(totageabs_percent,1.0)
+gen id=2
+gen registry="heart"
+gen category=2
+gen year=2020
+
+order id registry category year totagecases totcases totagecases_percent totageabs totabs totageabs_percent
+
+label define category_lab 1 "CT for those alive at discharge" 2 "Under age 70" ,modify
+label values category category_lab
+label var category "Additional Analyses Category"
+
+save "`datapath'\version02\2-working\addanalyses_age" ,replace
 restore
