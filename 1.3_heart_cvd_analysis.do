@@ -79,7 +79,7 @@ dis 68/291
 **115 for year 2020
 tab prehosp_d if hosp==1 & year==2020 ,m
 tab prehosp_d year if hosp==1
-
+STOP
 **Case Fatality Rate at 28 day
 ** 79/291
 tab f1vstatus year if hosp==1
@@ -262,6 +262,9 @@ append using "`datapath'\version02\2-working\mort_heart"
 sort mort_heart_ar
 save "`datapath'\version02\2-working\mort_heart" ,replace
 
+/* Old method based on feedback from NS in CVD DM Re-engineer notebk
+** In-hospital CFR calculated 'died in hospital'/'number of cases with full information'
+
 gen cfr_percent_2011=year_2011[4]/year_2011[3]*100
 replace cfr_percent_2011=round(cfr_percent_2011,1.0)
 gen cfr_percent_2012=year_2012[4]/year_2012[3]*100
@@ -281,6 +284,29 @@ replace cfr_percent_2018=round(cfr_percent_2018,1.0)
 gen cfr_percent_2019=year_2019[4]/year_2019[3]*100
 replace cfr_percent_2019=round(cfr_percent_2019,1.0)
 gen cfr_percent_2020=year_2020[4]/year_2020[3]*100
+replace cfr_percent_2020=round(cfr_percent_2020,1.0)
+*/
+
+** In-hospital CFR calculated 'died in hospital'/'number of hospitalized cases'
+gen cfr_percent_2011=year_2011[4]/year_2011[2]*100
+replace cfr_percent_2011=round(cfr_percent_2011,1.0)
+gen cfr_percent_2012=year_2012[4]/year_2012[2]*100
+replace cfr_percent_2012=round(cfr_percent_2012,1.0)
+gen cfr_percent_2013=year_2013[4]/year_2013[2]*100
+replace cfr_percent_2013=round(cfr_percent_2013,1.0)
+gen cfr_percent_2014=year_2014[4]/year_2014[2]*100
+replace cfr_percent_2014=round(cfr_percent_2014,1.0)
+gen cfr_percent_2015=year_2015[4]/year_2015[2]*100
+replace cfr_percent_2015=round(cfr_percent_2015,1.0)
+gen cfr_percent_2016=year_2016[4]/year_2016[2]*100
+replace cfr_percent_2016=round(cfr_percent_2016,1.0)
+gen cfr_percent_2017=year_2017[4]/year_2017[2]*100
+replace cfr_percent_2017=round(cfr_percent_2017,1.0)
+gen cfr_percent_2018=year_2018[4]/year_2018[2]*100
+replace cfr_percent_2018=round(cfr_percent_2018,1.0)
+gen cfr_percent_2019=year_2019[4]/year_2019[2]*100
+replace cfr_percent_2019=round(cfr_percent_2019,1.0)
+gen cfr_percent_2020=year_2020[4]/year_2020[2]*100
 replace cfr_percent_2020=round(cfr_percent_2020,1.0)
 
 drop year_*
@@ -400,6 +426,9 @@ append using "`datapath'\version02\2-working\mort_heart"
 sort mort_heart_ar
 save "`datapath'\version02\2-working\mort_heart" ,replace
 
+/* Old method based on feedback from NS in CVD DM Re-engineer notebk
+** 28-d CFR calculated 'died at 28-d'/'number of cases with full information'
+
 gen cfr_28d_percent_2011=year_2011[8]/year_2011[3]*100
 replace cfr_28d_percent_2011=round(cfr_28d_percent_2011,1.0)
 gen cfr_28d_percent_2012=year_2012[8]/year_2012[3]*100
@@ -419,6 +448,29 @@ replace cfr_28d_percent_2018=round(cfr_28d_percent_2018,1.0)
 gen cfr_28d_percent_2019=year_2019[8]/year_2019[3]*100
 replace cfr_28d_percent_2019=round(cfr_28d_percent_2019,1.0)
 gen cfr_28d_percent_2020=year_2020[8]/year_2020[3]*100
+replace cfr_28d_percent_2020=round(cfr_28d_percent_2020,1.0)
+*/
+
+** 28-day CFR calculated 'died at 28-d/'number of hospitalized cases'
+gen cfr_28d_percent_2011=year_2011[8]/year_2011[2]*100
+replace cfr_28d_percent_2011=round(cfr_28d_percent_2011,1.0)
+gen cfr_28d_percent_2012=year_2012[8]/year_2012[2]*100
+replace cfr_28d_percent_2012=round(cfr_28d_percent_2012,1.0)
+gen cfr_28d_percent_2013=year_2013[8]/year_2013[2]*100
+replace cfr_28d_percent_2013=round(cfr_28d_percent_2013,1.0)
+gen cfr_28d_percent_2014=year_2014[8]/year_2014[2]*100
+replace cfr_28d_percent_2014=round(cfr_28d_percent_2014,1.0)
+gen cfr_28d_percent_2015=year_2015[8]/year_2015[2]*100
+replace cfr_28d_percent_2015=round(cfr_28d_percent_2015,1.0)
+gen cfr_28d_percent_2016=year_2016[8]/year_2016[2]*100
+replace cfr_28d_percent_2016=round(cfr_28d_percent_2016,1.0)
+gen cfr_28d_percent_2017=year_2017[8]/year_2017[2]*100
+replace cfr_28d_percent_2017=round(cfr_28d_percent_2017,1.0)
+gen cfr_28d_percent_2018=year_2018[8]/year_2018[2]*100
+replace cfr_28d_percent_2018=round(cfr_28d_percent_2018,1.0)
+gen cfr_28d_percent_2019=year_2019[8]/year_2019[2]*100
+replace cfr_28d_percent_2019=round(cfr_28d_percent_2019,1.0)
+gen cfr_28d_percent_2020=year_2020[8]/year_2020[2]*100
 replace cfr_28d_percent_2020=round(cfr_28d_percent_2020,1.0)
 
 drop year_*
@@ -472,6 +524,7 @@ replace year_2020=year_2020+"%" if mort_heart_ar==5|mort_heart_ar==7|mort_heart_
 
 save "`datapath'\version02\2-working\mort_heart" ,replace
 restore
+
 
 ***********************************
 **FIGURE 1.4 MI OUTCOME FLOWCHART *

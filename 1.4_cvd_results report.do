@@ -1562,7 +1562,7 @@ putdocx text ("Stroke: Mortality"), bold
 putdocx paragraph, style(Heading2)
 putdocx text ("Stroke: Secular trends in Stroke Mortality (Dofile: 1.3_stroke_cvd_analysis.do)"), bold
 putdocx paragraph, halign(center)
-putdocx text ("Table 2.5 Mortality statistics for acute MI patients in Barbados, 2020"), bold font(Helvetica,10,"blue")
+putdocx text ("Table 2.5 Mortality statistics for stroke patients in Barbados, 2020"), bold font(Helvetica,10,"blue")
 
 rename mort_stroke_ar category
 rename year_* year__*
@@ -1578,7 +1578,7 @@ putdocx table tbl1(1,8), bold shading(lightgray)
 putdocx table tbl1(1,9), bold shading(lightgray)
 putdocx table tbl1(1,10), bold shading(lightgray)
 putdocx table tbl1(1,11), bold shading(lightgray)
-putdocx table tbl1(1,12), bold shading(lightgray)
+//putdocx table tbl1(1,12), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
 putdocx save "`datapath'\version02\3-output\2020AnnualReportStatsV17_`listdate'.docx", append

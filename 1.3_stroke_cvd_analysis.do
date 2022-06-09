@@ -123,6 +123,11 @@ tab case if vstatus==2 & abstracted!=. & hosp==1 & case>1 //gives the Total dece
 
 tab vstatus abstracted if hosp==1 & year==2019
 tab case vstatus if abstracted==1 & hosp==1 & case>1 //gives the abstracteddeceased and Total abstracted by year for the 'In-hospital CFR (of cases with full information)'
+
+count if hosp==1 & year==2020
+count if hosp==1 & year==2019
+
+tab year if hosp==1 //Number of hospitalized cases
 ** End of JC's additional code
 
 **Case Fatality Rate at 28day
@@ -133,8 +138,9 @@ tab death if hosp==1 & year==2020 //46%
 ** JC added the below on 12apr2022
 tab case death if hosp==1 & case>1 ,m //JC added this 12apr2022 in light of above display command so the output will be:
 //Case fatality rates at 28 days = dead/Total per year*100
+tab f1vstatus year if hosp==1
 
-
+STOP
 ** JC update: Save these results as a dataset for reporting Table 2.5
 
 preserve
@@ -364,6 +370,8 @@ replace year_2018=year_2018+"%" if mort_stroke_ar>2
 replace year_2019=year_2019+"%" if mort_stroke_ar>2
 replace year_2020=year_2020+"%" if mort_stroke_ar>2
 
+drop year_2010
+
 erase "`datapath'\version02\2-working\mort_stroke_ar.dta"
 erase "`datapath'\version02\2-working\mort_stroke_temp.dta"
 save "`datapath'\version02\2-working\mort_stroke" ,replace
@@ -485,7 +493,7 @@ erase "`datapath'\version02\2-working\outcomes_stroke_ar.dta"
 save "`datapath'\version02\2-working\outcomes_stroke" ,replace
 restore
 
- 
+STOP
 ** JC update: Save these results as a dataset for reporting PM1 & PM2
 save "`datapath'\version02\2-working\pm1_stroke" ,replace
  ***PM1- reperfusion percentage
@@ -867,7 +875,7 @@ replace percent_female=round(percent_female,1.0)
 replace percent_male=round(percent_male,1.0)
 sort year
 save "`datapath'\version02\2-working\pm4_stroke" ,replace
-
+*/
 
 **********************************************************************
 **Additional Analyses: % CTs for those discharged alive
