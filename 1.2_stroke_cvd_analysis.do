@@ -5,7 +5,7 @@ cls
     //  project:                BNR Stroke
     //  analysts:               Ashley HENRY and Jacqueline CAMPBELL
     //  date first created:     23-Feb-2022
-    //  date last modified:     09-Jun-2022
+    //  date last modified:     21-Jun-2022
 	//  analysis:               Stroke 2020 dataset for Annual Report
     //  algorithm task          Performing Stroke 2020 Data Analysis
     //  status:                 Pending
@@ -994,3 +994,40 @@ save "`datapath'\version02\2-working\riskfactors_stroke" ,replace
 restore
 
 
+** Alternative code JC: 21jun2022 - include 2019 + 2020 for prior stroke/TIA for both numerator and denominator so SF can update 2019 annual report
+by year,sort:tab pstroke tia, m row col 
+//2020 numerator: 117+21-5 = 133
+//2019 numerator: 146+34-8 = 172
+
+preserve
+contract pstroke tia if year==2019
+drop if pstroke==. & tia==.
+egen denominator=total(_freq)
+egen numerator=total(_freq) if pstroke==1|tia==1
+gen year=2019
+gen id=_n
+drop if id>1
+keep year numerator denominator
+gen percent=numerator/denominator*100
+replace percent=round(percent,1.0)
+order year numerator percent denominator
+save "`datapath'\version02\2-working\riskfactors_stroketia" ,replace
+restore
+
+preserve
+contract pstroke tia if year==2020
+drop if pstroke==. & tia==.
+egen denominator=total(_freq)
+egen numerator=total(_freq) if pstroke==1|tia==1
+gen year=2020
+gen id=_n
+drop if id>1
+keep year numerator denominator
+gen percent=numerator/denominator*100
+replace percent=round(percent,1.0)
+order year numerator percent denominator
+
+append using "`datapath'\version02\2-working\riskfactors_stroketia"
+sort year
+save "`datapath'\version02\2-working\riskfactors_stroketia" ,replace
+restore

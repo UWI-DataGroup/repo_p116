@@ -5,7 +5,7 @@ cls
     //  project:                BNR Heart
     //  analysts:               Ashley HENRY and Jacqueline CAMPBELL
     //  date first created:     26-Jan-2022
-    //  date last modified:     09-Jun-2022
+    //  date last modified:     21-Jun-2022
 	//  analysis:               Heart 2020 dataset for Annual Report
     //  algorithm task          Performing Heart 2020 Data Analysis
     //  status:                 Pending
@@ -79,7 +79,7 @@ dis 68/291
 **115 for year 2020
 tab prehosp_d if hosp==1 & year==2020 ,m
 tab prehosp_d year if hosp==1
-STOP
+
 **Case Fatality Rate at 28 day
 ** 79/291
 tab f1vstatus year if hosp==1
@@ -262,9 +262,6 @@ append using "`datapath'\version02\2-working\mort_heart"
 sort mort_heart_ar
 save "`datapath'\version02\2-working\mort_heart" ,replace
 
-/* Old method based on feedback from NS in CVD DM Re-engineer notebk
-** In-hospital CFR calculated 'died in hospital'/'number of cases with full information'
-
 gen cfr_percent_2011=year_2011[4]/year_2011[3]*100
 replace cfr_percent_2011=round(cfr_percent_2011,1.0)
 gen cfr_percent_2012=year_2012[4]/year_2012[3]*100
@@ -284,29 +281,6 @@ replace cfr_percent_2018=round(cfr_percent_2018,1.0)
 gen cfr_percent_2019=year_2019[4]/year_2019[3]*100
 replace cfr_percent_2019=round(cfr_percent_2019,1.0)
 gen cfr_percent_2020=year_2020[4]/year_2020[3]*100
-replace cfr_percent_2020=round(cfr_percent_2020,1.0)
-*/
-
-** In-hospital CFR calculated 'died in hospital'/'number of hospitalized cases'
-gen cfr_percent_2011=year_2011[4]/year_2011[2]*100
-replace cfr_percent_2011=round(cfr_percent_2011,1.0)
-gen cfr_percent_2012=year_2012[4]/year_2012[2]*100
-replace cfr_percent_2012=round(cfr_percent_2012,1.0)
-gen cfr_percent_2013=year_2013[4]/year_2013[2]*100
-replace cfr_percent_2013=round(cfr_percent_2013,1.0)
-gen cfr_percent_2014=year_2014[4]/year_2014[2]*100
-replace cfr_percent_2014=round(cfr_percent_2014,1.0)
-gen cfr_percent_2015=year_2015[4]/year_2015[2]*100
-replace cfr_percent_2015=round(cfr_percent_2015,1.0)
-gen cfr_percent_2016=year_2016[4]/year_2016[2]*100
-replace cfr_percent_2016=round(cfr_percent_2016,1.0)
-gen cfr_percent_2017=year_2017[4]/year_2017[2]*100
-replace cfr_percent_2017=round(cfr_percent_2017,1.0)
-gen cfr_percent_2018=year_2018[4]/year_2018[2]*100
-replace cfr_percent_2018=round(cfr_percent_2018,1.0)
-gen cfr_percent_2019=year_2019[4]/year_2019[2]*100
-replace cfr_percent_2019=round(cfr_percent_2019,1.0)
-gen cfr_percent_2020=year_2020[4]/year_2020[2]*100
 replace cfr_percent_2020=round(cfr_percent_2020,1.0)
 
 drop year_*
@@ -426,9 +400,6 @@ append using "`datapath'\version02\2-working\mort_heart"
 sort mort_heart_ar
 save "`datapath'\version02\2-working\mort_heart" ,replace
 
-/* Old method based on feedback from NS in CVD DM Re-engineer notebk
-** 28-d CFR calculated 'died at 28-d'/'number of cases with full information'
-
 gen cfr_28d_percent_2011=year_2011[8]/year_2011[3]*100
 replace cfr_28d_percent_2011=round(cfr_28d_percent_2011,1.0)
 gen cfr_28d_percent_2012=year_2012[8]/year_2012[3]*100
@@ -448,29 +419,6 @@ replace cfr_28d_percent_2018=round(cfr_28d_percent_2018,1.0)
 gen cfr_28d_percent_2019=year_2019[8]/year_2019[3]*100
 replace cfr_28d_percent_2019=round(cfr_28d_percent_2019,1.0)
 gen cfr_28d_percent_2020=year_2020[8]/year_2020[3]*100
-replace cfr_28d_percent_2020=round(cfr_28d_percent_2020,1.0)
-*/
-
-** 28-day CFR calculated 'died at 28-d/'number of hospitalized cases'
-gen cfr_28d_percent_2011=year_2011[8]/year_2011[2]*100
-replace cfr_28d_percent_2011=round(cfr_28d_percent_2011,1.0)
-gen cfr_28d_percent_2012=year_2012[8]/year_2012[2]*100
-replace cfr_28d_percent_2012=round(cfr_28d_percent_2012,1.0)
-gen cfr_28d_percent_2013=year_2013[8]/year_2013[2]*100
-replace cfr_28d_percent_2013=round(cfr_28d_percent_2013,1.0)
-gen cfr_28d_percent_2014=year_2014[8]/year_2014[2]*100
-replace cfr_28d_percent_2014=round(cfr_28d_percent_2014,1.0)
-gen cfr_28d_percent_2015=year_2015[8]/year_2015[2]*100
-replace cfr_28d_percent_2015=round(cfr_28d_percent_2015,1.0)
-gen cfr_28d_percent_2016=year_2016[8]/year_2016[2]*100
-replace cfr_28d_percent_2016=round(cfr_28d_percent_2016,1.0)
-gen cfr_28d_percent_2017=year_2017[8]/year_2017[2]*100
-replace cfr_28d_percent_2017=round(cfr_28d_percent_2017,1.0)
-gen cfr_28d_percent_2018=year_2018[8]/year_2018[2]*100
-replace cfr_28d_percent_2018=round(cfr_28d_percent_2018,1.0)
-gen cfr_28d_percent_2019=year_2019[8]/year_2019[2]*100
-replace cfr_28d_percent_2019=round(cfr_28d_percent_2019,1.0)
-gen cfr_28d_percent_2020=year_2020[8]/year_2020[2]*100
 replace cfr_28d_percent_2020=round(cfr_28d_percent_2020,1.0)
 
 drop year_*
@@ -524,7 +472,6 @@ replace year_2020=year_2020+"%" if mort_heart_ar==5|mort_heart_ar==7|mort_heart_
 
 save "`datapath'\version02\2-working\mort_heart" ,replace
 restore
-
 
 ***********************************
 **FIGURE 1.4 MI OUTCOME FLOWCHART *
@@ -762,6 +709,10 @@ tab ecgste reperf if sex==1 & year==2020 & diagnosis==2 ,m //female
 tab ecgste reperf if sex==2 & year==2020 & diagnosis==2 ,m //male
 
 tab repertype if year==2020
+
+***Alternative code for reperfusions by sex and year - JC 21jun2022: this is NS' code and was used in final 2020 annual report outputs
+by year,sort:tab reperf ecgste, m row col
+by year sex,sort:tab reperf ecgste, m row col
 
 ** JC update: Save these results as a dataset for reporting Table 1.6
 preserve
@@ -2517,6 +2468,9 @@ tab aspdis sex if year==2017
 tab aspdis sex if year==2018
 tab aspdis sex if year==2019
 tab aspdis sex if year==2020
+tab aspdis if year==2019
+tab vstatus if  abstracted==1 & year==2019
+tab aspdis if year==2019 & vstatus==1
 tab aspdis if year==2020
 tab vstatus if  abstracted==1 & year==2020
 ** Of those discharged( 222), 184 had aspirin at discharge.
@@ -2525,6 +2479,7 @@ dis 184/222  //83%
 ** JC 17mar2022: per discussion with NS, check for cases wherein [aspdis]!=yes/at discharge but antiplatelets [pladis]=yes/at discharge and same for aspirin used chronically [aspchr]
 bysort year :tab pladis if aspdis==99|aspdis==2
 bysort year :tab aspchr if aspdis==99|aspdis==2
+bysort year :tab aspchr if (aspdis==99|aspdis==2) & (pladis==99|pladis==2)
 bysort year :tab aspdis pladis
 bysort year :tab aspdis aspchr
 
@@ -2532,6 +2487,15 @@ tab pladis if year==2020 & (aspdis==99|aspdis==2)
 tab aspchr if year==2020 & (aspdis==99|aspdis==2)
 tab aspdis pladis if year==2020
 tab aspdis aspchr if year==2020
+
+bysort aspchr :tab aspdis pladis if year==2019
+bysort year :tab aspdis pladis if aspchr!=1
+bysort year :tab aspdis pladis if aspchr!=1 & vstatus==1
+
+tab aspdis if vstatus==1 & year==2019 //77%
+tab aspdis if abstracted==1 & year==2019 //59%
+tab aspdis if vstatus==1 & year==2019 & pladis==1
+tabulate aspdis pladis if year==2019, nokey row column 
 
 ** JC update: Save these results as a dataset for reporting PM5 "Documented aspirin prescribed at discharge"
 preserve
@@ -2541,13 +2505,18 @@ restore
 
 ** JC 09jun2022: NS requested combining aspirin and antiplatelets into one group called 'Aspirin/Antiplatelet therapy' which would include those not discharged on aspirin but discharged on antiplatelets and those chronically on aspirin
 preserve
+bysort year :tab vstatus
 tab aspdis year if aspdis==1, matcell(foo)
 mat li foo
 svmat foo, names(year)
-egen total_alive=total(vstatus) if vstatus==1 & abstracted==1 & year==2020
-fillmissing total_alive
+egen total_alive_2020=total(vstatus) if vstatus==1 & year==2020
+egen total_alive_2019=total(vstatus) if vstatus==1 & year==2019
+egen total_alive_2018=total(vstatus) if vstatus==1 & year==2018
+egen total_alive_2017=total(vstatus) if vstatus==1 & year==2017
+fillmissing total_alive*
+
 gen id=_n
-keep id year9-year12 total_alive
+keep id year9-year12 total_alive*
 
 drop if id!=1
 gen category="aspirin"
@@ -2570,6 +2539,10 @@ replace aspdis_20171=aspdis_20193 if id==3
 replace aspdis_20171=aspdis_20204 if id==4
 rename id year
 rename aspdis_20171 aspdis
+rename total_alive_2020 total_alive
+replace total_alive=total_alive_2017 if year==1
+replace total_alive=total_alive_2018 if year==2
+replace total_alive=total_alive_2019 if year==3
 keep year aspdis total_alive
 
 label define year_lab 1 "2017" 2 "2018" 3 "2019" 4 "2020" ,modify
@@ -2620,7 +2593,9 @@ save "`datapath'\version02\2-working\pm5_asppla_heart" ,replace
 restore
 
 preserve
-tab aspchr year if aspchr==1 & (aspdis==99|aspdis==2), matcell(foo)
+tab aspchr year if aspchr==1 & (aspdis==99|aspdis==2)
+tab aspchr year if aspchr==1 & (aspdis==99|aspdis==2) & (pladis==99|pladis==2)
+tab aspchr year if aspchr==1 & (aspdis==99|aspdis==2) & (pladis==99|pladis==2), matcell(foo)
 mat li foo
 svmat foo, names(year)
 gen id=_n
