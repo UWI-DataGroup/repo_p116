@@ -5,7 +5,7 @@ cls
     //  project:                BNR Heart
     //  analysts:               Ashley HENRY and Jacqueline CAMPBELL
     //  date first created:     26-Jan-2022
-    //  date last modified:     21-Jun-2022
+    //  date last modified:     20-Jul-2022
 	//  analysis:               Heart 2020 dataset for Annual Report
     //  algorithm task          Performing Heart 2020 Data Analysis
     //  status:                 Pending
@@ -2451,6 +2451,32 @@ replace male_percent=round(male_percent,1.0)
 replace total_percent=round(total_percent,1.0)
 
 save "`datapath'\version02\2-working\pm4_ecg_heart" ,replace
+/* 
+	JC 20jul2022: Simon Anderson's query from 2020 annual report review: Can we do this by NSTEMI and STEMI? Particularly the latter…
+	So I added the below code to create a separate table from the above to differentiate by heart type
+
+use "`datapath'\version02\2-working\pm4_ecg_heart_ar" ,clear
+STOP - need to ask NS how best to do this as in other code, e.g. PM2 + PM3, the heart type variable [htype] is not used but the ECG variable denoting STEMI [ecgste] is used to identify STEMI cases; So how do I identify NSTEMI cases? Do I use [htype]? However, [htype] has less NSTEMI cases than when [ecgstd] and [ecgtwv] are used...
+tab ecgste if year==2020
+tab htype if year==2020
+
+** STEMI
+by year,sort:tab decho ecgste, m row col
+by year sex,sort:tab decho ecgste, m row col //use this for STEMI
+
+by year sex,sort:tab decho ecgstd, m row col
+by year sex,sort:tab decho ecgtwv, m row col
+
+by year sex,sort:tab decho htype, m row col
+tab decho htype if year==2020 & sex==2
+tab decho ecgstd if year==2020 & sex==2
+tab decho ecgtwv if year==2020 & sex==2
+** 
+tab decho sex if year==2020 
+
+drop if year!=2020
+...
+*/
 erase "`datapath'\version02\2-working\pm4_ecg_heart_ar.dta"
 restore
 

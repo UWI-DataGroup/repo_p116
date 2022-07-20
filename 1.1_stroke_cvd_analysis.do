@@ -5,7 +5,7 @@ cls
     //  project:                BNR Stroke
     //  analysts:               Ashley HENRY and Jacqueline CAMPBELL
     //  date first created:     23-Feb-2022
-    //  date last modified:     12-May-2022
+    //  date last modified:     20-Jul-2022
 	//  analysis:               Stroke 2020 dataset for Annual Report
     //  algorithm task          Performing Stroke 2020 Data Analysis
     //  status:                 Pending
@@ -125,39 +125,20 @@ distrate case2010 pop_wpp2010 using "`datapath'\version02\3-output\who2000_10-2"
 /*
 
 */
-** JC update: Save these results as a dataset for reporting Figures 2.1 and 2.2
+** JC update: Save these results as a dataset for reporting Figures 1.1 and 1.2
 gen year=1
 matrix list r(adj)
 matrix totnumber = r(NDeath)
 matrix cir = r(crude)
-matrix asir = r(adj)
-matrix ui_lower = r(lb_G)
-matrix ui_upper = r(ub_G)
 svmat totnumber
 svmat cir
-svmat asir
-svmat ui_lower
-svmat ui_upper
 
-collapse year totnumber cir asir ui_*
+collapse year totnumber cir
 replace cir=round(cir,0.1)
-replace asir=round(asir,0.1)
-replace ui_lower=round(ui_lower,0.1)
-replace ui_upper=round(ui_upper,0.1)
 rename totnumber1 totnumber
 rename cir1 cir
-rename asir1 asir 
-rename ui_lower1 ui_lower
-rename ui_upper1 ui_upper
 
-gen percent=100
-
-gen ui_lower1=string(ui_lower, "%02.1f")
-gen ui_upper1=string(ui_upper, "%02.1f")
-gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
-drop ui_lower* ui_upper*
-
-save "`datapath'\version02\2-working\CIRsASIRs_total_stroke" ,replace
+save "`datapath'\version02\2-working\CIRs_total_stroke" ,replace
 
 clear
 
@@ -174,7 +155,7 @@ distrate case2010 pop_wpp2010 using "`datapath'\version02\3-output\who2000_10-2"
 /*
 
 */
-** JC update: Save these results as a dataset for reporting Table 2.1
+** JC update: Save these results as a dataset for reporting Table 1.2
 gen year=1
 matrix list r(adj)
 matrix number = r(NDeath)
@@ -237,60 +218,21 @@ preserve
 	** type -search distrate,net- at the Stata prompt to find and install this command
 
 sort age_10
-save "`datapath'\version02\2-working\tempdistrate_mort_stroke" ,replace
 
 distrate case2010 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
-
-** JC update: Save these results as a dataset for reporting Figures 2.1 and 2.2
-gen year=1
-matrix list r(adj)
-matrix totnumber = r(NDeath)
-matrix asmr = r(adj)
-matrix ui_lower = r(lb_G)
-matrix ui_upper = r(ub_G)
-svmat totnumber
-svmat asmr
-svmat ui_lower
-svmat ui_upper
-
-collapse year totnumber asmr ui_*
-replace asmr=round(asmr,0.1)
-replace ui_lower=round(ui_lower,0.1)
-replace ui_upper=round(ui_upper,0.1)
-rename totnumber1 totnumber
-rename asmr1 asmr 
-rename ui_lower1 ui_lower
-rename ui_upper1 ui_upper
-
-gen ui_lower1=string(ui_lower, "%02.1f")
-gen ui_upper1=string(ui_upper, "%02.1f")
-gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
-drop ui_lower* ui_upper*
-
-gen sex=3
-gen percent=100
-
-order year sex totnumber asmr ui_range
-sort sex year
-rename totnumber number
-
-save "`datapath'\version02\2-working\ASMRs_total_stroke" ,replace
-
-clear
 
 *************************************************
 ** 2010 AGE-STANDARDIZED MORTALITY BY SEX TO UN WPP
 ** Using WHO World Standard Population
 *****************************************************
-use "`datapath'\version02\2-working\tempdistrate_mort_stroke" ,clear
 
 distrate case2010 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)				 
 /*
 
 */
-** JC update: Save these results as a dataset for reporting Table 2.1
+** JC update: Save these results as a dataset for reporting Table 1.2
 gen year=1
 matrix list r(adj)
 matrix number = r(NDeath)
@@ -416,40 +358,21 @@ save "`datapath'\version02\2-working\tempdistrate_stroke" ,replace
 distrate case2011 pop_wpp2011 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
 
-** JC update: Save these results as a dataset for reporting Figures 2.1 and 2.2
+** JC update: Save these results as a dataset for reporting Figures 1.1 and 1.2
 gen year=2
 matrix list r(adj)
 matrix totnumber = r(NDeath)
 matrix cir = r(crude)
-matrix asir = r(adj)
-matrix ui_lower = r(lb_G)
-matrix ui_upper = r(ub_G)
 svmat totnumber
 svmat cir
-svmat asir
-svmat ui_lower
-svmat ui_upper
 
-collapse year totnumber cir asir ui_*
+collapse year totnumber cir
 replace cir=round(cir,0.1)
-replace asir=round(asir,0.1)
-replace ui_lower=round(ui_lower,0.1)
-replace ui_upper=round(ui_upper,0.1)
 rename totnumber1 totnumber
 rename cir1 cir
-rename asir1 asir 
-rename ui_lower1 ui_lower
-rename ui_upper1 ui_upper
 
-gen percent=100
-
-gen ui_lower1=string(ui_lower, "%02.1f")
-gen ui_upper1=string(ui_upper, "%02.1f")
-gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
-drop ui_lower* ui_upper*
-
-append using "`datapath'\version02\2-working\CIRsASIRs_total_stroke" 
-save "`datapath'\version02\2-working\CIRsASIRs_total_stroke" ,replace
+append using "`datapath'\version02\2-working\CIRs_total_stroke" 
+save "`datapath'\version02\2-working\CIRs_total_stroke" ,replace
 
 clear
 		 
@@ -465,7 +388,7 @@ distrate case2011 pop_wpp2011 using "`datapath'\version02\3-output\who2000_10-2"
 /*
 
 */
-** JC update: Save these results as a dataset for reporting Table 2.1
+** JC update: Save these results as a dataset for reporting Table 1.2
 gen year=2
 matrix list r(adj)
 matrix number = r(NDeath)
@@ -531,59 +454,19 @@ preserve
 	** type -search distrate,net- at the Stata prompt to find and install this command
 
 sort age_10
-save "`datapath'\version02\2-working\tempdistrate_mort_stroke" ,replace
 
 distrate case2011 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
-
-** JC update: Save these results as a dataset for reporting Figures 2.1 and 2.2
-gen year=2
-matrix list r(adj)
-matrix totnumber = r(NDeath)
-matrix asmr = r(adj)
-matrix ui_lower = r(lb_G)
-matrix ui_upper = r(ub_G)
-svmat totnumber
-svmat asmr
-svmat ui_lower
-svmat ui_upper
-
-collapse year totnumber asmr ui_*
-replace asmr=round(asmr,0.1)
-replace ui_lower=round(ui_lower,0.1)
-replace ui_upper=round(ui_upper,0.1)
-rename totnumber1 totnumber
-rename asmr1 asmr 
-rename ui_lower1 ui_lower
-rename ui_upper1 ui_upper
-
-gen ui_lower1=string(ui_lower, "%02.1f")
-gen ui_upper1=string(ui_upper, "%02.1f")
-gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
-drop ui_lower* ui_upper*
-
-gen sex=3
-gen percent=100
-
-order year sex totnumber asmr ui_range
-sort sex year
-rename totnumber number
-
-append using "`datapath'\version02\2-working\ASMRs_total_stroke"
-save "`datapath'\version02\2-working\ASMRs_total_stroke" ,replace
-
-clear
 
 *************************************************
 ** 2011 AGE-STANDARDIZED MORTALITY BY SEX TO UN WPP
 ** Using WHO World Standard Population
 *****************************************************
-use "`datapath'\version02\2-working\tempdistrate_mort_stroke" ,clear
 
 distrate case2011 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
 
-** JC update: Save these results as a dataset for reporting Table 2.1
+** JC update: Save these results as a dataset for reporting Table 1.2
 gen year=2
 matrix list r(adj)
 matrix number = r(NDeath)
@@ -711,40 +594,21 @@ save "`datapath'\version02\2-working\tempdistrate_stroke" ,replace
 distrate case2012 pop_wpp2012 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
 
-** JC update: Save these results as a dataset for reporting Figures 2.1 and 2.2
+** JC update: Save these results as a dataset for reporting Figures 1.1 and 1.2
 gen year=3
 matrix list r(adj)
 matrix totnumber = r(NDeath)
 matrix cir = r(crude)
-matrix asir = r(adj)
-matrix ui_lower = r(lb_G)
-matrix ui_upper = r(ub_G)
 svmat totnumber
 svmat cir
-svmat asir
-svmat ui_lower
-svmat ui_upper
 
-collapse year totnumber cir asir ui_*
+collapse year totnumber cir
 replace cir=round(cir,0.1)
-replace asir=round(asir,0.1)
-replace ui_lower=round(ui_lower,0.1)
-replace ui_upper=round(ui_upper,0.1)
 rename totnumber1 totnumber
 rename cir1 cir
-rename asir1 asir 
-rename ui_lower1 ui_lower
-rename ui_upper1 ui_upper
 
-gen percent=100
-
-gen ui_lower1=string(ui_lower, "%02.1f")
-gen ui_upper1=string(ui_upper, "%02.1f")
-gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
-drop ui_lower* ui_upper*
-
-append using "`datapath'\version02\2-working\CIRsASIRs_total_stroke" 
-save "`datapath'\version02\2-working\CIRsASIRs_total_stroke" ,replace
+append using "`datapath'\version02\2-working\CIRs_total_stroke" 
+save "`datapath'\version02\2-working\CIRs_total_stroke" ,replace
 
 clear
 
@@ -757,7 +621,7 @@ use "`datapath'\version02\2-working\tempdistrate_stroke" ,clear
 distrate case2012 pop_wpp2012 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
 
-** JC update: Save these results as a dataset for reporting Table 2.1
+** JC update: Save these results as a dataset for reporting Table 1.2
 gen year=3
 matrix list r(adj)
 matrix number = r(NDeath)
@@ -822,59 +686,19 @@ preserve
 	** type -search distrate,net- at the Stata prompt to find and install this command
 
 sort age_10
-save "`datapath'\version02\2-working\tempdistrate_mort_stroke" ,replace
 
 distrate case2012 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
-
-** JC update: Save these results as a dataset for reporting Figures 2.1 and 2.2
-gen year=3
-matrix list r(adj)
-matrix totnumber = r(NDeath)
-matrix asmr = r(adj)
-matrix ui_lower = r(lb_G)
-matrix ui_upper = r(ub_G)
-svmat totnumber
-svmat asmr
-svmat ui_lower
-svmat ui_upper
-
-collapse year totnumber asmr ui_*
-replace asmr=round(asmr,0.1)
-replace ui_lower=round(ui_lower,0.1)
-replace ui_upper=round(ui_upper,0.1)
-rename totnumber1 totnumber
-rename asmr1 asmr 
-rename ui_lower1 ui_lower
-rename ui_upper1 ui_upper
-
-gen ui_lower1=string(ui_lower, "%02.1f")
-gen ui_upper1=string(ui_upper, "%02.1f")
-gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
-drop ui_lower* ui_upper*
-
-gen sex=3
-gen percent=100
-
-order year sex totnumber asmr ui_range
-sort sex year
-rename totnumber number
-
-append using "`datapath'\version02\2-working\ASMRs_total_stroke"
-save "`datapath'\version02\2-working\ASMRs_total_stroke" ,replace
-
-clear
 
 *************************************************
 ** 2012 AGE-STANDARDIZED MORTALITY BY SEX TO UN WPP
 ** Using WHO World Standard Population
 *****************************************************
-use "`datapath'\version02\2-working\tempdistrate_mort_stroke" ,clear
 
 distrate case2012 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
 
-** JC update: Save these results as a dataset for reporting Table 2.1
+** JC update: Save these results as a dataset for reporting Table 1.2
 gen year=3
 matrix list r(adj)
 matrix number = r(NDeath)
@@ -1002,40 +826,21 @@ save "`datapath'\version02\2-working\tempdistrate_stroke" ,replace
 distrate case2013 pop_wpp2013 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
 
-** JC update: Save these results as a dataset for reporting Figures 2.1 and 2.2
+** JC update: Save these results as a dataset for reporting Figures 1.1 and 1.2
 gen year=4
 matrix list r(adj)
 matrix totnumber = r(NDeath)
 matrix cir = r(crude)
-matrix asir = r(adj)
-matrix ui_lower = r(lb_G)
-matrix ui_upper = r(ub_G)
 svmat totnumber
 svmat cir
-svmat asir
-svmat ui_lower
-svmat ui_upper
 
-collapse year totnumber cir asir ui_*
+collapse year totnumber cir
 replace cir=round(cir,0.1)
-replace asir=round(asir,0.1)
-replace ui_lower=round(ui_lower,0.1)
-replace ui_upper=round(ui_upper,0.1)
 rename totnumber1 totnumber
 rename cir1 cir
-rename asir1 asir 
-rename ui_lower1 ui_lower
-rename ui_upper1 ui_upper
 
-gen percent=100
-
-gen ui_lower1=string(ui_lower, "%02.1f")
-gen ui_upper1=string(ui_upper, "%02.1f")
-gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
-drop ui_lower* ui_upper*
-
-append using "`datapath'\version02\2-working\CIRsASIRs_total_stroke" 
-save "`datapath'\version02\2-working\CIRsASIRs_total_stroke" ,replace
+append using "`datapath'\version02\2-working\CIRs_total_stroke" 
+save "`datapath'\version02\2-working\CIRs_total_stroke" ,replace
 
 clear
 
@@ -1048,7 +853,7 @@ use "`datapath'\version02\2-working\tempdistrate_stroke" ,clear
 distrate case2013 pop_wpp2013 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
 
-** JC update: Save these results as a dataset for reporting Table 2.1
+** JC update: Save these results as a dataset for reporting Table 1.2
 gen year=4
 matrix list r(adj)
 matrix number = r(NDeath)
@@ -1113,59 +918,19 @@ preserve
 	** type -search distrate,net- at the Stata prompt to find and install this command
 
 sort age_10
-save "`datapath'\version02\2-working\tempdistrate_mort_stroke" ,replace
 
 distrate case2013 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
-
-** JC update: Save these results as a dataset for reporting Figures 2.1 and 2.2
-gen year=4
-matrix list r(adj)
-matrix totnumber = r(NDeath)
-matrix asmr = r(adj)
-matrix ui_lower = r(lb_G)
-matrix ui_upper = r(ub_G)
-svmat totnumber
-svmat asmr
-svmat ui_lower
-svmat ui_upper
-
-collapse year totnumber asmr ui_*
-replace asmr=round(asmr,0.1)
-replace ui_lower=round(ui_lower,0.1)
-replace ui_upper=round(ui_upper,0.1)
-rename totnumber1 totnumber
-rename asmr1 asmr 
-rename ui_lower1 ui_lower
-rename ui_upper1 ui_upper
-
-gen ui_lower1=string(ui_lower, "%02.1f")
-gen ui_upper1=string(ui_upper, "%02.1f")
-gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
-drop ui_lower* ui_upper*
-
-gen sex=3
-gen percent=100
-
-order year sex totnumber asmr ui_range
-sort sex year
-rename totnumber number
-
-append using "`datapath'\version02\2-working\ASMRs_total_stroke"
-save "`datapath'\version02\2-working\ASMRs_total_stroke" ,replace
-
-clear
 
 *************************************************
 ** 2013 AGE-STANDARDIZED MORTALITY BY SEX TO UN WPP
 ** Using WHO World Standard Population
 *****************************************************
-use "`datapath'\version02\2-working\tempdistrate_mort_stroke" ,clear
 
 distrate case2013 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
 
-** JC update: Save these results as a dataset for reporting Table 2.1
+** JC update: Save these results as a dataset for reporting Table 1.2
 gen year=4
 matrix list r(adj)
 matrix number = r(NDeath)
@@ -1290,40 +1055,21 @@ save "`datapath'\version02\2-working\tempdistrate_stroke" ,replace
 distrate case2014 pop_wpp2014 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
 
-** JC update: Save these results as a dataset for reporting Figures 2.1 and 2.2
+** JC update: Save these results as a dataset for reporting Figures 1.1 and 1.2
 gen year=5
 matrix list r(adj)
 matrix totnumber = r(NDeath)
 matrix cir = r(crude)
-matrix asir = r(adj)
-matrix ui_lower = r(lb_G)
-matrix ui_upper = r(ub_G)
 svmat totnumber
 svmat cir
-svmat asir
-svmat ui_lower
-svmat ui_upper
 
-collapse year totnumber cir asir ui_*
+collapse year totnumber cir
 replace cir=round(cir,0.1)
-replace asir=round(asir,0.1)
-replace ui_lower=round(ui_lower,0.1)
-replace ui_upper=round(ui_upper,0.1)
 rename totnumber1 totnumber
 rename cir1 cir
-rename asir1 asir 
-rename ui_lower1 ui_lower
-rename ui_upper1 ui_upper
 
-gen percent=100
-
-gen ui_lower1=string(ui_lower, "%02.1f")
-gen ui_upper1=string(ui_upper, "%02.1f")
-gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
-drop ui_lower* ui_upper*
-
-append using "`datapath'\version02\2-working\CIRsASIRs_total_stroke" 
-save "`datapath'\version02\2-working\CIRsASIRs_total_stroke" ,replace
+append using "`datapath'\version02\2-working\CIRs_total_stroke" 
+save "`datapath'\version02\2-working\CIRs_total_stroke" ,replace
 
 clear
 
@@ -1336,7 +1082,7 @@ use "`datapath'\version02\2-working\tempdistrate_stroke" ,clear
 distrate case2014 pop_wpp2014 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
 
-** JC update: Save these results as a dataset for reporting Table 2.1
+** JC update: Save these results as a dataset for reporting Table 1.2
 gen year=5
 matrix list r(adj)
 matrix number = r(NDeath)
@@ -1401,59 +1147,19 @@ preserve
 	** type -search distrate,net- at the Stata prompt to find and install this command
 
 sort age_10
-save "`datapath'\version02\2-working\tempdistrate_mort_stroke" ,replace
 
 distrate case2014 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
-
-** JC update: Save these results as a dataset for reporting Figures 2.1 and 2.2
-gen year=5
-matrix list r(adj)
-matrix totnumber = r(NDeath)
-matrix asmr = r(adj)
-matrix ui_lower = r(lb_G)
-matrix ui_upper = r(ub_G)
-svmat totnumber
-svmat asmr
-svmat ui_lower
-svmat ui_upper
-
-collapse year totnumber asmr ui_*
-replace asmr=round(asmr,0.1)
-replace ui_lower=round(ui_lower,0.1)
-replace ui_upper=round(ui_upper,0.1)
-rename totnumber1 totnumber
-rename asmr1 asmr 
-rename ui_lower1 ui_lower
-rename ui_upper1 ui_upper
-
-gen ui_lower1=string(ui_lower, "%02.1f")
-gen ui_upper1=string(ui_upper, "%02.1f")
-gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
-drop ui_lower* ui_upper*
-
-gen sex=3
-gen percent=100
-
-order year sex totnumber asmr ui_range
-sort sex year
-rename totnumber number
-
-append using "`datapath'\version02\2-working\ASMRs_total_stroke"
-save "`datapath'\version02\2-working\ASMRs_total_stroke" ,replace
-
-clear
 
 *************************************************
 ** 2014 AGE-STANDARDIZED MORTALITY BY SEX TO UN WPP
 ** Using WHO World Standard Population
 *****************************************************
-use "`datapath'\version02\2-working\tempdistrate_mort_stroke" ,clear
 
 distrate case2014 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
 
-** JC update: Save these results as a dataset for reporting Table 2.1
+** JC update: Save these results as a dataset for reporting Table 1.2
 gen year=5
 matrix list r(adj)
 matrix number = r(NDeath)
@@ -1580,40 +1286,21 @@ save "`datapath'\version02\2-working\tempdistrate_stroke" ,replace
 distrate case2015 pop_wpp2015 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
 
-** JC update: Save these results as a dataset for reporting Figures 2.1 and 2.2
+** JC update: Save these results as a dataset for reporting Figures 1.1 and 1.2
 gen year=6
 matrix list r(adj)
 matrix totnumber = r(NDeath)
 matrix cir = r(crude)
-matrix asir = r(adj)
-matrix ui_lower = r(lb_G)
-matrix ui_upper = r(ub_G)
 svmat totnumber
 svmat cir
-svmat asir
-svmat ui_lower
-svmat ui_upper
 
-collapse year totnumber cir asir ui_*
+collapse year totnumber cir
 replace cir=round(cir,0.1)
-replace asir=round(asir,0.1)
-replace ui_lower=round(ui_lower,0.1)
-replace ui_upper=round(ui_upper,0.1)
 rename totnumber1 totnumber
 rename cir1 cir
-rename asir1 asir 
-rename ui_lower1 ui_lower
-rename ui_upper1 ui_upper
 
-gen percent=100
-
-gen ui_lower1=string(ui_lower, "%02.1f")
-gen ui_upper1=string(ui_upper, "%02.1f")
-gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
-drop ui_lower* ui_upper*
-
-append using "`datapath'\version02\2-working\CIRsASIRs_total_stroke" 
-save "`datapath'\version02\2-working\CIRsASIRs_total_stroke" ,replace
+append using "`datapath'\version02\2-working\CIRs_total_stroke" 
+save "`datapath'\version02\2-working\CIRs_total_stroke" ,replace
 
 clear
 
@@ -1626,7 +1313,7 @@ use "`datapath'\version02\2-working\tempdistrate_stroke" ,clear
 distrate case2015 pop_wpp2015 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
 
-** JC update: Save these results as a dataset for reporting Table 2.1
+** JC update: Save these results as a dataset for reporting Table 1.2
 gen year=6
 matrix list r(adj)
 matrix number = r(NDeath)
@@ -1691,59 +1378,19 @@ preserve
 	** type -search distrate,net- at the Stata prompt to find and install this command
 
 sort age_10
-save "`datapath'\version02\2-working\tempdistrate_mort_stroke" ,replace
 
 distrate case2015 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
-
-** JC update: Save these results as a dataset for reporting Figures 2.1 and 2.2
-gen year=6
-matrix list r(adj)
-matrix totnumber = r(NDeath)
-matrix asmr = r(adj)
-matrix ui_lower = r(lb_G)
-matrix ui_upper = r(ub_G)
-svmat totnumber
-svmat asmr
-svmat ui_lower
-svmat ui_upper
-
-collapse year totnumber asmr ui_*
-replace asmr=round(asmr,0.1)
-replace ui_lower=round(ui_lower,0.1)
-replace ui_upper=round(ui_upper,0.1)
-rename totnumber1 totnumber
-rename asmr1 asmr 
-rename ui_lower1 ui_lower
-rename ui_upper1 ui_upper
-
-gen ui_lower1=string(ui_lower, "%02.1f")
-gen ui_upper1=string(ui_upper, "%02.1f")
-gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
-drop ui_lower* ui_upper*
-
-gen sex=3
-gen percent=100
-
-order year sex totnumber asmr ui_range
-sort sex year
-rename totnumber number
-
-append using "`datapath'\version02\2-working\ASMRs_total_stroke"
-save "`datapath'\version02\2-working\ASMRs_total_stroke" ,replace
-
-clear
 
 *************************************************
 ** 2015 AGE-STANDARDIZED MORTALITY BY SEX TO UN WPP
 ** Using WHO World Standard Population
 *****************************************************
-use "`datapath'\version02\2-working\tempdistrate_mort_stroke" ,clear
 
 distrate case2015 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
 
-** JC update: Save these results as a dataset for reporting Table 2.1
+** JC update: Save these results as a dataset for reporting Table 1.2
 gen year=6
 matrix list r(adj)
 matrix number = r(NDeath)
@@ -1872,40 +1519,21 @@ save "`datapath'\version02\2-working\tempdistrate_stroke" ,replace
 distrate case2016 pop_wpp2016 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
 
-** JC update: Save these results as a dataset for reporting Figures 2.1 and 2.2
+** JC update: Save these results as a dataset for reporting Figures 1.1 and 1.2
 gen year=7
 matrix list r(adj)
 matrix totnumber = r(NDeath)
 matrix cir = r(crude)
-matrix asir = r(adj)
-matrix ui_lower = r(lb_G)
-matrix ui_upper = r(ub_G)
 svmat totnumber
 svmat cir
-svmat asir
-svmat ui_lower
-svmat ui_upper
 
-collapse year totnumber cir asir ui_*
+collapse year totnumber cir
 replace cir=round(cir,0.1)
-replace asir=round(asir,0.1)
-replace ui_lower=round(ui_lower,0.1)
-replace ui_upper=round(ui_upper,0.1)
 rename totnumber1 totnumber
 rename cir1 cir
-rename asir1 asir 
-rename ui_lower1 ui_lower
-rename ui_upper1 ui_upper
 
-gen percent=100
-
-gen ui_lower1=string(ui_lower, "%02.1f")
-gen ui_upper1=string(ui_upper, "%02.1f")
-gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
-drop ui_lower* ui_upper*
-
-append using "`datapath'\version02\2-working\CIRsASIRs_total_stroke" 
-save "`datapath'\version02\2-working\CIRsASIRs_total_stroke" ,replace
+append using "`datapath'\version02\2-working\CIRs_total_stroke" 
+save "`datapath'\version02\2-working\CIRs_total_stroke" ,replace
 
 clear
 
@@ -1918,7 +1546,7 @@ use "`datapath'\version02\2-working\tempdistrate_stroke" ,clear
 distrate case2016 pop_wpp2016 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex) mult(100000) format(%8.2f)
 
-** JC update: Save these results as a dataset for reporting Table 2.1
+** JC update: Save these results as a dataset for reporting Table 1.2
 gen year=7
 matrix list r(adj)
 matrix number = r(NDeath)
@@ -1983,59 +1611,19 @@ preserve
 	** type -search distrate,net- at the Stata prompt to find and install this command
 
 sort age_10
-save "`datapath'\version02\2-working\tempdistrate_mort_stroke" ,replace
 
 distrate case2016 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
-
-** JC update: Save these results as a dataset for reporting Figures 2.1 and 2.2
-gen year=7
-matrix list r(adj)
-matrix totnumber = r(NDeath)
-matrix asmr = r(adj)
-matrix ui_lower = r(lb_G)
-matrix ui_upper = r(ub_G)
-svmat totnumber
-svmat asmr
-svmat ui_lower
-svmat ui_upper
-
-collapse year totnumber asmr ui_*
-replace asmr=round(asmr,0.1)
-replace ui_lower=round(ui_lower,0.1)
-replace ui_upper=round(ui_upper,0.1)
-rename totnumber1 totnumber
-rename asmr1 asmr 
-rename ui_lower1 ui_lower
-rename ui_upper1 ui_upper
-
-gen ui_lower1=string(ui_lower, "%02.1f")
-gen ui_upper1=string(ui_upper, "%02.1f")
-gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
-drop ui_lower* ui_upper*
-
-gen sex=3
-gen percent=100
-
-order year sex totnumber asmr ui_range
-sort sex year
-rename totnumber number
-
-append using "`datapath'\version02\2-working\ASMRs_total_stroke"
-save "`datapath'\version02\2-working\ASMRs_total_stroke" ,replace
-
-clear
 
 *************************************************
 ** 2016 AGE-STANDARDIZED MORTALITY BY SEX TO UN WPP
 ** Using WHO World Standard Population
 *****************************************************
-use "`datapath'\version02\2-working\tempdistrate_mort_stroke" ,clear
 
 distrate case2016 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
 
-** JC update: Save these results as a dataset for reporting Table 2.1
+** JC update: Save these results as a dataset for reporting Table 1.2
 gen year=7
 matrix list r(adj)
 matrix number = r(NDeath)
@@ -2163,40 +1751,21 @@ save "`datapath'\version02\2-working\tempdistrate_stroke" ,replace
 distrate case2017 pop_wpp2017 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
 
-** JC update: Save these results as a dataset for reporting Figures 2.1 and 2.2
+** JC update: Save these results as a dataset for reporting Figures 1.1 and 1.2
 gen year=8
 matrix list r(adj)
 matrix totnumber = r(NDeath)
 matrix cir = r(crude)
-matrix asir = r(adj)
-matrix ui_lower = r(lb_G)
-matrix ui_upper = r(ub_G)
 svmat totnumber
 svmat cir
-svmat asir
-svmat ui_lower
-svmat ui_upper
 
-collapse year totnumber cir asir ui_*
+collapse year totnumber cir
 replace cir=round(cir,0.1)
-replace asir=round(asir,0.1)
-replace ui_lower=round(ui_lower,0.1)
-replace ui_upper=round(ui_upper,0.1)
 rename totnumber1 totnumber
 rename cir1 cir
-rename asir1 asir 
-rename ui_lower1 ui_lower
-rename ui_upper1 ui_upper
 
-gen percent=100
-
-gen ui_lower1=string(ui_lower, "%02.1f")
-gen ui_upper1=string(ui_upper, "%02.1f")
-gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
-drop ui_lower* ui_upper*
-
-append using "`datapath'\version02\2-working\CIRsASIRs_total_stroke" 
-save "`datapath'\version02\2-working\CIRsASIRs_total_stroke" ,replace
+append using "`datapath'\version02\2-working\CIRs_total_stroke" 
+save "`datapath'\version02\2-working\CIRs_total_stroke" ,replace
 
 clear
 
@@ -2209,7 +1778,7 @@ use "`datapath'\version02\2-working\tempdistrate_stroke" ,clear
 distrate case2017 pop_wpp2017 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
 
-** JC update: Save these results as a dataset for reporting Table 2.1
+** JC update: Save these results as a dataset for reporting Table 1.2
 gen year=8
 matrix list r(adj)
 matrix number = r(NDeath)
@@ -2274,59 +1843,19 @@ preserve
 	** type -search distrate,net- at the Stata prompt to find and install this command
 
 sort age_10
-save "`datapath'\version02\2-working\tempdistrate_mort_stroke" ,replace
 
 distrate case2017 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
-
-** JC update: Save these results as a dataset for reporting Figures 2.1 and 2.2
-gen year=8
-matrix list r(adj)
-matrix totnumber = r(NDeath)
-matrix asmr = r(adj)
-matrix ui_lower = r(lb_G)
-matrix ui_upper = r(ub_G)
-svmat totnumber
-svmat asmr
-svmat ui_lower
-svmat ui_upper
-
-collapse year totnumber asmr ui_*
-replace asmr=round(asmr,0.1)
-replace ui_lower=round(ui_lower,0.1)
-replace ui_upper=round(ui_upper,0.1)
-rename totnumber1 totnumber
-rename asmr1 asmr 
-rename ui_lower1 ui_lower
-rename ui_upper1 ui_upper
-
-gen ui_lower1=string(ui_lower, "%02.1f")
-gen ui_upper1=string(ui_upper, "%02.1f")
-gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
-drop ui_lower* ui_upper*
-
-gen sex=3
-gen percent=100
-
-order year sex totnumber asmr ui_range
-sort sex year
-rename totnumber number
-
-append using "`datapath'\version02\2-working\ASMRs_total_stroke"
-save "`datapath'\version02\2-working\ASMRs_total_stroke" ,replace
-
-clear
 
 *************************************************
 ** 2017 AGE-STANDARDIZED MORTALITY BY SEX TO UN WPP
 ** Using WHO World Standard Population
 *****************************************************
-use "`datapath'\version02\2-working\tempdistrate_mort_stroke" ,clear
 
 distrate case2017 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
 
-** JC update: Save these results as a dataset for reporting Table 2.1
+** JC update: Save these results as a dataset for reporting Table 1.2
 gen year=8
 matrix list r(adj)
 matrix number = r(NDeath)
@@ -2455,40 +1984,21 @@ save "`datapath'\version02\2-working\tempdistrate_stroke" ,replace
 distrate case2018 pop_wpp2018 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
 
-** JC update: Save these results as a dataset for reporting Figures 2.1 and 2.2
+** JC update: Save these results as a dataset for reporting Figures 1.1 and 1.2
 gen year=9
 matrix list r(adj)
 matrix totnumber = r(NDeath)
 matrix cir = r(crude)
-matrix asir = r(adj)
-matrix ui_lower = r(lb_G)
-matrix ui_upper = r(ub_G)
 svmat totnumber
 svmat cir
-svmat asir
-svmat ui_lower
-svmat ui_upper
 
-collapse year totnumber cir asir ui_*
+collapse year totnumber cir
 replace cir=round(cir,0.1)
-replace asir=round(asir,0.1)
-replace ui_lower=round(ui_lower,0.1)
-replace ui_upper=round(ui_upper,0.1)
 rename totnumber1 totnumber
 rename cir1 cir
-rename asir1 asir 
-rename ui_lower1 ui_lower
-rename ui_upper1 ui_upper
 
-gen percent=100
-
-gen ui_lower1=string(ui_lower, "%02.1f")
-gen ui_upper1=string(ui_upper, "%02.1f")
-gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
-drop ui_lower* ui_upper*
-
-append using "`datapath'\version02\2-working\CIRsASIRs_total_stroke" 
-save "`datapath'\version02\2-working\CIRsASIRs_total_stroke" ,replace
+append using "`datapath'\version02\2-working\CIRs_total_stroke" 
+save "`datapath'\version02\2-working\CIRs_total_stroke" ,replace
 
 clear
 
@@ -2501,7 +2011,7 @@ use "`datapath'\version02\2-working\tempdistrate_stroke" ,clear
 distrate case2018 pop_wpp2018 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
 
-** JC update: Save these results as a dataset for reporting Table 2.1
+** JC update: Save these results as a dataset for reporting Table 1.2
 gen year=9
 matrix list r(adj)
 matrix number = r(NDeath)
@@ -2566,59 +2076,19 @@ preserve
 	** type -search distrate,net- at the Stata prompt to find and install this command
 
 sort age_10
-save "`datapath'\version02\2-working\tempdistrate_mort_stroke" ,replace
 
 distrate case2018 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
-
-** JC update: Save these results as a dataset for reporting Figures 2.1 and 2.2
-gen year=9
-matrix list r(adj)
-matrix totnumber = r(NDeath)
-matrix asmr = r(adj)
-matrix ui_lower = r(lb_G)
-matrix ui_upper = r(ub_G)
-svmat totnumber
-svmat asmr
-svmat ui_lower
-svmat ui_upper
-
-collapse year totnumber asmr ui_*
-replace asmr=round(asmr,0.1)
-replace ui_lower=round(ui_lower,0.1)
-replace ui_upper=round(ui_upper,0.1)
-rename totnumber1 totnumber
-rename asmr1 asmr 
-rename ui_lower1 ui_lower
-rename ui_upper1 ui_upper
-
-gen ui_lower1=string(ui_lower, "%02.1f")
-gen ui_upper1=string(ui_upper, "%02.1f")
-gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
-drop ui_lower* ui_upper*
-
-gen sex=3
-gen percent=100
-
-order year sex totnumber asmr ui_range
-sort sex year
-rename totnumber number
-
-append using "`datapath'\version02\2-working\ASMRs_total_stroke"
-save "`datapath'\version02\2-working\ASMRs_total_stroke" ,replace
-
-clear
 
 *************************************************
 ** 2018 AGE-STANDARDIZED MORTALITY BY SEX TO UN WPP
 ** Using WHO World Standard Population
 *****************************************************
-use "`datapath'\version02\2-working\tempdistrate_mort_stroke" ,clear
 
 distrate case2018 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
 
-** JC update: Save these results as a dataset for reporting Table 2.1
+** JC update: Save these results as a dataset for reporting Table 1.2
 gen year=9
 matrix list r(adj)
 matrix number = r(NDeath)
@@ -2746,40 +2216,21 @@ save "`datapath'\version02\2-working\tempdistrate_stroke" ,replace
 distrate case2019 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
 
-** JC update: Save these results as a dataset for reporting Figures 2.1 and 2.2
+** JC update: Save these results as a dataset for reporting Figures 1.1 and 1.2
 gen year=10
 matrix list r(adj)
 matrix totnumber = r(NDeath)
 matrix cir = r(crude)
-matrix asir = r(adj)
-matrix ui_lower = r(lb_G)
-matrix ui_upper = r(ub_G)
 svmat totnumber
 svmat cir
-svmat asir
-svmat ui_lower
-svmat ui_upper
 
-collapse year totnumber cir asir ui_*
+collapse year totnumber cir
 replace cir=round(cir,0.1)
-replace asir=round(asir,0.1)
-replace ui_lower=round(ui_lower,0.1)
-replace ui_upper=round(ui_upper,0.1)
 rename totnumber1 totnumber
 rename cir1 cir
-rename asir1 asir 
-rename ui_lower1 ui_lower
-rename ui_upper1 ui_upper
 
-gen percent=100
-
-gen ui_lower1=string(ui_lower, "%02.1f")
-gen ui_upper1=string(ui_upper, "%02.1f")
-gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
-drop ui_lower* ui_upper*
-
-append using "`datapath'\version02\2-working\CIRsASIRs_total_stroke" 
-save "`datapath'\version02\2-working\CIRsASIRs_total_stroke" ,replace
+append using "`datapath'\version02\2-working\CIRs_total_stroke" 
+save "`datapath'\version02\2-working\CIRs_total_stroke" ,replace
 
 clear
 
@@ -2792,7 +2243,7 @@ use "`datapath'\version02\2-working\tempdistrate_stroke" ,clear
 distrate case2019 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
 
-** JC update: Save these results as a dataset for reporting Table 2.1
+** JC update: Save these results as a dataset for reporting Table 1.2
 gen year=10
 matrix list r(adj)
 matrix number = r(NDeath)
@@ -2857,59 +2308,19 @@ preserve
 	** type -search distrate,net- at the Stata prompt to find and install this command
 
 sort age_10
-save "`datapath'\version02\2-working\tempdistrate_mort_stroke" ,replace
 
 distrate case2019 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
-
-** JC update: Save these results as a dataset for reporting Figures 2.1 and 2.2
-gen year=10
-matrix list r(adj)
-matrix totnumber = r(NDeath)
-matrix asmr = r(adj)
-matrix ui_lower = r(lb_G)
-matrix ui_upper = r(ub_G)
-svmat totnumber
-svmat asmr
-svmat ui_lower
-svmat ui_upper
-
-collapse year totnumber asmr ui_*
-replace asmr=round(asmr,0.1)
-replace ui_lower=round(ui_lower,0.1)
-replace ui_upper=round(ui_upper,0.1)
-rename totnumber1 totnumber
-rename asmr1 asmr 
-rename ui_lower1 ui_lower
-rename ui_upper1 ui_upper
-
-gen ui_lower1=string(ui_lower, "%02.1f")
-gen ui_upper1=string(ui_upper, "%02.1f")
-gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
-drop ui_lower* ui_upper*
-
-gen sex=3
-gen percent=100
-
-order year sex totnumber asmr ui_range
-sort sex year
-rename totnumber number
-
-append using "`datapath'\version02\2-working\ASMRs_total_stroke"
-save "`datapath'\version02\2-working\ASMRs_total_stroke" ,replace
-
-clear
 
 *************************************************
 ** 2019 AGE-STANDARDIZED MORTALITY BY SEX TO UN WPP
 ** Using WHO World Standard Population
 *****************************************************
-use "`datapath'\version02\2-working\tempdistrate_mort_stroke" ,clear
 
 distrate case2019 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
 
-** JC update: Save these results as a dataset for reporting Table 2.1
+** JC update: Save these results as a dataset for reporting Table 1.2
 gen year=10
 matrix list r(adj)
 matrix number = r(NDeath)
@@ -3036,40 +2447,21 @@ save "`datapath'\version02\2-working\tempdistrate_stroke" ,replace
 distrate case2020 pop_wpp2020 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
 
-** JC update: Save these results as a dataset for reporting Figures 2.1 and 2.2
+** JC update: Save these results as a dataset for reporting Figures 1.1 and 1.2
 gen year=11
 matrix list r(adj)
 matrix totnumber = r(NDeath)
 matrix cir = r(crude)
-matrix asir = r(adj)
-matrix ui_lower = r(lb_G)
-matrix ui_upper = r(ub_G)
 svmat totnumber
 svmat cir
-svmat asir
-svmat ui_lower
-svmat ui_upper
 
-collapse year totnumber cir asir ui_*
+collapse year totnumber cir
 replace cir=round(cir,0.1)
-replace asir=round(asir,0.1)
-replace ui_lower=round(ui_lower,0.1)
-replace ui_upper=round(ui_upper,0.1)
 rename totnumber1 totnumber
 rename cir1 cir
-rename asir1 asir 
-rename ui_lower1 ui_lower
-rename ui_upper1 ui_upper
 
-gen percent=100
-
-gen ui_lower1=string(ui_lower, "%02.1f")
-gen ui_upper1=string(ui_upper, "%02.1f")
-gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
-drop ui_lower* ui_upper*
-
-append using "`datapath'\version02\2-working\CIRsASIRs_total_stroke" 
-save "`datapath'\version02\2-working\CIRsASIRs_total_stroke" ,replace
+append using "`datapath'\version02\2-working\CIRs_total_stroke" 
+save "`datapath'\version02\2-working\CIRs_total_stroke" ,replace
 
 clear
 
@@ -3082,7 +2474,7 @@ use "`datapath'\version02\2-working\tempdistrate_stroke" ,clear
 distrate case2020 pop_wpp2020 using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
 
-** JC update: Save these results as a dataset for reporting Table 2.1
+** JC update: Save these results as a dataset for reporting Table 1.2
 gen year=11
 matrix list r(adj)
 matrix number = r(NDeath)
@@ -3152,59 +2544,19 @@ preserve
 	** type -search distrate,net- at the Stata prompt to find and install this command
 
 sort age_10
-save "`datapath'\version02\2-working\tempdistrate_mort_stroke" ,replace
 
 distrate case2020 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) mult(100000) format(%8.2f)
-
-** JC update: Save these results as a dataset for reporting Figures 2.1 and 2.2
-gen year=11
-matrix list r(adj)
-matrix totnumber = r(NDeath)
-matrix asmr = r(adj)
-matrix ui_lower = r(lb_G)
-matrix ui_upper = r(ub_G)
-svmat totnumber
-svmat asmr
-svmat ui_lower
-svmat ui_upper
-
-collapse year totnumber asmr ui_*
-replace asmr=round(asmr,0.1)
-replace ui_lower=round(ui_lower,0.1)
-replace ui_upper=round(ui_upper,0.1)
-rename totnumber1 totnumber
-rename asmr1 asmr 
-rename ui_lower1 ui_lower
-rename ui_upper1 ui_upper
-
-gen ui_lower1=string(ui_lower, "%02.1f")
-gen ui_upper1=string(ui_upper, "%02.1f")
-gen ui_range=ui_lower1+" "+"-"+" "+ui_upper1
-drop ui_lower* ui_upper*
-
-gen sex=3
-gen percent=100
-
-order year sex totnumber asmr ui_range
-sort sex year
-rename totnumber number
-
-append using "`datapath'\version02\2-working\ASMRs_total_stroke"
-save "`datapath'\version02\2-working\ASMRs_total_stroke" ,replace
-
-clear
 
 *************************************************
 ** 2020 AGE-STANDARDIZED MORTALITY BY SEX TO UN WPP
 ** Using WHO World Standard Population
 *****************************************************
-use "`datapath'\version02\2-working\tempdistrate_mort_stroke" ,clear
 
 distrate case2020 pop_wpp using "`datapath'\version02\3-output\who2000_10-2", 	///	
 		         stand(age_10) popstand(pop) by(sex)mult(100000) format(%8.2f)
 
-** JC update: Save these results as a dataset for reporting Table 2.1
+** JC update: Save these results as a dataset for reporting Table 1.2
 gen year=11
 matrix list r(adj)
 matrix number = r(NDeath)
@@ -3249,8 +2601,6 @@ label values year year_lab
 order year sex number percent asmr ui_range
 sort sex year
 save "`datapath'\version02\2-working\ASMRs_stroke" ,replace
-** Remove the temp database created above to reduce space used on SharePoint
-erase "`datapath'\version02\2-working\tempdistrate_mort_stroke.dta"
 restore
 *****
 
@@ -3528,3 +2878,81 @@ graph twoway 	(bar case ageg if sex==2, yaxis(1) col(blue*1.5) barw(0.5) )
 			);
 #delimit cr
 graph export "`datapath'\version02\3-output\2020_age-sex graph_stroke.png" ,replace
+
+/* 
+	JC 20jul2022: Simon Anderson's query from 2020 annual report review: Strokes in younger men more prevalent in the 64-75 age group in 2020 - All? or Ischaemic?
+	His comment was in response to key findings relating to the above ASIRs + graphs.
+	The variable for stroke type [stype] not included in the graph datasets so need to pull from dataset just before rates are calculated.
+*/
+************************************** 2020 *****************************
+** Load the dataset 
+clear
+use "`datapath'\version02\3-output\stroke_2009-2020_v9_names_Stata_v16_clean" ,clear
+
+count
+** 4794 as of 26-Jan-2022
+
+sort sex age_10
+
+merge m:m sex age_10 using "`datapath'\version02\3-output\pop_wpp_2020-10"
+
+*********************** Recreating case variable ****************************
+*** The following wa done so that the seperate amounts for each year could be seen ******
+** This also assis in being able to do analysis on one year, rather than a combination of all years *****
+drop case
+** CASE variable
+gen case=1 if year==2009
+replace case=2 if year==2010
+replace case=3 if year==2011
+replace case=4 if year==2012
+replace case=5 if year==2013
+replace case=6 if year==2014
+replace case=7 if year==2015
+replace case=8 if year==2016
+replace case=9 if year==2017
+replace case=10 if year==2018
+replace case=11 if year==2019
+replace case=12 if year==2020
+label defin case_lab 1 "No. of cases in 2009" 2"No. of cases in 2010" 3"No. of cases in 2011" 4"No. of cases in 2012" ///
+                    5 "No. of cases in 2013" 6"No. of cases in 2014" 7"No. of cases in 2015" 8"No. of cases in 2016" ///
+					9 "No. of cases in 2017" 10 "No. of cases in 2018" 11"No. of cases in 2019"  12 "No. of cases in 2020" , modify
+label values case case_lab
+label var case "Stroke event / participant"
+
+tab case ,m
+tab sex if case==12
+tab age_10 if case==12 ,m
+
+****************************FIGURE 1.2********************************
+************** AGE-STANDARDIZED TO UNWPP ******************
+**CHANGING..AGE_10 variable to match who_2000_10-2
+
+replace age_10=9 if age_10==10
+label define age_10_up_lab 1 "0-14"  2 "15-25"  		///
+						3 "25-34" 4 "35-44"    	///
+						5 "45-54" 6 "55-64"    	///
+						7 "65-74" 8 "75-84"    	///
+						9 "85&over" , modify
+label values age_10 age_10_up_lab				 
+label var age_10 "Age in 10-year bands from 15 years"
+
+**************************************************
+** 2020 AGE-STANDARDIZED TO UNWPP
+** Using WHO World Standard Population
+*****************************************************
+replace case = 0 if case==. 
+gen case2020= 1 if case==12
+replace case2020 = 0 if case2020==.
+
+
+//drop pfu
+** If a full year, use pfu=1
+gen pfu=1
+label var pfu "Proportion of year in which stroke cases occurred"
+
+tab age_10 if case==12
+tab stype if case==12
+tab age_10 stype if case==12
+tab age_10 stype if sex==2 & case==12 //80=ischaemic; 12=intracerebral; 1=subarachnoid
+//Of the 93 cases where stroke type was documented for males in this age group 65-74, 86% were ischaemic.
+tab age_10 stype if sex==1 & case==12
