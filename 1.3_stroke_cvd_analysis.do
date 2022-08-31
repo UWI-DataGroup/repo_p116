@@ -121,7 +121,7 @@ tab case if vstatus!=. & abstracted!=. & hosp==1 & case>1 //gives the Total by y
 tab case if vstatus==2 & abstracted!=. & hosp==1 & case>1 //gives the Total deceased by year for the 'In-hospital CFR (all cases)'
 
 
-tab vstatus abstracted if hosp==1 & year==2019
+tab vstatus abstracted if hosp==1 & year==2020, col
 tab case vstatus if abstracted==1 & hosp==1 & case>1 //gives the abstracteddeceased and Total abstracted by year for the 'In-hospital CFR (of cases with full information)'
 
 count if hosp==1 & year==2020
