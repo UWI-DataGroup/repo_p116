@@ -4,9 +4,9 @@
     //  project:                BNR-CVD
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      02-NOV-2022
-    // 	date last modified      02-NOV-2022
+    // 	date last modified      03-NOV-2022
     //  algorithm task          Cleaning variables in the REDCap Casefinding form
-    //  status                  Completed
+    //  status                  Pending
     //  objective               To have a cleaned 2021 cvd incidence dataset ready for cleaning
     //  methods                 Using missing and invalid checks to correct data
 	//  support:                Natasha Sobers and Ian R Hambleton
@@ -168,9 +168,19 @@ replace lname = lower(rtrim(ltrim(itrim(lname))))
 count if regexm(fname,"DUMM")|regexm(fname,"DATA") //0
 count if regexm(mname,"DUMM")|regexm(mname,"DATA") //0
 count if regexm(lname,"DUMM")|regexm(lname,"DATA") //0
-STOP
+
 *********
 ** Sex **
 *********
 ** Missing
-count if sex==. //
+count if sex==. //0
+STOP
+
+** Create cleaned dataset
+save "`datapath'\version03\2-working\BNRCVDCORE_CleanedData_cf", replace
+
+PERFORM DUPLICATES CHECKS USING NRN, DOB, NAMES AFTER COMPLETION OF THE CF FORM AND BEFORE PROCEEDING TO CLEANING THE OTHER FORMS
+
+
+** Create cleaned non-duplicates dataset
+save "`datapath'\version03\2-working\BNRCVDCORE_CleanedData_nodups_cf", replace

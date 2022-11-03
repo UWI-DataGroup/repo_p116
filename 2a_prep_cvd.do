@@ -4,7 +4,7 @@
     //  project:                BNR-CVD
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      01-NOV-2022
-    // 	date last modified      02-NOV-2022
+    // 	date last modified      03-NOV-2022
     //  algorithm task          Removing non-annual report records; Copying stroke's repeating instrument data into one row of data
     //  status                  Completed
     //  objective               To have a prepared 2021 cvd incidence dataset ready for cleaning
@@ -224,6 +224,18 @@ replace sd_etype=2 if redcap_event_name=="heart_arm_2"
 label var sd_etype "SD-Event Type"
 label define sd_etype_lab 1 "Stroke" 2 "Heart" 3 "Both" 4 "Not CVD" , modify
 label values sd_etype sd_etype_lab
+
+** Create a unique ID to use for linking frames in flags dofile (2b_prep flags_cvd.do)
+sort unique_id 
+quietly by unique_id : gen dup = cond(_N==1,0,_n)
+sort unique_id record_id
+count if dup>0 //10
+
+gen link_id = unique_id
+replace link_id = subinstr(link_id,"-1","-2",.) if dup>0 & redcap_repeat_instance==2
+
+order link_id
+drop dup
 
 count //1834
 
