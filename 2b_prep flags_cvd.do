@@ -4,7 +4,7 @@
     //  project:                BNR-CVD
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      01-NOV-2022
-    // 	date last modified      03-NOV-2022
+    // 	date last modified      09-NOV-2022
     //  algorithm task          Creating flags for each variable
     //  status                  Pending
     //  objective               To have the prepared 2021 cvd incidence dataset with flagged fields for the CVD team to correct data in REDCap's BNRCVD_CORE db
@@ -86,6 +86,7 @@ frame change flags
 
 frlink 1:1 link_id, frame(errors) //all obs in frame flags matched
 replace rvflag_old = frval(errors,mname) if record_id=="2291" //1 change
+replace rvflag_old = frval(errors,dob) if record_id=="2256"|record_id=="4117"|record_id=="3192" //0 changes as they're blank
 
 
 *****************
@@ -100,5 +101,6 @@ frame change flags
 
 frlink 1:1 link_id, frame(corrections) //7 obs in frame flags unmatched
 replace rvflag_new = frval(corrections,mname) if record_id=="2291" //1 change
+replace rvflag_new = frval(corrections,dob) if record_id=="2256"|record_id=="4117"|record_id=="3192" //2 changes
 
 NOTE TO SELF: MAY NEED TO RENAME THIS DOFILE TO REPRESENT LAST DOFILE AFTER CLEANING PROCESS IS COMPLETED SO THE DOFILES ARE IN SEQUENTIAL ORDER

@@ -4,7 +4,7 @@
     //  project:                BNR-CVD
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      02-NOV-2022
-    // 	date last modified      03-NOV-2022
+    // 	date last modified      09-NOV-2022
     //  algorithm task          Cleaning variables in the REDCap Casefinding form
     //  status                  Pending
     //  objective               To have a cleaned 2021 cvd incidence dataset ready for cleaning
@@ -142,6 +142,10 @@ count if retsource!=. & (evolution==1|sri==1) //0
 count if fname=="" //0
 count if mname=="" //0
 count if lname=="" //0
+** Invalid missing code
+count if fname=="88"|fname=="999"|fname=="9999" //0
+count if mname=="88"|mname=="999"|mname=="9999" //0
+count if lname=="88"|lname=="999"|lname=="9999" //0
 **Invalid (contains a number or special character)
 count if regexm(fname,"0")|regexm(mname,"0")|regexm(lname,"0") //0
 count if regexm(fname,"1")|regexm(mname,"1")|regexm(lname,"1") //0
@@ -169,11 +173,80 @@ count if regexm(fname,"DUMM")|regexm(fname,"DATA") //0
 count if regexm(mname,"DUMM")|regexm(mname,"DATA") //0
 count if regexm(lname,"DUMM")|regexm(lname,"DATA") //0
 
+
+** JC 09nov2022: Although Sex comes before DOB and NRN on the CF form, a validity check for Sex needs NRN to be formatted and cleaned so DOB and NRN cleaned before Sex; Also cleaned NRN before DOB for similar reason
+*********
+** NRN **
+*********
+** Create a string variable for NRN
+format natregno %12.0g
+tostring natregno, gen(sd_natregno) format(%12.0g)
+** Missing
+count if natregno==. //0
+count if natregno==. & dob!=. & dob!=99 //0
+count if natregno==88 & (nrnyear==.|nrnmonth==.|nrnday==.|nrnnum==.) //0
+** Invalid missing code
+count if natregno==999|natregno==9999 //0
+** Invalid format
+count if length(sd_natregno)==9 //2
+replace sd_natregno="0"+sd_natregno if record_id=="1842"|record_id=="3024" //2 changes - these are not errors in the CVDdb; it's an import error
+count if length(sd_natregno)==8 //0
+count if length(sd_natregno)==7 //0
+** Combine partial NRN variables to use in validity checks
+tostring nrnyear, gen(yr)
+replace yr="200"+yr if record_id=="3741" //1 change
+replace yr="19"+yr if natregno==88 & record_id!="3741" //15 changes
+tostring nrnmonth, gen(mon)
+replace mon="0"+mon if natregno==88 & length(mon)<2 //15 changes
+tostring nrnday, gen(day)
+replace day="0"+day if natregno==88 & length(day)<2 //7 changes
+tostring nrnnum, gen(num)
+gen nrndate=yr+mon+day if natregno==88
+gen nrn_corr = date(nrndate, "YMD")
+format nrn_corr %dM_d,_CY
+** Invalid (DOB and NRN do not match)
+count if natregno==88 & dob!=nrn_corr //0
+** Update Stata-Derived NRN with partial NRN data
+gen nrn=substr(nrndate,3,6) + num if natregno==88
+replace sd_natregno=nrn if natregno==88 //16 changes
+drop yr mon day num nrndate nrn_corr nrn
+
+
+*********
+** DOB **
+*********
+** Missing
+count if dob==. //208
+count if dob==88 & (dobyear==.|dobmonth==.|dobday==.) //0
+count if dob==. & natregno!=. & natregno!=99 //2 - records 2256 + 4117
+gen dob_nrn = substr(sd_natregno,1,6)
+replace dob_nrn="19"+dob_nrn if record_id=="3192" | dob!=. & dob<d(01jan2000) //1616 changes
+replace dob_nrn="20"+dob_nrn if dob!=. & dob>d(31dec1999) & record_id!="3192" //3 changes
+gen dob_nrn2 = date(dob_nrn, "YMD")
+format dob_nrn2 %dM_d,_CY
+count if dob!=dob_nrn2 & natregno!=99 //25
+list record_id redcap_event_name dob dob_nrn2 cfage natregno if dob!=dob_nrn2 & natregno!=99
+stop
+replace dob=dob_corr2 if record_id=="2256"|record_id=="4117"|record_id=="3192"
+drop dob_corr*
+** Invalid missing code
+count if dob==999|dob==9999 //0
+
+
+
+
+
 *********
 ** Sex **
 *********
 ** Missing
 count if sex==. //0
+** Invalid missing code
+count if sex==88|sex==999|sex==9999 //0
+count if sex==99 //0
+** Possibly invalid (first name, NRN and sex check: MALES)
+gen nrnid=substr(natregno, -4,4)
+count if sex==2 & nrnid!="9999" & regex(substr(natregno,-2,1), "[1,3,5,7,9]") //12
 STOP
 
 ** Create cleaned dataset
