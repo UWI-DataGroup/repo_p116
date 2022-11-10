@@ -4,7 +4,7 @@
     //  project:                BNR-CVD
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      02-NOV-2022
-    // 	date last modified      09-NOV-2022
+    // 	date last modified      10-NOV-2022
     //  algorithm task          Cleaning variables in the REDCap Casefinding form
     //  status                  Pending
     //  objective               To have a cleaned 2021 cvd incidence dataset ready for cleaning
@@ -218,21 +218,47 @@ drop yr mon day num nrndate nrn_corr nrn
 ** Missing
 count if dob==. //208
 count if dob==88 & (dobyear==.|dobmonth==.|dobday==.) //0
-count if dob==. & natregno!=. & natregno!=99 //2 - records 2256 + 4117
+count if dob==. & natregno!=. & natregno!=99 //2 - records 2256 + 4117: corrected below
+** Invalid missing code
+count if dob==999|dob==9999 //0
+** Invalid (future date)
+count if dob!=. & dob>sd_currentdate //0
+** Invalid (DOB and NRN do not match)
 gen dob_nrn = substr(sd_natregno,1,6)
+replace dob_nrn="19"+dob_nrn if record_id=="2256"|record_id=="4117" //2 changes
 replace dob_nrn="19"+dob_nrn if record_id=="3192" | dob!=. & dob<d(01jan2000) //1616 changes
 replace dob_nrn="20"+dob_nrn if dob!=. & dob>d(31dec1999) & record_id!="3192" //3 changes
 gen dob_nrn2 = date(dob_nrn, "YMD")
 format dob_nrn2 %dM_d,_CY
 count if dob!=dob_nrn2 & natregno!=99 //25
-list record_id redcap_event_name dob dob_nrn2 cfage natregno if dob!=dob_nrn2 & natregno!=99
-stop
-replace dob=dob_corr2 if record_id=="2256"|record_id=="4117"|record_id=="3192"
-drop dob_corr*
-** Invalid missing code
-count if dob==999|dob==9999 //0
+//list record_id redcap_event_name dob dob_nrn2 cfage natregno if dob!=dob_nrn2 & natregno!=99
+stop - need to verify the below records in MedData as electoral list and logic can't determine correct dates
+2280
+** Corrections for missing
+replace dob=dob_nrn2 if record_id=="2256"|record_id=="4117"
+** Corrections for invalid
+replace dob=dob_nrn2 if record_id=="2274"|record_id=="2675"|record_id=="2728"|record_id=="2808"|record_id=="2882"| ///
+						record_id=="3021"|record_id=="3170"|record_id=="3191"|record_id=="3192"|record_id=="3247"| ///
+						record_id=="3291"|record_id=="3306"|record_id=="3410"|record_id=="3441"|record_id=="3541" ///
+						record_id=="3555"|record_id=="3610"|record_id=="3728"|record_id=="3757"
+replace sd_natregno=subinstr(sd_natregno,"69","79",.) if record_id=="2192"
+replace sd_natregno=subinstr(sd_natregno,"10","40",.) if record_id=="2194"
+replace sd_natregno=subinstr(sd_natregno,"20","10",.) if record_id=="2482"
+replace sd_natregno=subinstr(sd_natregno,"89","86",.) if record_id=="2551"
+replace sd_natregno=subinstr(sd_natregno,"31","13",.) if record_id=="3397"
+** Corrections for NRN from above
+gen nrn=sd_natregno
+destring nrn ,replace
+replace natregno=nrn if record_id=="2192"|record_id=="2194"|record_id=="2482"|record_id=="2551"|record_id=="3397"
+drop dob_nrn*
 
 
+*********
+** AGE **
+*********
+** Missing
+cfage //autocalculated by REDCap
+cfage_da //entered by DA
 
 
 
@@ -252,6 +278,7 @@ STOP
 ** Create cleaned dataset
 save "`datapath'\version03\2-working\BNRCVDCORE_CleanedData_cf", replace
 
+RECALCULATE cfage (this is autocalc in REDCap) BASED ON CLEANED DOB.
 PERFORM DUPLICATES CHECKS USING NRN, DOB, NAMES AFTER COMPLETION OF THE CF FORM AND BEFORE PROCEEDING TO CLEANING THE OTHER FORMS
 
 
