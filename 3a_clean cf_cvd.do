@@ -4,7 +4,7 @@
     //  project:                BNR-CVD
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      02-NOV-2022
-    // 	date last modified      10-NOV-2022
+    // 	date last modified      22-NOV-2022
     //  algorithm task          Cleaning variables in the REDCap Casefinding form
     //  status                  Pending
     //  objective               To have a cleaned 2021 cvd incidence dataset ready for cleaning
@@ -232,34 +232,27 @@ gen dob_nrn2 = date(dob_nrn, "YMD")
 format dob_nrn2 %dM_d,_CY
 count if dob!=dob_nrn2 & natregno!=99 //25
 //list record_id redcap_event_name dob dob_nrn2 cfage natregno if dob!=dob_nrn2 & natregno!=99
-stop - need to verify the below records in MedData as electoral list and logic can't determine correct dates
-2280
+
 ** Corrections for missing
 replace dob=dob_nrn2 if record_id=="2256"|record_id=="4117"
 ** Corrections for invalid
 replace dob=dob_nrn2 if record_id=="2274"|record_id=="2675"|record_id=="2728"|record_id=="2808"|record_id=="2882"| ///
 						record_id=="3021"|record_id=="3170"|record_id=="3191"|record_id=="3192"|record_id=="3247"| ///
-						record_id=="3291"|record_id=="3306"|record_id=="3410"|record_id=="3441"|record_id=="3541" ///
-						record_id=="3555"|record_id=="3610"|record_id=="3728"|record_id=="3757"
+						record_id=="3291"|record_id=="3306"|record_id=="3410"|record_id=="3441"|record_id=="3541"| ///
+						record_id=="3555"|record_id=="3610"|record_id=="3728"|record_id=="3757" //19 changes
 replace sd_natregno=subinstr(sd_natregno,"69","79",.) if record_id=="2192"
 replace sd_natregno=subinstr(sd_natregno,"10","40",.) if record_id=="2194"
 replace sd_natregno=subinstr(sd_natregno,"20","10",.) if record_id=="2482"
 replace sd_natregno=subinstr(sd_natregno,"89","86",.) if record_id=="2551"
 replace sd_natregno=subinstr(sd_natregno,"31","13",.) if record_id=="3397"
+replace sd_natregno=subinstr(sd_natregno,"02","10",.) if record_id=="2280"
+replace sd_natregno=subinstr(sd_natregno,"03","30",.) if record_id=="2280"
 ** Corrections for NRN from above
 gen nrn=sd_natregno
 destring nrn ,replace
-replace natregno=nrn if record_id=="2192"|record_id=="2194"|record_id=="2482"|record_id=="2551"|record_id=="3397"
-drop dob_nrn*
-
-
-*********
-** AGE **
-*********
-** Missing
-cfage //autocalculated by REDCap
-cfage_da //entered by DA
-
+replace natregno=nrn if record_id=="2192"|record_id=="2194"|record_id=="2482"|record_id=="2551"|record_id=="3397"|record_id=="2280" //6 changes
+replace dob=dob+241 if record_id=="2280"
+drop dob_nrn* nrn
 
 
 *********
@@ -271,9 +264,121 @@ count if sex==. //0
 count if sex==88|sex==999|sex==9999 //0
 count if sex==99 //0
 ** Possibly invalid (first name, NRN and sex check: MALES)
-gen nrnid=substr(natregno, -4,4)
-count if sex==2 & nrnid!="9999" & regex(substr(natregno,-2,1), "[1,3,5,7,9]") //12
-STOP
+gen nrnid=substr(sd_natregno, -4,4)
+count if sex==1 & nrnid!="9999" & regex(substr(sd_natregno,-2,1), "[1,3,5,7,9]") //123 - checked in MedData
+//list record_id fname lname sex sd_natregno dob if sex==1 & nrnid!="9999" & regex(substr(sd_natregno,-2,1), "[1,3,5,7,9]")
+** Corrections
+replace sex=2 if record_id=="1799"|record_id=="2060"|record_id=="2463"|record_id=="2586"|record_id=="2907" ///
+		|record_id=="2911"|record_id=="3601"|record_id=="4116"|record_id=="4357"
+//incidental corrections from above review
+replace fname=subinstr(fname,"s","",.) if record_id=="2907"
+replace fname=subinstr(fname,"'","",.) if record_id=="4318"
+** Possibly invalid (first name, NRN and sex check: FEMALES)
+count if sex==2 & nrnid!="9999" & regex(substr(sd_natregno,-2,1), "[0,2,4,6,8]") //12
+//list record_id fname lname sex sd_natregno dob if sex==2 & nrnid!="9999" & regex(substr(sd_natregno,-2,1), "[0,2,4,6,8]")
+** Corrections
+replace sex=1 if record_id=="1817"|record_id=="1853"|record_id=="2018"|record_id=="2050"|record_id=="2150" ///
+				|record_id=="2557"|record_id=="2649"|record_id=="3738"|record_id=="4354"
+//incidental corrections from above review
+gen fname2=substr(fname,7,5) if record_id=="2150"
+replace fname=fname2 if record_id=="2150"
+drop fname2 nrnid
+
+
+** Need to clean cfadmdate first in order to clean age
+*****************************
+** CF Admission/Visit Date **
+*****************************
+** Missing
+count if cfadmdate==. //1 - checked MedData but last encounter was outpatient months before death; I think dod is adm date (check with NS)
+replace cfadmdate=cfdod if record_id=="2830" //see above
+//incidental correction for NRN
+preserve
+clear
+import excel using "`datapath'\version03\2-working\MissingNRN_20221122.xlsx" , firstrow case(lower)
+tostring record_id, replace
+destring elec_natregno, replace
+save "`datapath'\version03\2-working\missing_nrn" ,replace
+restore
+
+merge m:1 record_id using "`datapath'\version03\2-working\missing_nrn" ,force
+/*
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                         1,826
+        from master                     1,826  (_merge==1)
+        from using                          0  (_merge==2)
+
+    Matched                                 1  (_merge==3)
+    -----------------------------------------
+*/
+replace natregno=elec_natregno if _merge==3 //2 changes
+replace sd_natregno=elec_sd_natregno if _merge==3
+replace dob=elec_dob if _merge==3
+drop elec_* _merge
+erase "`datapath'\version03\2-working\missing_nrn.dta"
+** Invalid (not 2021)
+count if year(cfadmdate)!=2021 //3 - correct as event was in 2021
+** Invalid (before DOB)
+count if dob!=. & cfadmdate!=. & cfadmdate<dob //0
+** Invalid (after CF Date)
+count if cfdoa!=. & cfadmdate!=. & cfadmdate>cfdoa //0
+** Invalid (after DLC/DOD)
+count if dlc!=. & cfadmdate!=. & cfadmdate>dlc //0
+count if cfdod!=. & cfadmdate!=. & cfadmdate>cfdod //1 - cannot find in DeathData but still changed year
+replace cfdod=cfdod+365  if record_id=="3232"
+replace cfdodyr=2022 if record_id=="3232"
+** Invalid (future date)
+count if cfadmdate>sd_currentdate //0
+** Create CF adm date YEAR variable
+drop cfadmyr
+gen cfadmyr=year(cfadmdate)
+count if cfadmyr==. //0
+order link_id unique_id record_id redcap_event_name redcap_repeat_instrument redcap_repeat_instance redcap_data_access_group cfdoa cfdoat cfda sri srirec evolution sourcetype firstnf cfsource___1 cfsource___2 cfsource___3 cfsource___4 cfsource___5 cfsource___6 cfsource___7 cfsource___8 cfsource___9 cfsource___10 cfsource___11 cfsource___12 cfsource___13 cfsource___14 cfsource___15 cfsource___16 cfsource___17 cfsource___18 cfsource___19 cfsource___20 cfsource___21 cfsource___22 cfsource___23 cfsource___24 cfsource___25 cfsource___26 cfsource___27 cfsource___28 cfsource___29 cfsource___30 cfsource___31 cfsource___32 retsource oretsrce fname mname lname sex dob dobday dobmonth dobyear cfage cfage_da natregno sd_natregno nrnyear nrnmonth nrnday nrnnum recnum cfadmdate cfadmyr
+
+
+*********
+** AGE **
+*********
+** Missing
+count if cfage==. & dob!=. //autocalculated by REDCap
+//2 - cfage_da has values for these missing; probably DOB was added after this form was initially completed
+count if cfage_da==. & dob==. //entered by DA
+//0
+** Invalid missing code
+count if cfage_da==9999 //0
+** Invalid autocalculated ages
+gen cfage2=(cfadmdate-dob)/365.25
+gen checkage=int(cfage2)
+count if cfage!=. & cfage!=checkage //286
+//list record_id cfadmdate dob cfage checkage if cfage!=. & cfage!=checkage
+replace cfage=checkage if cfage!=. & cfage!=checkage //286 changes - no need for DAs to correct in db as this is autocalculated by db
+** Invalid DA-entered age
+count if dob!=. & cfage==. & cfage_da!=. & cfage_da!=checkage //0
+drop cfage2 checkage
+
+***********************
+** Hospital/Record # **
+***********************
+** Missing
+count if recnum=="" //0
+** Invalid missing code
+count if recnum=="88"|recnum=="999"|recnum=="9999" //0
+
+***********************
+** Initial Diagnosis **
+***********************
+** Missing
+count if initialdx=="" //0
+** Invalid missing code (88, 999, 999 are invalid)
+count if regexm(initialdx,"9") //34 - all correct
+count if regexm(initialdx,"8") //0
+replace initialdx = lower(rtrim(ltrim(itrim(initialdx)))) if record_id=="3244"
+
+stop
+
+** Remove unnecessary variables (i.e. variables used for db functionality but not needed for cleaning and analysis)
+cfadmdatemon cfadmdatemondash
 
 ** Create cleaned dataset
 save "`datapath'\version03\2-working\BNRCVDCORE_CleanedData_cf", replace
