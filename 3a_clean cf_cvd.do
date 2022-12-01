@@ -4,7 +4,7 @@
     //  project:                BNR-CVD
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      02-NOV-2022
-    // 	date last modified      22-NOV-2022
+    // 	date last modified      01-DEC-2022
     //  algorithm task          Cleaning variables in the REDCap Casefinding form
     //  status                  Pending
     //  objective               To have a cleaned 2021 cvd incidence dataset ready for cleaning
@@ -38,6 +38,67 @@
 ** Load prepared 2021 dataset
 use "`datapath'\version03\2-working\BNRCVDCORE_PreparedData", clear
 
+** JC 01dec2022: Review and remove cases that are ineligible and/or duplicates prior to cleaning
+count if cstatus==2 //1093
+gen sd_record_id=record_id
+destring sd_record_id ,replace
+order sd_record_id
+count if cstatus==2 & inrange(sd_record_id, 0, 3000) //599
+count if cstatus==2 & inrange(sd_record_id, 3001, 5000) //494
+order record_id sd_etype ineligible initialdx finaldx cfcods duprec
+//list record_id sd_etype ineligible initialdx finaldx cfcods duprec if cstatus==2 & inrange(sd_record_id, 0, 3000), string(20)
+//list record_id sd_etype ineligible initialdx finaldx cfcods duprec if cstatus==2 & inrange(sd_record_id, 3001, 5000), string(20)
+
+//replace ineligible=2 if record_id=="2077" & sd_etype==2|record_id=="2255" & sd_etype==2
+replace cstatus=2 if record_id=="4982"|record_id=="5116"
+replace ineligible=3 if record_id=="4982"|record_id=="5116"
+
+replace readmit=1 if record_id=="2064"
+replace readmitadm=d(02may2021) if record_id=="2064"
+replace readmitdis=d(09may2021) if record_id=="2064"
+replace readmitdays=readmitdis-readmitadm if record_id=="2064"
+
+replace readmit=1 if record_id=="3144"
+replace readmitadm=d(07jun2021) if record_id=="3144"
+replace readmitdis=d(01jul2021) if record_id=="3144"
+replace readmitdays=readmitdis-readmitadm if record_id=="3144"
+
+count if cstatus==3 //2
+
+** Review cases listed as duplicate to (1) ensure re-admission info is completed and (2) duplicate and case status fields are correctly completed
+count if ineligible==2 & duplicate==. //0
+count if ineligible!=2 & duplicate==1 //89
+count if ineligible==2 & toabs!=2 //7
+
+** Remove cases listed as ineligible and duplicate
+count //1834
+tab cstatus ,m
+/*
+   Case Status |      Freq.     Percent        Cum.
+---------------+-----------------------------------
+      Eligible |        739       40.29       40.29
+    Ineligible |      1,095       59.71      100.00
+---------------+-----------------------------------
+         Total |      1,834      100.00
+*/
+
+tab ineligible ,m
+/*
+            Case Status - Ineligible |      Freq.     Percent        Cum.
+-------------------------------------+-----------------------------------
+             Abstracted (Ineligible) |         48        2.62        2.62
+                           Duplicate |         86        4.69        7.31
+         Not Abstracted (Ineligible) |        837       45.64       52.94
+Not Abstracted (Irretrievable Notes) |        110        6.00       58.94
+       Not Abstracted (Non-resident) |         16        0.87       59.81
+                                   . |        737       40.19      100.00
+-------------------------------------+-----------------------------------
+                               Total |      1,834      100.00
+*/
+
+drop if ineligible!=. //1097
+count //737
+stop
 ** Cleaning each variable as they appear in REDCap BNRCVD_CORE db
 
 *************
@@ -98,6 +159,12 @@ count if evolution==1 & (redcap_repeat_instance==.|redcap_repeat_instance==1) //
 count if evolution==1 //5 - records 1729, 2309, 2353, 2853, 3247
 //no symptoms data to populate after above records reviewed
 drop if evolution==1 & redcap_repeat_instance==2 | record_id=="2853" //6 deleted - 2853 is a duplicate of 3247
+** Populate re-admission data using dates from 2nd admission in CVDdb (record_id 2309, 2353, 2853, 3247 already entered by DA)
+replace readmit=1 if record_id=="1729"
+replace readmitadm=d(08feb2021) if record_id=="1729"
+replace readmitdis=d(12feb2021) if record_id=="1729"
+replace readmitdays=readmitdis-readmitadm if record_id=="1729"
+
 
 *****************
 ** Source Type **
@@ -375,7 +442,51 @@ count if regexm(initialdx,"9") //34 - all correct
 count if regexm(initialdx,"8") //0
 replace initialdx = lower(rtrim(ltrim(itrim(initialdx)))) if record_id=="3244"
 
+*********************
+** Hospital Status **
+*********************
+** Missing
+count if hstatus==. //0
+** Invalid missing code (88, 999, 999 are invalid)
+count if hstatus==88|hstatus==999|hstatus==9999 //0
+** Invalid (discharged but retrieval source = ward)
+count if hstatus==1 & retsource!=. & retsource<20 //0
+** Invalid (on ward but retrieval source = records dept)
+count if hstatus==2 & retsource!=. & retsource>19 //2 - both are true duplicates and will be deleted later so leave as is
+** Invalid (discharged but no DLC/DOD)
+count if hstatus==1 & dlc==. & cfdod==. //15
+//list record_id fname mname lname natregno cfadmdate if hstatus==1 & dlc==. & cfdod==.
 stop
+//corrections from above using MedData and Deathdb
+replace dlc=d(13mar2021) if record_id=="1823"
+replace cfdod=d(07aug2021) if record_id=="3179"
+replace slc=2 if record_id=="3179"
+replace dlc=d(01jul2021) if record_id=="3444"
+replace dlc=d(18nov2021) if record_id=="4335"
+replace dlc=d(28nov2021) if record_id=="4354"
+replace dlc=d(09dec2021) if record_id=="4363"
+** Invalid (on ward but has DLC/DOD)
+count if hstatus==2 & (dlc!=.|cfdod!=.) //0
+
+
+preserve
+clear
+import excel using "`datapath'\version03\2-working\MissingNRN_20221201.xlsx" , firstrow case(lower)
+tostring record_id, replace
+destring elec_natregno, replace
+save "`datapath'\version03\2-working\missing_nrn" ,replace
+restore
+
+merge m:1 record_id using "`datapath'\version03\2-working\missing_nrn" ,force
+/*
+
+*/
+replace natregno=elec_natregno if _merge==3 //2 changes
+replace sd_natregno=elec_sd_natregno if _merge==3
+replace dob=elec_dob if _merge==3
+replace recnum=elec_recnum if _merge==3
+drop elec_* _merge
+erase "`datapath'\version03\2-working\missing_nrn.dta"
 
 ** Remove unnecessary variables (i.e. variables used for db functionality but not needed for cleaning and analysis)
 cfadmdatemon cfadmdatemondash
@@ -383,7 +494,7 @@ cfadmdatemon cfadmdatemondash
 ** Create cleaned dataset
 save "`datapath'\version03\2-working\BNRCVDCORE_CleanedData_cf", replace
 
-RECALCULATE cfage (this is autocalc in REDCap) BASED ON CLEANED DOB.
+
 PERFORM DUPLICATES CHECKS USING NRN, DOB, NAMES AFTER COMPLETION OF THE CF FORM AND BEFORE PROCEEDING TO CLEANING THE OTHER FORMS
 
 
