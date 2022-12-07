@@ -4,7 +4,7 @@
     //  project:                BNR-CVD
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      01-NOV-2022
-    // 	date last modified      01-DEC-2022
+    // 	date last modified      07-DEC-2022
     //  algorithm task          Creating flags for each variable
     //  status                  Pending
     //  objective               To have the prepared 2021 cvd incidence dataset with flagged fields for the CVD team to correct data in REDCap's BNRCVD_CORE db
@@ -85,20 +85,30 @@ use "`datapath'\version03\2-working\BNRCVDCORE_PreparedData", clear
 frame change flags
 
 frlink 1:1 link_id, frame(errors) //all obs in frame flags matched
-replace rvflag_old = frval(errors,mname) if record_id=="2291" //1 change
-replace rvflag_old = frval(errors,dob) if record_id=="2256"|record_id=="4117"|record_id=="2274"|record_id=="3192" ///
-		|record_id=="2675"|record_id=="2728"|record_id=="2808"|record_id=="2882"|record_id=="3021"|record_id=="3170" ///
-		|record_id=="3191"|record_id=="3247"|record_id=="3291"|record_id=="3306"|record_id=="3410"|record_id=="3441" ///
-		|record_id=="3541"|record_id=="3555"|record_id=="3610"|record_id=="3728"|record_id=="3757"|record_id=="2280"|record_id=="2830"
+//replace rvflag_old = frval(errors,mname) if record_id=="2291" //1 change
+replace rvflag_old = frval(errors,dob) if record_id=="2256" ///
+		|record_id=="2728"|record_id=="2808"|record_id=="3021" ///
+		|record_id=="3191"|record_id=="3247"|record_id=="3291"|record_id=="3306"|record_id=="3410" ///
+		|record_id=="3610"|record_id=="3757"|record_id=="2280"|record_id=="2830"|record_id=="4335"|record_id=="4404"
+expand=2 if record_id=="4335", gen (dupobs1)
+replace rvflag_old = frval(errors,natregno) if record_id=="4335" & dupobs1==1 //1 change
+expand=2 if record_id=="4335", gen (dupobs2)
+replace rvflag_old = frval(errors,recnum) if record_id=="4335" & dupobs2==1 //1 change
+expand=2 if record_id=="4335", gen (dupobs3)
+replace rvflag_old = frval(errors,dlc) if record_id=="4335" & dupobs3==1 //1 change 	 
+expand=2 if record_id=="4404", gen (dupobs1)
+replace rvflag_old = frval(errors,natregno) if record_id=="4404" & dupobs1==1 //1 change
+expand=2 if record_id=="4404", gen (dupobs2)
+replace rvflag_old = frval(errors,recnum) if record_id=="4404" & dupobs2==1 //1 change
+expand=2 if record_id=="4404", gen (dupobs3)
+replace rvflag_old = frval(errors,dlc) if record_id=="4404" & dupobs3==1 //1 change 	 //|record_id=="4117"|record_id=="3728"|record_id=="3441"|record_id=="3541"|record_id=="3555"|record_id=="3192"|record_id=="3170"|record_id=="2882"|record_id=="2274"|record_id=="2675"
 //0 changes as they're blank
-replace rvflag_old = frval(errors,natregno) if record_id=="2192"|record_id=="2194"|record_id=="2482"|record_id=="2551" ///
-		|record_id=="3397"|record_id=="2280"|record_id=="2830"
-replace rvflag_old = frval(errors,sex) if record_id=="1799"|record_id=="2060"|record_id=="2463"|record_id=="2586"|record_id=="2907" ///
-		|record_id=="2911"|record_id=="3601"|record_id=="4116"|record_id=="4357"|record_id=="1817"|record_id=="1853" ///
-		|record_id=="2018"|record_id=="2050"|record_id=="2150"|record_id=="2557"|record_id=="2649"|record_id=="3738" ///
-		|record_id=="4354"
-replace rvflag_old = frval(errors,fname) if record_id=="4318"|record_id=="2150"
-replace rvflag_old = frval(errors,cfdod) if record_id=="3232" //1 change
+replace rvflag_old = frval(errors,natregno) if record_id=="2280"|record_id=="2830" 
+		//record_id=="2192"|record_id=="2194"|record_id=="2482"|record_id=="2551"|record_id=="3397"
+replace rvflag_old = frval(errors,sex) if record_id=="2060"|record_id=="2150"
+		//record_id=="1799"|record_id=="2463"|record_id=="2586"|record_id=="2907"|record_id=="2911"|record_id=="3601"|record_id=="4116"|record_id=="4357"|record_id=="1817"|record_id=="1853"|record_id=="2018"|record_id=="2050"|record_id=="2557"|record_id=="2649"|record_id=="3738"|record_id=="4354"
+replace rvflag_old = frval(errors,fname) if record_id=="2150" //record_id=="4318"|
+//replace rvflag_old = frval(errors,cfdod) if record_id=="3232" //1 change
 replace rvflag_old = frval(errors,readmit) if record_id=="1729" //1 change
 expand=2 if record_id=="1729", gen (dupobs1)
 replace rvflag_old = frval(errors,readmitadm) if record_id=="1729" & dupobs1==1 //1 change
@@ -106,6 +116,15 @@ expand=2 if record_id=="1729", gen (dupobs2)
 replace rvflag_old = frval(errors,readmitdis) if record_id=="1729" & dupobs2==1 //1 change
 expand=2 if record_id=="1729", gen (dupobs3)
 replace rvflag_old = frval(errors,readmitdays) if record_id=="1729" & dupobs3==1 //1 change
+replace rvflag_old = frval(errors,dlc) if record_id=="1823"
+replace rvflag_old = frval(errors,slc) if record_id=="2704"|record_id=="2840"|record_id=="3362"
+expand=2 if record_id=="2704", gen (dupobs1)
+replace rvflag_old = frval(errors,cfdod) if record_id=="2704" & dupobs1==1 //1 change
+expand=2 if record_id=="2840", gen (dupobs1)
+replace rvflag_old = frval(errors,cfdod) if record_id=="2840" & dupobs1==1 //1 change
+replace rvflag_old = frval(errors,cfdod) if record_id=="2126"
+
+
 
 
 *****************
@@ -119,24 +138,38 @@ use "`datapath'\version03\2-working\BNRCVDCORE_CleanedData_cf", clear
 frame change flags
 
 frlink 1:1 link_id, frame(corrections) //7 obs in frame flags unmatched
-replace rvflag_new = frval(corrections,mname) if record_id=="2291" //1 change
-replace rvflag_new = frval(corrections,dob) if record_id=="2256"|record_id=="4117"|record_id=="2274"|record_id=="3192" ///
-		|record_id=="2675"|record_id=="2728"|record_id=="2808"|record_id=="2882"|record_id=="3021"|record_id=="3170" ///
-		|record_id=="3191"|record_id=="3247"|record_id=="3291"|record_id=="3306"|record_id=="3410"|record_id=="3441" ///
-		|record_id=="3541"|record_id=="3555"|record_id=="3610"|record_id=="3728"|record_id=="3757"|record_id=="2280"|record_id=="2830"
+//replace rvflag_new = frval(corrections,mname) if record_id=="2291" //1 change
+replace rvflag_new = frval(corrections,dob) if record_id=="2256" ///
+		|record_id=="2728"|record_id=="2808"|record_id=="3021" ///
+		|record_id=="3191"|record_id=="3247"|record_id=="3291"|record_id=="3306"|record_id=="3410" ///
+		|record_id=="3610"|record_id=="3757"|record_id=="2280"|record_id=="2830"|record_id=="4335"|record_id=="4404"  //|record_id=="4117"|record_id=="3728"|record_id=="3441"|record_id=="3541"|record_id=="3555"|record_id=="3192"|record_id=="3170"|record_id=="2882"|record_id=="2274"|record_id=="2675"
 //2 changes
-replace rvflag_new = frval(corrections,natregno) if record_id=="2192"|record_id=="2194"|record_id=="2482"|record_id=="2551" ///
-		|record_id=="3397"|record_id=="2280"|record_id=="2830"
-replace rvflag_new = frval(corrections,sex) if record_id=="1799"|record_id=="2060"|record_id=="2463"|record_id=="2586"|record_id=="2907" ///
-		|record_id=="2911"|record_id=="3601"|record_id=="4116"|record_id=="4357"|record_id=="1817"|record_id=="1853" ///
-		|record_id=="2018"|record_id=="2050"|record_id=="2150"|record_id=="2557"|record_id=="2649"|record_id=="3738" ///
-		|record_id=="4354"
-replace rvflag_new = frval(corrections,fname) if record_id=="4318"|record_id=="2150"
-replace rvflag_new = frval(corrections,cfdod) if record_id=="3232" //1 change
+replace rvflag_new = frval(corrections,natregno) if record_id=="2280"|record_id=="2830" 
+		//record_id=="2192"|record_id=="2194"|record_id=="2482"|record_id=="2551"|record_id=="3397"
+replace rvflag_new = frval(corrections,sex) if record_id=="2060"|record_id=="2150"
+		//record_id=="1799"|record_id=="2463"|record_id=="2586"|record_id=="2907"|record_id=="2911"|record_id=="3601"|record_id=="4116"|record_id=="4357"|record_id=="1817"|record_id=="1853"|record_id=="2018"|record_id=="2050"|record_id=="2557"|record_id=="2649"|record_id=="3738"|record_id=="4354" 
+replace rvflag_new = frval(corrections,fname) if record_id=="2150" //record_id=="4318"|
+//replace rvflag_new = frval(corrections,cfdod) if record_id=="3232" //1 change
 replace rvflag_new = frval(corrections,readmit) if record_id=="1729" & dupobs1==0 & dupobs2==0 & dupobs3==0 //1 change
 replace rvflag_new = frval(corrections,readmitadm) if record_id=="1729" & dupobs1==1 //1 change
 replace rvflag_new = frval(corrections,readmitdis) if record_id=="1729" & dupobs2==1 //1 change
 replace rvflag_new = frval(corrections,readmitdays) if record_id=="1729" & dupobs3==1 //1 change
+replace rvflag_new = frval(corrections,dlc) if record_id=="1823"
+replace rvflag_new = frval(corrections,dob) if record_id=="4335" & dupobs1==0 & dupobs2==0 & dupobs3==0 //1 change
+replace rvflag_new = frval(corrections,natregno) if record_id=="4335" & dupobs1==1 //1 change
+replace rvflag_new = frval(corrections,recnum) if record_id=="4335" & dupobs2==1 //1 change
+replace rvflag_new = frval(corrections,dlc) if record_id=="4335" & dupobs3==1 //1 change
+replace rvflag_new = frval(corrections,dob) if record_id=="4404" & dupobs1==0 & dupobs2==0 & dupobs3==0 //1 change
+replace rvflag_new = frval(corrections,natregno) if record_id=="4404" & dupobs1==1 //1 change
+replace rvflag_new = frval(corrections,recnum) if record_id=="4404" & dupobs2==1 //1 change
+replace rvflag_new = frval(corrections,dlc) if record_id=="4404" & dupobs3==1 //1 change
+replace rvflag_new = frval(corrections,slc) if record_id=="2704" & dupobs1==0|record_id=="2840" & dupobs1==0|record_id=="3362"
+replace rvflag_new = frval(corrections,cfdod) if record_id=="2704" & dupobs1==1 //1 change
+replace rvflag_new = frval(corrections,cfdod) if record_id=="2840" & dupobs1==1 //1 change
+replace rvflag_new = frval(corrections,cfdod) if record_id=="2126"
+
+
+
 
 NOTES TO SELF: 
 (1) MAY NEED TO RENAME THIS DOFILE TO REPRESENT LAST DOFILE AFTER CLEANING PROCESS IS COMPLETED SO THE DOFILES ARE IN SEQUENTIAL ORDER

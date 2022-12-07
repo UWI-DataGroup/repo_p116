@@ -4,7 +4,7 @@
     //  project:                BNR-CVD
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      01-NOV-2022
-    // 	date last modified      03-NOV-2022
+    // 	date last modified      07-DEC-2022
     //  algorithm task          Removing non-annual report records; Copying stroke's repeating instrument data into one row of data
     //  status                  Completed
     //  objective               To have a prepared 2021 cvd incidence dataset ready for cleaning
@@ -67,7 +67,7 @@ tab redcap_event_name
 ** Remove all variables not necessary for data cleaning/analysis
 drop tf* //tracking form variables
 drop otftype cfupdate recid absdone disdone totpile tracking_complete //JC 02nov2022: removing more tracking variables
-drop rvpid rvpidcfabs rvcfadoa rvcfada ocfada rvflagd rvflag rvflag_old rvflag_new rvflagcorrect rvaction rvactiond rvactionda rvactionoda rvflagtot reviewing_complete //reviewing form variables
+drop rvpid rvpidcfabs rvcfadoa rvcfada rvflagd rvflag rvflag_old rvflag_new rvflagcorrect rvaction rvactiond rvactionda rvactionoda rvflagtot reviewing_complete //reviewing form variables
 drop if regexm(record_id, "108-") //sop data
 drop if redcap_event_name=="tracking_arm_3"|redcap_event_name=="dashboards_arm_5"
 drop hcfr2020 hcfr2020_jan hcfr2020_feb hcfr2020_mar hcfr2020_apr hcfr2020_may hcfr2020_jun hcfr2020_jul hcfr2020_aug hcfr2020_sep hcfr2020_oct hcfr2020_nov hcfr2020_dec hcfr2021 hcfr2021_jan hcfr2021_feb hcfr2021_mar hcfr2021_apr hcfr2021_may hcfr2021_jun hcfr2021_jul hcfr2021_aug hcfr2021_sep hcfr2021_oct hcfr2021_nov hcfr2021_dec haspdash2020 haspdash2020_jan haspdash2020_feb haspdash2020_mar haspdash2020_apr haspdash2020_may haspdash2020_jun haspdash2020_jul haspdash2020_aug haspdash2020_sep haspdash2020_oct haspdash2020_nov haspdash2020_dec haspdash2021 haspdash2021_jan haspdash2021_feb haspdash2021_mar haspdash2021_apr haspdash2021_may haspdash2021_jun haspdash2021_jul haspdash2021_aug haspdash2021_sep haspdash2021_oct haspdash2021_nov haspdash2021_dec scfr2020 scfr2020_jan scfr2020_feb scfr2020_mar scfr2020_apr scfr2020_may scfr2020_jun scfr2020_jul scfr2020_aug scfr2020_sep scfr2020_oct scfr2020_nov scfr2020_dec scfr2021 scfr2021_jan scfr2021_feb scfr2021_mar scfr2021_apr scfr2021_may scfr2021_jun scfr2021_jul scfr2021_aug scfr2021_sep scfr2021_oct scfr2021_nov scfr2021_dec saspdash2020 saspdash2020_jan saspdash2020_feb saspdash2020_mar saspdash2020_apr saspdash2020_may saspdash2020_jun saspdash2020_jul saspdash2020_aug saspdash2020_sep saspdash2020_oct saspdash2020_nov saspdash2020_dec saspdash2021 saspdash2021_jan saspdash2021_feb saspdash2021_mar saspdash2021_apr saspdash2021_may saspdash2021_jun saspdash2021_jul saspdash2021_aug saspdash2021_sep saspdash2021_oct saspdash2021_nov saspdash2021_dec dashboards_complete
@@ -203,6 +203,7 @@ drop if record_id=="3908" //duplicate stroke record for 2022
 
 tab sd_dcyear ,m
 /*
+01nov2022 export
      dcyear |      Freq.     Percent        Cum.
 ------------+-----------------------------------
        2020 |      1,887       35.96       35.96
@@ -210,6 +211,15 @@ tab sd_dcyear ,m
        2022 |      1,527       29.10      100.00
 ------------+-----------------------------------
       Total |      5,248      100.00
+
+07dec2022 export
+  sd_dcyear |      Freq.     Percent        Cum.
+------------+-----------------------------------
+       2020 |      1,888       34.73       34.73
+       2021 |      1,837       33.79       68.52
+       2022 |      1,711       31.48      100.00
+------------+-----------------------------------
+      Total |      5,436      100.00
 */
 
 ** Remove non-2021 data
@@ -237,7 +247,7 @@ replace link_id = subinstr(link_id,"-1","-2",.) if dup>0 & redcap_repeat_instanc
 order link_id
 drop dup
 
-count //1834
+count //1834; 1837
 
 ** Create prepared dataset
 save "`datapath'\version03\2-working\BNRCVDCORE_PreparedData", replace
