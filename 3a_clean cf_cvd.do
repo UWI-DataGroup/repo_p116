@@ -4,7 +4,7 @@
     //  project:                BNR-CVD
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      02-NOV-2022
-    // 	date last modified      07-DEC-2022
+    // 	date last modified      08-DEC-2022
     //  algorithm task          Cleaning variables in the REDCap Casefinding form
     //  status                  Pending
     //  objective               To have a cleaned 2021 cvd incidence dataset ready for cleaning
@@ -501,7 +501,7 @@ count if recnum=="88"|recnum=="999"|recnum=="9999" //0
 ***********************
 ** Missing
 count if initialdx=="" //0
-** Invalid missing code (88, 999, 999 are invalid)
+** Invalid missing code (88, 99, 999, 9999 are invalid)
 count if regexm(initialdx,"9") //34 - all correct; now 11
 count if regexm(initialdx,"8") //0
 //replace initialdx = lower(rtrim(ltrim(itrim(initialdx)))) if record_id=="3244"
@@ -566,10 +566,10 @@ erase "`datapath'\version03\2-working\missing_nrn.dta"
 
 
 
-****************************
-** Status at Last Contact **
-**		   (SLC) 		  **
-****************************
+************************************
+**  Status at Last Contact (SLC)  **
+** (currently known vital status) **
+************************************
 ** Missing
 count if slc==. //0
 ** Invalid (slc=alive but cfdod/dod not blank or 28d vstatus=deceased)
@@ -591,7 +591,122 @@ count if slc==2 & cfdod==. & dod==. //1 - record 3362 cannot find pt in Deathdb 
 **		  (DLC) 		**
 **************************
 ** Missing
-count if dlc==. //0
+count if dlc==. //215 - all deceased except one whose DLC is truly missing
+replace dlc=cfdod if dlc==. //214 changes
+** Missing
+count if slc==1 & dlc==. //1 - record 3121 (stroke) cannot find in MedData or DeathDb
+** Invalid missing code
+count if dlc==999|dlc==9999 //0
+** Invalid (bfore 2021)
+count if year(dlc)<2021 //0
+** Invalid (future date)
+count if dlc>sd_currentdate //1 - record 3121 (stroke) see above note
+** Invalid (before CF Adm/Visit Date)
+count if dlc!=. & cfadmdate!=. & dlc<cfadmdate //0
+** Invalid (before DOB)
+count if dlc!=. & dob!=. & dlc<dob //0
+** Invalid (after DOD)
+count if dlc!=. & cfdod!=. & dlc>cfdod //0
+count if dlc!=. & dod!=. & dlc>dod //0
+** Invalid (DLC not blank; Hosp.Status=discharged)
+count if sourcetype!=2 & dlc!=. & hstatus!=1 //0
+** Invalid (DLC partial missing codes for all)
+count if dlc==88 & dlcday==. & dlcmonth==. & dlcyear==. //0
+** Invalid (DLC not partial but partial field not blank)
+count if dlc!=88 & dlcday!=. & dlcmonth!=. & dlcyear!=. //0
+count if dlc!=88 & (dlcday!=. | dlcmonth!=. | dlcyear!=.) //0
+** Invalid missing code (DLC partial fields)
+count if dlcday==88|dlcday==999|dlcday==9999 //0
+count if dlcmonth==88|dlcmonth==999|dlcmonth==9999 //0
+count if dlcyear==88|dlcyear==999|dlcyear==9999 //0
+** Create DLC YEAR variable
+drop dlcyr
+gen dlcyr=year(dlc)
+count if dlcyr==. //1 - record 3121 (stroke) with true missing DLC
+
+
+****************
+** Death Date **
+**	(CFDOD)	  **
+****************
+** Missing
+count if cfdod==. //468 - all alive except one whose DOD is unk (see below)
+** Missing
+count if slc==2 & cfdod==. //1 - record 3362 (stroke) cannot find in MedData, 2022 or multiyr DeathDbs
+** Invalid missing code
+count if cfdod==999|cfdod==9999 //0
+** Invalid (bfore 2021)
+count if year(cfdod)<2021 //0
+** Invalid (future date)
+count if cfdod!=. & cfdod>sd_currentdate //0
+** Invalid (before CF Adm/Visit Date)
+count if cfdod!=. & cfadmdate!=. & cfdod<cfadmdate //0
+** Invalid (before DOB)
+count if cfdod!=. & dob!=. & cfdod<dob //0
+** Invalid (before DLC)
+count if dlc!=. & cfdod!=. & cfdod<dlc //0
+** Invalid (CFDOD not= DOD)
+count if cfdod!=. & dod!=. & cfdod!=dod //0
+** Invalid (DLC not blank; Hosp.Status=discharged)
+count if sourcetype!=2 & cfdod!=. & hstatus!=1 //0
+** Invalid (DLC partial missing codes for all)
+count if cfdod==88 & cfdodday==. & cfdodmonth==. & cfdodyear==. //0
+** Invalid (DLC not partial but partial field not blank)
+count if cfdod!=88 & cfdodday!=. & cfdodmonth!=. & cfdodyear!=. //0
+count if cfdod!=88 & (cfdodday!=. | cfdodmonth!=. | cfdodyear!=.) //0
+** Invalid missing code (DLC partial fields)
+count if cfdodday==88|cfdodday==999|cfdodday==9999 //0
+count if cfdodmonth==88|cfdodmonth==999|cfdodmonth==9999 //0
+count if cfdodyear==88|cfdodyear==999|cfdodyear==9999 //0
+** Create CFDOD YEAR variable
+drop cfdodyr
+gen cfdodyr=year(cfdod)
+count if cfdodyr==. //468 - 467 alive and 1 dead - record 3362 (stroke) with true missing CFDOD
+
+
+*********************
+** Final Diagnosis **
+*********************
+** Missing
+count if slc==1 & finaldx=="" //0
+count if slc!=2 & hstatus==1 & finaldx=="" //0
+** Invalid missing code (88, 99, 999, 9999 are invalid)
+count if regexm(finaldx,"9") //3 - all correct
+count if regexm(finaldx,"8") //0
+** Invalid (finaldx not blank and hosp.status/SLC not=discharged/alive)
+count if slc!=1 & hstatus!=1 & finaldx!="" //0
+
+
+***********************
+** Cause(s) of Death **
+***********************
+** Missing
+count if slc==2 & cfcods=="" //10 - record 3362 (stroke) cannot find in DeathDbs
+replace dlc=cfdod if record_id=="1882" & sd_etype==2
+replace cfdod=cfdod + 19 if record_id=="1882" & sd_etype==2
+** Invalid missing code (88, 99, 999, 9999 are invalid)
+count if regexm(cfcods,"9") //10 - check for CODs in DeathDbs and add to excel corrections sheet 
+stop
+count if regexm(cfcods,"8") //0
+** Invalid (CODs not blank and SLC not=deceased)
+count if slc!=2 & cfcods!="" //0
+
+//corrections from above
+preserve
+clear
+import excel using "`datapath'\version03\2-working\MissingCODs_20221208.xlsx" , firstrow case(lower)
+tostring record_id, replace
+save "`datapath'\version03\2-working\missing_cods" ,replace
+restore
+
+merge m:1 record_id using "`datapath'\version03\2-working\missing_cods" ,force
+/*
+
+*/
+replace cfcods=elec_cfcods if _merge==3
+drop elec_* _merge
+erase "`datapath'\version03\2-working\missing_cods.dta"
+
 
 stop
 ** Remove unnecessary variables (i.e. variables used for db functionality but not needed for cleaning and analysis)
