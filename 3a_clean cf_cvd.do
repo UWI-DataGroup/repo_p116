@@ -4,10 +4,10 @@
     //  project:                BNR-CVD
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      02-NOV-2022
-    // 	date last modified      08-DEC-2022
+    // 	date last modified      13-DEC-2022
     //  algorithm task          Cleaning variables in the REDCap Casefinding form
-    //  status                  Pending
-    //  objective               To have a cleaned 2021 cvd incidence dataset ready for cleaning
+    //  status                  Completed
+    //  objective               To have a cleaned 2021 cvd incidence dataset ready for analysis
     //  methods                 Using missing and invalid checks to correct data
 	//  support:                Natasha Sobers and Ian R Hambleton
 
@@ -261,8 +261,48 @@ drop if record_id=="1945" & sd_etype==2 //1 deleted
 ** Missing
 count if retsource==. //0
 count if retsource==98 & oretsrce=="" //0
+** Invalid missing code
+count if retsource==88|retsource==999|retsource==9999 //0
 ** Invalid (evolution/sri=Yes and Retrieval Source not blank)
 count if retsource!=. & (evolution==1|sri==1) //0
+** Invalid (retsource=ward and hosp.status=discharged)
+count if retsource<20 & hstatus==1
+** Invalid (retsource NOT=death rec; sourcetype=hosp and slc=deceased)
+count if retsource!=21 & sourcetype==1 & slc==2 //8
+//list record_id sd_etype cstatus retsource if retsource!=21 & sourcetype==1 & slc==2
+replace retsource=21 if retsource!=21 & sourcetype==1 & slc==2 //8 changes
+** Invalid (retsource=death rec and slc NOT=deceased)
+count if retsource==21 & slc!=2 //0
+** Invalid (retsource NOT=med rec/A&E; hosp.status=discharged and slc NOT=deceased)
+count if retsource!=20 & retsource!=22 & hstatus==1 & slc!=2 //0
+** Invalid (retsource=ward; cfsource NOT=ward/unit)
+count if retsource<20 & cfsource___1==0 & cfsource___2==0 & cfsource___3==0 & cfsource___4==0 & cfsource___5==0 & cfsource___6==0 & cfsource___7==0 & cfsource___8==0 & cfsource___9==0 & cfsource___10==0 & cfsource___11==0 & cfsource___12==0 & cfsource___13==0 & cfsource___14==0 & cfsource___15==0 & cfsource___16==0 & cfsource___17==0 //0
+** Invalid (retsource=A&E; cfsource NOT=A&E)
+count if retsource==22 & cfsource___22==0 //0
+** Invalid (retsource=med rec; cfsource NOT=med rec/MedData)
+count if retsource==20 & cfsource___20==0 & cfsource___33==0 //1 - correct, leave as is
+** Invalid (retsource=death rec; cfsource NOT=death rec)
+count if retsource==21 & cfsource___21==0 //8 - correct, leave as is
+** Invalid (retsource=Bay View; cfsource NOT=Bay View)
+count if retsource==23 & cfsource___23==0 //0
+** Invalid (retsource=Sparman; cfsource NOT=Sparman)
+count if retsource==24 & cfsource___24==0 //0
+** Invalid (retsource=polyclinic; cfsource NOT=polyclinic)
+count if retsource>33 & retsource<42 & cfsource___25==0 //0
+** Invalid (retsource=emergency clinic; cfsource NOT=emergency clinic)
+count if retsource>41 & retsource<46 & cfsource___27==0 //0
+** Invalid (retsource=nursing home; cfsource NOT=nursing home)
+count if retsource==46 & cfsource___28==0 //0
+** Invalid (retsource=district hosp.; cfsource NOT=district hosp.)
+count if retsource==25 & cfsource___29==0 //0
+** Invalid (retsource=geriatric hosp.; cfsource NOT=geriatric hosp.)
+count if retsource==26 & cfsource___30==0 //0
+** Invalid (retsource=psychiatric hosp.; cfsource NOT=psychiatric hosp.)
+count if retsource==27 & cfsource___31==0 //0
+** Invalid (retsource=other; other retsource=one of the retsource options)
+count if retsource==98 //1 - correct, leave as is
+
+
 
 **************************
 ** First, Middle + Last **
@@ -597,7 +637,7 @@ replace dlc=cfdod if dlc==. //214 changes
 count if slc==1 & dlc==. //1 - record 3121 (stroke) cannot find in MedData or DeathDb
 ** Invalid missing code
 count if dlc==999|dlc==9999 //0
-** Invalid (bfore 2021)
+** Invalid (before 2021)
 count if year(dlc)<2021 //0
 ** Invalid (future date)
 count if dlc>sd_currentdate //1 - record 3121 (stroke) see above note
@@ -635,7 +675,7 @@ count if cfdod==. //468 - all alive except one whose DOD is unk (see below)
 count if slc==2 & cfdod==. //1 - record 3362 (stroke) cannot find in MedData, 2022 or multiyr DeathDbs
 ** Invalid missing code
 count if cfdod==999|cfdod==9999 //0
-** Invalid (bfore 2021)
+** Invalid (before 2021)
 count if year(cfdod)<2021 //0
 ** Invalid (future date)
 count if cfdod!=. & cfdod>sd_currentdate //0
@@ -685,8 +725,8 @@ count if slc==2 & cfcods=="" //10 - record 3362 (stroke) cannot find in DeathDbs
 replace dlc=cfdod if record_id=="1882" & sd_etype==2
 replace cfdod=cfdod + 19 if record_id=="1882" & sd_etype==2
 ** Invalid missing code (88, 99, 999, 9999 are invalid)
-count if regexm(cfcods,"9") //10 - check for CODs in DeathDbs and add to excel corrections sheet 
-stop
+count if regexm(cfcods,"9") //10 - check for CODs in DeathDbs and add to excel corrections sheet
+//list record_id fname lname cfage cfage_da natregno dob cfdod cfcods if regexm(cfcods,"9")
 count if regexm(cfcods,"8") //0
 ** Invalid (CODs not blank and SLC not=deceased)
 count if slc!=2 & cfcods!="" //0
@@ -701,23 +741,186 @@ restore
 
 merge m:1 record_id using "`datapath'\version03\2-working\missing_cods" ,force
 /*
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                           717
+        from master                       717  (_merge==1)
+        from using                          0  (_merge==2)
 
+    Matched                                18  (_merge==3)
+    -----------------------------------------
 */
 replace cfcods=elec_cfcods if _merge==3
 drop elec_* _merge
 erase "`datapath'\version03\2-working\missing_cods.dta"
 
 
-stop
+preserve
+clear
+import excel using "`datapath'\version03\2-working\MissingNRN_20221213.xlsx" , firstrow case(lower)
+tostring record_id, replace
+destring elec_natregno, replace
+tostring elec_sd_natregno, replace
+save "`datapath'\version03\2-working\missing_nrn" ,replace
+restore
+
+merge m:1 record_id using "`datapath'\version03\2-working\missing_nrn" ,force
+/*
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                           733
+        from master                       733  (_merge==1)
+        from using                          0  (_merge==2)
+
+    Matched                                 2  (_merge==3)
+    -----------------------------------------
+*/
+replace natregno=elec_natregno if _merge==3 //2 changes
+replace sd_natregno=elec_sd_natregno if _merge==3
+replace dob=elec_dob if _merge==3
+replace cfage=elec_cfage if _merge==3
+drop elec_* _merge
+erase "`datapath'\version03\2-working\missing_nrn.dta"
+
+
+
+*******************
+** Doctor's Name **
+*******************
+** Missing
+count if sourcetype==2 & docname==. //0
+** Invalid missing code (88, 99, 999, 9999 are invalid)
+//count if regexm(docname,"9")
+count if docname==88|docname==99|docname==999|docname==9999 //1 - correct; leave as is
+** Invalid (sourcetype NOT=community and docname NOT blank)
+count if sourcetype!=2 & docname!=. //0
+
+
+
+**********************
+** Doctor's Address **
+**********************
+** Missing
+count if sourcetype==2 & docaddr=="" //0
+** Invalid missing code (88, 99, 999, 9999 are invalid)
+count if regexm(docaddr,"8") //0
+count if regexm(docaddr,"9") //0
+//count if docaddr=="88"|docaddr=="99"|docaddr=="999"|docaddr=="9999" //1 - correct; leave as is
+** Invalid (sourcetype NOT=community and docname NOT blank)
+count if sourcetype!=2 & docaddr!="" //0
+
+
+
+******************************************
+** 			Case Status 				**
+** Eligible, Ineligible, Pending Review **
+******************************************
+** Missing
+count if cstatus==. //0
+** Invalid missing code (88, 99, 999, 9999 are invalid)
+count if cstatus==88|cstatus==99|cstatus==999|cstatus==9999 //0
+** Invalid (cstatus=eligible; ineligible/pending review NOT blank)
+count if cstatus==1 & (ineligible!=. | pendrv!=.) //0
+** Invalid (cstatus=ineligible; eligible/pending review NOT blank)
+count if cstatus==2 & (eligible!=. | pendrv!=.) //0
+** Invalid (cstatus=pending review; eligible/ineligible NOT blank)
+count if cstatus==3 & (eligible!=. | ineligible!=.) //0
+** Invalid (eligible=confirmed NOT abs; Full Abs done)
+count if eligible==6 & (hxdoa!=.|tdoa!=.|dxdoa!=.|rxdoa!=.) //0
+//list record_id sd_etype adoa ptmdoa edoa hxdoa tdoa dxdoa rxdoa if eligible==6 & (hxdoa!=.|tdoa!=.|dxdoa!=.|rxdoa!=.)
+** Invalid (eligible=confirmed NO discharge; Full Discharge done)
+count if eligible==11 & (ddoa!=.|vstatus!=.) //0
+** Invalid (eligible=readmitted within 28d; stroke-in-evolution=No)
+count if (eligible==7|eligible==8) & evolution!=1 //0
+** Invalid (eligible=pending 28d f/u; 28d form completed)
+count if eligible==4 & fu1type==1 //13
+count if eligible==4 & fu1type==1 & (hxdoa!=.|tdoa!=.|dxdoa!=.|rxdoa!=.) //12
+replace eligible=9 if eligible==4 & fu1type==1 & (hxdoa!=.|tdoa!=.|dxdoa!=.|rxdoa!=.) //12 changes
+
+
+
+*******************************************
+** Duplicate, Dup Record_ID, Dup Checked **
+*******************************************
+** Missing
+count if duplicate==. //695 - leave as is since next dofile will check for duplicates
+** Invalid missing code (88, 99, 999, 9999 are invalid)
+count if duplicate==88|duplicate==99|duplicate==999|duplicate==9999 //0
+** Invalid (duplicate record_id = record_id)
+gen str_duprec=duprec
+tostring str_duprec ,replace
+count if duprec!=. & str_duprec==record_id //0
+** Invalid (duplicate record_id NOT blank; Dup checked=No/blank)
+count if duprec!=. & dupcheck!=1 //0
+
+drop str_duprec
+
+
+
+**************************
+** Date Notes Requested **
+**************************
+** Missing
+count if requestdate1==. //439 - leave as is since year closed with many notes irretrievable
+** Invalid missing code (88, 99, 999, 9999 are invalid)
+count if requestdate1==88|requestdate1==99|requestdate1==999|requestdate1==9999 //0
+count if requestdate2==88|requestdate2==99|requestdate2==999|requestdate2==9999 //0
+count if requestdate3==88|requestdate3==99|requestdate3==999|requestdate3==9999 //0
+** Invalid (before CF Adm/Visit Date)
+count if requestdate1!=. & cfadmdate!=. & requestdate1<cfadmdate //0
+count if requestdate2!=. & cfadmdate!=. & requestdate2<cfadmdate //0
+count if requestdate3!=. & cfadmdate!=. & requestdate3<cfadmdate //0
+** Invalid (future date)
+count if requestdate1!=. & requestdate1>sd_currentdate //0
+count if requestdate2!=. & requestdate2>sd_currentdate //0
+count if requestdate3!=. & requestdate3>sd_currentdate //0
+** Invalid (before RequestDate)
+count if requestdate1!=. & requestdate2!=. & requestdate2<requestdate1 //0
+count if requestdate1!=. & requestdate3!=. & requestdate3<requestdate1 //0
+count if requestdate2!=. & requestdate3!=. & requestdate3<requestdate2 //0
+
+
+
+***************
+** NFdb Info **
+***************
+** Missing
+count if nfdb==. //2 - leave as is since year closed with many notes irretrievable
+replace nfdb=2 if nfdb==. //2 changes - no need for DAs to correct in CVDdb since this is an autofilled field
+** Invalid missing code (88, 99, 999, 9999 are invalid)
+count if nfdb==88|nfdb==99|nfdb==999|nfdb==9999 //0
+count if nfdbrec==88|nfdbrec==99|nfdbrec==999|nfdbrec==9999 //0
+** Invalid (NFdb=Yes; NFdb record_id is blank)
+count if nfdb==1 & nfdbrec==. //0
+** Invalid (NFdb=No; NFdb record_id is blank)
+count if nfdb==2 & nfdbrec!=. //0
+
+
+
+**********************
+** Abstraction Info **
+**********************
+** Missing
+count if eligible==10 & reabsrec==. //0
+count if toabs==. //0
+count if copycf==. //201
+replace copycf=2 if copycf==. //201 changes - no need for DAs to correct in CVDdb since this is an autofilled field
+** Invalid missing code (88, 99, 999, 9999 are invalid)
+count if reabsrec==88|reabsrec==99|reabsrec==999|reabsrec==9999 //0
+count if toabs==88|toabs==99|toabs==999|toabs==9999 //0
+count if copycf==88|copycf==99|copycf==999|copycf==9999 //0
+** Invalid (toabs=Yes; NFdb record_id is blank)
+count if nfdb==1 & nfdbrec==. //0
+** Invalid (NFdb=No; NFdb record_id is blank)
+count if nfdb==2 & nfdbrec!=. //0
+** Possibly Invalid (toabs vs cstatus)
+tab eligible toabs ,m
+tab ineligible toabs ,m
+tab pendrv toabs ,m
+
+
 ** Remove unnecessary variables (i.e. variables used for db functionality but not needed for cleaning and analysis)
-cfadmdatemon cfadmdatemondash
+drop cfadmdatemon cfadmdatemondash fname_eve lname_eve sex_eve slc_eve cstatus_eve eligible_eve f1vstatus_eve edateyr_rx edatemondash_rx sd_currentdate
 
 ** Create cleaned dataset
 save "`datapath'\version03\2-working\BNRCVDCORE_CleanedData_cf", replace
-
-
-PERFORM DUPLICATES CHECKS USING NRN, DOB, NAMES AFTER COMPLETION OF THE CF FORM AND BEFORE PROCEEDING TO CLEANING THE OTHER FORMS
-
-
-** Create cleaned non-duplicates dataset
-save "`datapath'\version03\2-working\BNRCVDCORE_CleanedData_nodups_cf", replace
