@@ -4,7 +4,7 @@
     //  project:                BNR
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      11-JAN-2023
-    //  date last modified	  	12-JAN-2023
+    //  date last modified	  	16-JAN-2023
     //  algorithm task          Prep and format 2021 death data
     //  status                  Pending
     //  objective               To have multiple datasets with cleaned 2021 death data for:
@@ -553,8 +553,6 @@ order record_id stroke heart coddeath natregno
 ** Review + correct all deaths assigned as heart or stroke if incorrectly assigned
 count if stroke==1|heart==1 //651 - reviewed all but awaiting queries review meeting with CVD team to confirm some of the below
 
-stop
-
 replace stroke=2 if record_id==36187|record_id==36310|record_id==34147|record_id==36589|record_id==35274 ///
 					|record_id==37354|record_id==34495|record_id==34625|record_id==36609|record_id==34743 ///
 					|record_id==35603|record_id==35957|record_id==35464|record_id==34183|record_id==35876 ///
@@ -582,32 +580,35 @@ replace stroke=2 if record_id==36187|record_id==36310|record_id==34147|record_id
 					|record_id==36390|record_id==35427|record_id==35380|record_id==34472|record_id==37239 ///
 					|record_id==34360|record_id==34623|record_id==35781|record_id==37263|record_id==36804 ///
 					|record_id==35417|record_id==34624|record_id==36939|record_id==34294|record_id==36446 ///
-					|record_id==36658|record_id==|record_id==|record_id==|record_id== ///
-					|record_id==|record_id==|record_id==|record_id==|record_id== ///
-					|record_id==|record_id==|record_id==|record_id==|record_id== ///
-					|record_id==|record_id==|record_id==|record_id==|record_id== ///
-
+					|record_id==36658 //|record_id==|record_id==|record_id==|record_id== ///
+					//|record_id==|record_id==|record_id==|record_id==|record_id== ///
+					//|record_id==|record_id==|record_id==|record_id==|record_id== ///
+					//|record_id==|record_id==|record_id==|record_id==|record_id== ///
+** 136 changes
 
 replace heart=2 if record_id==36310|record_id==34275|record_id==36563|record_id==34273|record_id==35255 ///
 					|record_id==34226|record_id==34471|record_id==37070|record_id==34317|record_id==35825 ///
-					|record_id==35479|record_id==|record_id==|record_id==|record_id== ///
-					|record_id==|record_id==|record_id==|record_id==|record_id== ///
-					|record_id==|record_id==|record_id==|record_id==|record_id== ///
-					|record_id==|record_id==|record_id==|record_id==|record_id== ///
-					|record_id==|record_id==|record_id==|record_id==|record_id== ///
-					|record_id==|record_id==|record_id==|record_id==|record_id== ///
-					|record_id==|record_id==|record_id==|record_id==|record_id== ///
+					|record_id==35479 //|record_id==|record_id==|record_id==|record_id== ///
+					//|record_id==|record_id==|record_id==|record_id==|record_id== ///
+					//|record_id==|record_id==|record_id==|record_id==|record_id== ///
+					//|record_id==|record_id==|record_id==|record_id==|record_id== ///
+					//|record_id==|record_id==|record_id==|record_id==|record_id== ///
+					//|record_id==|record_id==|record_id==|record_id==|record_id== ///
+					//|record_id==|record_id==|record_id==|record_id==|record_id== ///
+** 11 changes
 
-replace stroke=2 if heart==1 & stroke==. //assigning deaths that have already been reviewed above
-replace heart=2 if stroke==1 & heart==. //assigning deaths that have already been reviewed above
-
-** Review + correct all unassigned deaths to ensure there are no unassigned stroke or heart CODs
-** (exclude cardiac arrest as will review these separately)
-count if !(strmatch(strupper(coddeath), "*ARREST*")) & stroke==. & heart==.
-
+replace stroke=2 if heart==1 & stroke==. //assigning deaths that have already been reviewed above - 200 changes
+replace heart=2 if stroke==1 & heart==. //assigning deaths that have already been reviewed above - 294 changes
 
 ** Review + correct all cardiac arrests wherein heart variable is blank 
-count if regexm(coddeath, "ARREST") &  heart==. //
+count if regexm(coddeath, "ARREST") &  heart==. //175
+
+stop
+** Review + correct all unassigned deaths to ensure there are no unassigned stroke or heart CODs
+** (exclude cardiac arrest as will review these separately)
+count if !(strmatch(strupper(coddeath), "*ARREST*")) & stroke==. & heart==. //2330
+
+
 stop
 
 replace stroke=2 if stroke==.
@@ -619,7 +620,7 @@ replace coddeath=subinstr(coddeath,"CARE","CERE",.) if record_id==34334
 replace coddeath=subinstr(coddeath,"CARDIAC F","CARDIAC FAILURE",.) if record_id==36714
 replace coddeath=subinstr(coddeath,"HEMDOMA","HEMATOMA",.) if record_id==37006
 replace coddeath=subinstr(coddeath,"INFARCION","INFARCTION",.) if record_id==34380
-replace coddeath=subinstr(coddeath,"","",.) if record_id==
+replace natregno=subinstr(natregno,"9","8",.) if record_id==34294
 replace coddeath=subinstr(coddeath,"","",.) if record_id==
 replace coddeath=subinstr(coddeath,"","",.) if record_id==
 replace coddeath=subinstr(coddeath,"","",.) if record_id==
@@ -804,7 +805,7 @@ replace pod=1 if regexm(placeofdeath, "QUEEN ELZ") & pod==. //0 changes
 replace pod=1 if regexm(placeofdeath, "QEH") & pod==. //1439 changes
 replace pod=1 if regexm(placeofdeath, "Q.E.H") & pod==. //0 changes
 replace pod=3 if regexm(placeofdeath, "GERIATRIC") & pod==. //80 changes
-replace pod=3 if regexm(placeofdeath, "GERIACTIRC") & pod==. //0 chagnes
+replace pod=3 if regexm(placeofdeath, "GERIACTIRC") & pod==. //0 changes
 replace pod=3 if regexm(placeofdeath, "GERIACTRIC") & pod==. //0 chagnes
 replace pod=5 if regexm(placeofdeath, "CHILDRENS HOME") & pod==. //0 chagnes
 replace pod=4 if regexm(placeofdeath, "HOME") & pod==. //118 changes
