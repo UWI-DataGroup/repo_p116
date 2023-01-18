@@ -4,7 +4,7 @@
     //  project:                BNR
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      11-JAN-2023
-    //  date last modified	  	16-JAN-2023
+    //  date last modified	  	18-JAN-2023
     //  algorithm task          Prep and format 2021 death data
     //  status                  Pending
     //  objective               To have multiple datasets with cleaned 2021 death data for:
@@ -51,9 +51,9 @@
 ** JC 11jan2023: decided not to use the dataset prepared in p141 as this would not have the record_id from the multi-year database so will import and prep based on multi-year death db
 
 ** LOAD the national registry deaths 2021 excel dataset
-import excel using "`datapath'\version03\1-input\BNRDeathData20082021-CVDMatching2021Death_DATA_2023-01-11_1313_excel.xlsx" , firstrow case(lower)
+import excel using "`datapath'\version03\1-input\BNRDeathData20082021-CVDMatching2021Death_DATA_2023-01-18_0815_excel.xlsx" , firstrow case(lower)
 
-count //3148
+count //3148; 3149 (JC 18jan2023: added a late registration)
 
 
 *******************
@@ -606,7 +606,7 @@ count if regexm(coddeath, "ARREST") &  heart==. //175
 stop
 ** Review + correct all unassigned deaths to ensure there are no unassigned stroke or heart CODs
 ** (exclude cardiac arrest as will review these separately)
-count if !(strmatch(strupper(coddeath), "*ARREST*")) & stroke==. & heart==. //2330
+count if !(strmatch(strupper(coddeath), "*ARREST*")) & stroke==. & heart==. //2330; 2331
 
 
 stop
