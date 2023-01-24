@@ -4,7 +4,7 @@
     //  project:                BNR
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      11-JAN-2023
-    //  date last modified	  	18-JAN-2023
+    //  date last modified	  	24-JAN-2023
     //  algorithm task          Prep and format 2021 death data
     //  status                  Pending
     //  objective               To have multiple datasets with cleaned 2021 death data for:
@@ -518,13 +518,6 @@ replace heart=1 if regexm(coddeath, "MYOCARD") &  heart==.
 replace heart=1 if regexm(coddeath, "MYOCAD") &  heart==.
 replace heart=1 if regexm(coddeath, "HEART ATT") &  heart==.
 
-** JC 12jan2023: review cardiac arrests when checking any heart CODs that were not assigned 
-** (see Angie's note to Ashley below re cardiac arrest from 2020 cleaning dofile "3_prep_heart_dreg")
-/*
-** AR to AH: note - drop all who are CA plus CCF or HF only
-** AR to AH: cardiac arrests really should only be included - like SCD - in a setting of
-** cardiac ischaemia, as someone could die drowning and have a "cardiac arrest" which literally just means stopped heart.
-*/
 
 ** Reviewing all CODs are correctly assigned
 
@@ -545,11 +538,14 @@ tab dodyear stroke,m //2748 missing
 tab dodyear heart,m //2898 missing
 
 
-** Check that all cancer CODs are eligible
+** Check that all cancer CODs are eligible using Stata's Data Editor (Browse) so sort and order for user-friendly reviewing
 sort coddeath record_id
 order record_id stroke heart coddeath natregno
 
 
+**************
+** ASSIGNED **
+**************
 ** Review + correct all deaths assigned as heart or stroke if incorrectly assigned
 count if stroke==1|heart==1 //651 - reviewed all but awaiting queries review meeting with CVD team to confirm some of the below
 
@@ -562,7 +558,7 @@ replace stroke=2 if record_id==36187|record_id==36310|record_id==34147|record_id
 					|record_id==37278|record_id==35843|record_id==34779|record_id==35225|record_id==37153 ///
 					|record_id==36859|record_id==35461|record_id==35799|record_id==35882|record_id==36714 ///
 					|record_id==34252|record_id==37174|record_id==37340|record_id==36799|record_id==36944 ///
-					|record_id==36738|record_id==36385|record_id==36830|record_id==34881|record_id==37323 ///
+					|record_id==36385|record_id==36830|record_id==34881|record_id==37323 ///
 					|record_id==37301|record_id==34986|record_id==37296|record_id==37006|record_id==36047 ///
 					|record_id==34887|record_id==35322|record_id==36398|record_id==35015|record_id==34273 ///
 					|record_id==37166|record_id==37127|record_id==34339|record_id==36333|record_id==37025 ///
@@ -580,35 +576,77 @@ replace stroke=2 if record_id==36187|record_id==36310|record_id==34147|record_id
 					|record_id==36390|record_id==35427|record_id==35380|record_id==34472|record_id==37239 ///
 					|record_id==34360|record_id==34623|record_id==35781|record_id==37263|record_id==36804 ///
 					|record_id==35417|record_id==34624|record_id==36939|record_id==34294|record_id==36446 ///
-					|record_id==36658 //|record_id==|record_id==|record_id==|record_id== ///
+					|record_id==36658|record_id==34406 //|record_id==|record_id==|record_id== ///
 					//|record_id==|record_id==|record_id==|record_id==|record_id== ///
 					//|record_id==|record_id==|record_id==|record_id==|record_id== ///
 					//|record_id==|record_id==|record_id==|record_id==|record_id== ///
-** 136 changes
+** 135 changes
 
 replace heart=2 if record_id==36310|record_id==34275|record_id==36563|record_id==34273|record_id==35255 ///
 					|record_id==34226|record_id==34471|record_id==37070|record_id==34317|record_id==35825 ///
-					|record_id==35479 //|record_id==|record_id==|record_id==|record_id== ///
+					|record_id==35479|record_id==35444 |record_id==35417|record_id==34624|record_id==36939 ///
+					|record_id==34294|record_id==36446|record_id==34779|record_id==37006|record_id==35303 ///
+					|record_id==36804 //|record_id==|record_id==|record_id==|record_id== ///
 					//|record_id==|record_id==|record_id==|record_id==|record_id== ///
 					//|record_id==|record_id==|record_id==|record_id==|record_id== ///
 					//|record_id==|record_id==|record_id==|record_id==|record_id== ///
 					//|record_id==|record_id==|record_id==|record_id==|record_id== ///
-					//|record_id==|record_id==|record_id==|record_id==|record_id== ///
-					//|record_id==|record_id==|record_id==|record_id==|record_id== ///
-** 11 changes
+** 21 changes - some were assigned based on responses at CVD mtg re queries review on 23jan2023.
 
-replace stroke=2 if heart==1 & stroke==. //assigning deaths that have already been reviewed above - 200 changes
-replace heart=2 if stroke==1 & heart==. //assigning deaths that have already been reviewed above - 294 changes
+replace stroke=2 if heart==1 & stroke==. //assigning deaths that have already been reviewed above - 199 changes
+replace heart=2 if stroke==1 & heart==. //assigning deaths that have already been reviewed above - 295 changes
 
+
+*********
+** IHD **
+*********
+** JC 24jan2023: Based on feedback from meeting with NS yesterday, IHD should be included as a reportable heart COD for both ASMRs and incidence
+** Review + correct all ischaemic heart disease wherein heart variable is blank 
+count if (regexm(coddeath, "ISCHEMIC HEART")|regexm(coddeath, "ISCHAEMIC HEART")|regexm(coddeath, "ISCHEMIC CARDIAC")|regexm(coddeath, "ISCHAEMIC CARDIAC")) &  heart==. //38 - all correct 
+count if (regexm(coddeath, "ISCHEMIC HEART")|regexm(coddeath, "ISCHAEMIC HEART")|regexm(coddeath, "ISCHEMIC CARDIAC")|regexm(coddeath, "ISCHAEMIC CARDIAC")) &  heart==2 //4
+replace heart=1 if (regexm(coddeath, "ISCHEMIC HEART")|regexm(coddeath, "ISCHAEMIC HEART")|regexm(coddeath, "ISCHEMIC CARDIAC")|regexm(coddeath, "ISCHAEMIC CARDIAC")) &  heart==. //38 changes
+replace heart=1 if record_id==36738|record_id==34273|record_id==36438|record_id==36192 //4 changes
+
+
+*********
+** SCD **
+*********
+** JC 24jan2023: Based on feedback from meeting with NS yesterday, SCD should be included as a reportable heart COD for both ASMRs and incidence
+** Note: on some death certificates 'sudden cardiac arrest' is documented; according to CVD DA WhatsApp chat NS noted on 24jan2023 that these could be coded as SCD in ICD so will treat them as such here.
+** Review + correct all sudden cardiac deaths wherein heart variable is blank 
+count if regexm(coddeath, "SUDDEN CARDI") &  heart==. //49 - all correct
+replace heart=1 if regexm(coddeath, "SUDDEN CARDI") &  heart==. //49 changes
+//JC 24jan2023: For 2022 data cleaning you can assign IHDs and SCDs one time when assigning MIs but did it separately for 2021 as was unsure from reviewing 2020 dofile what COD terms were reportable
+
+
+********
+** CA **
+********
+** JC 12jan2023: review cardiac arrests when checking any heart CODs that were not assigned 
+** (see Angie's note to Ashley below re cardiac arrest from 2020 cleaning dofile "3_prep_heart_dreg")
+/*
+** AR to AH: note - drop all who are CA plus CCF or HF only
+** AR to AH: cardiac arrests really should only be included - like SCD - in a setting of
+** cardiac ischaemia, as someone could die drowning and have a "cardiac arrest" which literally just means stopped heart.
+*/
 ** Review + correct all cardiac arrests wherein heart variable is blank 
-count if regexm(coddeath, "ARREST") &  heart==. //175
+count if regexm(coddeath, "ARREST") &  heart==. //158 - all non reportable
+replace heart=2 if regexm(coddeath, "ARREST") &  heart==. //158 changes - NS confirmed via WA on 24jan2023 to exclude death wherein COD=sudden death cardiac arrest; hypertensive heart disease
 
-stop
+
+****************
+** UNASSIGNED **
+****************
 ** Review + correct all unassigned deaths to ensure there are no unassigned stroke or heart CODs
 ** (exclude cardiac arrest as will review these separately)
-count if !(strmatch(strupper(coddeath), "*ARREST*")) & stroke==. & heart==. //2330; 2331
+//count if !(strmatch(strupper(coddeath), "*ARREST*")) & stroke==. & heart==.
+count if stroke==. & heart==. //2293 - review and assign any reportable stroke or heart deaths
 
+stop
+replace stroke=1 if record_id==|record_id==|record_id==|record_id==|record_id== ///
+replace heart=1 if record_id==34795|record_id==|record_id==|record_id==|record_id== ///
 
+//JC 24jan2023: based on CVD mtg yesterday, NS confirmed 'acute coronary thrombosis' is a reportable COD for both ASMRs and incidence.
 stop
 
 replace stroke=2 if stroke==.
@@ -621,7 +659,7 @@ replace coddeath=subinstr(coddeath,"CARDIAC F","CARDIAC FAILURE",.) if record_id
 replace coddeath=subinstr(coddeath,"HEMDOMA","HEMATOMA",.) if record_id==37006
 replace coddeath=subinstr(coddeath,"INFARCION","INFARCTION",.) if record_id==34380
 replace natregno=subinstr(natregno,"9","8",.) if record_id==34294
-replace coddeath=subinstr(coddeath,"","",.) if record_id==
+replace coddeath=subinstr(coddeath,"THROMBOYSIS","THROMBOLYSIS",.) if record_id==35444
 replace coddeath=subinstr(coddeath,"","",.) if record_id==
 replace coddeath=subinstr(coddeath,"","",.) if record_id==
 replace coddeath=subinstr(coddeath,"","",.) if record_id==
@@ -655,6 +693,7 @@ replace codheart=3 if coddeath=="99"|(regexm(coddeath,"INDETERMINATE")|regexm(co
 
 
 
+STOP - below code copied from cancer mort dofile so need to update!!
 
 ** Spotting some duplicates so re-check for duplicates (since 2019 Pt.1 death cleaning was done at different time to 2019 Pt.2 these duplicates were missed)
 ** Delete records in multi-year REDCap database
