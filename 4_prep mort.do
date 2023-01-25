@@ -4,7 +4,7 @@
     //  project:                BNR
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      11-JAN-2023
-    //  date last modified	  	24-JAN-2023
+    //  date last modified	  	25-JAN-2023
     //  algorithm task          Prep and format 2021 death data
     //  status                  Pending
     //  objective               To have multiple datasets with cleaned 2021 death data for:
@@ -641,16 +641,35 @@ replace heart=2 if regexm(coddeath, "ARREST") &  heart==. //158 changes - NS con
 ** (exclude cardiac arrest as will review these separately)
 //count if !(strmatch(strupper(coddeath), "*ARREST*")) & stroke==. & heart==.
 count if stroke==. & heart==. //2293 - review and assign any reportable stroke or heart deaths
+count if regexm(coddeath, "INFARCT") & heart==. & stroke==. //13 - reviewed in above list but found some misspellings so added to spelling corrections below
 
-stop
-replace stroke=1 if record_id==|record_id==|record_id==|record_id==|record_id== ///
-replace heart=1 if record_id==34795|record_id==|record_id==|record_id==|record_id== ///
+replace stroke=1 if record_id==34510|record_id==35659|record_id==34393|record_id==34903|record_id==35439 ///
+					|record_id==35793|record_id==37096|record_id==34170|record_id==35425|record_id==35504
+//10 changes
+replace heart=1 if record_id==34795|record_id==34262 //2 changes
 
+STOP - ask NS the below
+/*
+acute coronary syndrome without mention of ischaemia or MI or angina:
+34580
+34677
+
+HYPERTENSIVE EMERGENCY WITH INTRAVENTRICULAR HAEMORRHAGE ASPIRATION PNEUMONIA - ask NS as this usually occurs in babies but when present in adults like this case it usually occurs in the setting of subarachnoid hemorrhage or hypertension-related intracerebral hemorrhage
+35419
+
+MASSIVE RIGHT FRONTOPARIETAL HEMORRHAGIC SHOCK ASPIRATION PNEUMONIA
+35376
+
+PULMONARY HEMORRHAGE SUPRATHERAPEUTIC ANTOCOAGULATION VENOUS SINUS THROMBUS SARS CO-V-2 INFECTION - CVST is a rare form of stroke: check with NS (see onset intervals in db)
+36023
+
+THROMBOEMBOLIC EVENT ARTERIAL THROMBUS TO LEFT LOWER LIMB LARGE UTERINE FIBROIDS DIABETES MELLITUS HYPERTENSION - ask NS since it doesn't specify cerebral as location of thromboembolic event and that would make it reportable according to BNR ops manual
+35044
 //JC 24jan2023: based on CVD mtg yesterday, NS confirmed 'acute coronary thrombosis' is a reportable COD for both ASMRs and incidence.
-stop
+*/
 
-replace stroke=2 if stroke==.
-replace heart=2 if heart==.
+replace stroke=2 if stroke==. //2498 chnges
+replace heart=2 if heart==. //2346 changes
 
 
 ** Spelling corrections from the above list reviews; Also emailed to KG on 11jul2022 to update in multi-year REDCap deathdb
@@ -660,14 +679,22 @@ replace coddeath=subinstr(coddeath,"HEMDOMA","HEMATOMA",.) if record_id==37006
 replace coddeath=subinstr(coddeath,"INFARCION","INFARCTION",.) if record_id==34380
 replace natregno=subinstr(natregno,"9","8",.) if record_id==34294
 replace coddeath=subinstr(coddeath,"THROMBOYSIS","THROMBOLYSIS",.) if record_id==35444
-replace coddeath=subinstr(coddeath,"","",.) if record_id==
-replace coddeath=subinstr(coddeath,"","",.) if record_id==
-replace coddeath=subinstr(coddeath,"","",.) if record_id==
-replace coddeath=subinstr(coddeath,"","",.) if record_id==
-replace coddeath=subinstr(coddeath,"","",.) if record_id==
-replace coddeath=subinstr(coddeath,"","",.) if record_id==
-replace coddeath=subinstr(coddeath,"","",.) if record_id==
-replace coddeath=subinstr(coddeath,"","",.) if record_id==
+replace coddeath=subinstr(coddeath,"AREST","ARREST",.) if record_id==36967
+replace coddeath=subinstr(coddeath,"CEREBROVASULAR","CEREBROVASCULAR",.) if record_id==35566
+replace coddeath=subinstr(coddeath,"CONESTIVE","CONGESTIVE",.) if record_id==37076
+replace coddeath=subinstr(coddeath,"INTRACARANIAL","INTRACRANIAL",.) if record_id==35377
+replace coddeath=subinstr(coddeath,"INTRAPARENCTYMAL [INTROCRONIAL]","INTRAPARENCHYMAL [INTRACRANIAL]",.) if record_id==35659
+replace coddeath=subinstr(coddeath,"SUBARACHOID","SUBARACHNOID",.) if record_id==34393
+replace coddeath=subinstr(coddeath,"CDEREBROVASCULAR","CEREBROVASCULAR",.) if record_id==34903
+replace coddeath=subinstr(coddeath,"PACREATIC","PANCREATIC",.) if record_id==36281
+replace coddeath=subinstr(coddeath,"POUTINE","PONTINE",.) if record_id==35439
+replace coddeath=subinstr(coddeath,"SUBARCHNOID","SUBARACHNOID",.) if record_id==35793|record_id==34170|record_id==35425|record_id==35504
+replace coddeath=subinstr(coddeath,"SUBA-ACHNOID","SUBARACHNOID",.) if record_id==37096
+replace coddeath=subinstr(coddeath,"SUDEEN","SUDDEN",.) if record_id==34262
+replace coddeath=subinstr(coddeath,"SUSOECTED","SUSPECTED",.) if record_id==34462
+replace coddeath=subinstr(coddeath,"TYROID","THYROID",.) if record_id==34834
+replace coddeath=subinstr(coddeath,"HEMITOMA","HEMATOMA",.) if record_id==34948
+replace coddeath=subinstr(coddeath,"INFARCTION","INFECTION",.) if record_id==35926|record_id==35991
 
 
 ** Create cod categorical variable for stroke
@@ -675,9 +702,9 @@ gen codstroke=.
 label define codstroke_lab 1 "Dead of stroke" 2 "Dead of other cause" 3 "Not known" 4 "NA", modify
 label values codstroke codstroke_lab
 label var codstroke "COD categories: Stroke"
-replace codstroke=1 if stroke==1 // changes
-replace codstroke=2 if stroke==2 // changes
-replace codstroke=3 if coddeath=="99"|(regexm(coddeath,"INDETERMINATE")|regexm(coddeath,"UNDETERMINED")|regexm(coddeath,"UNKNOWN CAUSE")|regexm(coddeath,"NO ANATOMICAL CAUSE")) //28 changes
+replace codstroke=1 if stroke==1 //316 changes
+replace codstroke=2 if stroke==2 //2833 changes
+replace codstroke=3 if coddeath=="99"|(regexm(coddeath,"INDETERMINATE")|regexm(coddeath,"UNDETERMINED")|regexm(coddeath,"UNKNOWN CAUSE")|regexm(coddeath,"NO ANATOMICAL CAUSE")) //30 changes
 //list record_id coddeath if cod==3
 
 
@@ -686,9 +713,9 @@ gen codheart=.
 label define codheart_lab 1 "Dead of AMI" 2 "Dead of other cause" 3 "Not known" 4 "NA", modify
 label values codheart codheart_lab
 label var codheart "COD categories: Heart"
-replace codheart=1 if heart==1 // changes
-replace codheart=2 if heart==2 // changes
-replace codheart=3 if coddeath=="99"|(regexm(coddeath,"INDETERMINATE")|regexm(coddeath,"UNDETERMINED")|regexm(coddeath,"UNKNOWN CAUSE")|regexm(coddeath,"NO ANATOMICAL CAUSE")) //28 changes
+replace codheart=1 if heart==1 //333 changes
+replace codheart=2 if heart==2 //2816 changes
+replace codheart=3 if coddeath=="99"|(regexm(coddeath,"INDETERMINATE")|regexm(coddeath,"UNDETERMINED")|regexm(coddeath,"UNKNOWN CAUSE")|regexm(coddeath,"NO ANATOMICAL CAUSE")) //30 changes
 //list record_id coddeath if cod==3
 
 
