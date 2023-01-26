@@ -4,7 +4,7 @@
     //  project:                BNR
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      11-JAN-2023
-    //  date last modified	  	25-JAN-2023
+    //  date last modified	  	26-JAN-2023
     //  algorithm task          Prep and format 2021 death data
     //  status                  Pending
     //  objective               To have multiple datasets with cleaned 2021 death data for:
@@ -539,6 +539,7 @@ tab dodyear heart,m //2898 missing
 
 
 ** Check that all cancer CODs are eligible using Stata's Data Editor (Browse) so sort and order for user-friendly reviewing
+** Note: the CVD DM Re-engineer OneNote book on the page entitled '2021 cases for NS (CVD) to review' has some guidance on how to assign unusal CODs
 sort coddeath record_id
 order record_id stroke heart coddeath natregno
 
@@ -644,35 +645,30 @@ count if stroke==. & heart==. //2293 - review and assign any reportable stroke o
 count if regexm(coddeath, "INFARCT") & heart==. & stroke==. //13 - reviewed in above list but found some misspellings so added to spelling corrections below
 
 replace stroke=1 if record_id==34510|record_id==35659|record_id==34393|record_id==34903|record_id==35439 ///
-					|record_id==35793|record_id==37096|record_id==34170|record_id==35425|record_id==35504
-//10 changes
-replace heart=1 if record_id==34795|record_id==34262 //2 changes
+					|record_id==35793|record_id==37096|record_id==34170|record_id==35425|record_id==35504 ///
+					|record_id==35419|record_id==35376
+//12 changes
+replace heart=1 if record_id==34795|record_id==34262|record_id==34580|record_id==34677 //4 changes
 
-STOP - ask NS the below
 /*
-acute coronary syndrome without mention of ischaemia or MI or angina:
-34580
-34677
+JC 26jan2023: below unusal CODs discussed with NS and the outcome
+	- acute coronary syndrome without mention of ischaemia or MI or angina - YES register.
+	- HYPERTENSIVE EMERGENCY WITH INTRAVENTRICULAR HAEMORRHAGE ASPIRATION PNEUMONIA - ask NS as this usually occurs in babies but when 
+	  present in adults like this case it usually occurs in the setting of subarachnoid hemorrhage or hypertension-related intracerebral hemorrhage: YES register.
+	- MASSIVE RIGHT FRONTOPARIETAL HEMORRHAGIC SHOCK ASPIRATION PNEUMONIA: YES register.
+	- PULMONARY HEMORRHAGE SUPRATHERAPEUTIC ANTICOAGULATION VENOUS SINUS THROMBUS SARS CO-V-2 INFECTION - CVST is a rare form of stroke: check with NS (see onset intervals in db) - 
+	  NO do not register based on past discussions with Prof Corbin re venous sinus thrombi.
+	- THROMBOEMBOLIC EVENT ARTERIAL THROMBUS TO LEFT LOWER LIMB LARGE UTERINE FIBROIDS DIABETES MELLITUS HYPERTENSION - ask NS since it doesn't specify cerebral as location of 
+	  thromboembolic event and that would make it reportable according to BNR ops manual: NO do not register.
 
-HYPERTENSIVE EMERGENCY WITH INTRAVENTRICULAR HAEMORRHAGE ASPIRATION PNEUMONIA - ask NS as this usually occurs in babies but when present in adults like this case it usually occurs in the setting of subarachnoid hemorrhage or hypertension-related intracerebral hemorrhage
-35419
-
-MASSIVE RIGHT FRONTOPARIETAL HEMORRHAGIC SHOCK ASPIRATION PNEUMONIA
-35376
-
-PULMONARY HEMORRHAGE SUPRATHERAPEUTIC ANTOCOAGULATION VENOUS SINUS THROMBUS SARS CO-V-2 INFECTION - CVST is a rare form of stroke: check with NS (see onset intervals in db)
-36023
-
-THROMBOEMBOLIC EVENT ARTERIAL THROMBUS TO LEFT LOWER LIMB LARGE UTERINE FIBROIDS DIABETES MELLITUS HYPERTENSION - ask NS since it doesn't specify cerebral as location of thromboembolic event and that would make it reportable according to BNR ops manual
-35044
-//JC 24jan2023: based on CVD mtg yesterday, NS confirmed 'acute coronary thrombosis' is a reportable COD for both ASMRs and incidence.
+JC 24jan2023: based on CVD mtg on 23jan2023, NS confirmed 'acute coronary thrombosis' is a reportable COD for both ASMRs and incidence.
 */
 
-replace stroke=2 if stroke==. //2498 chnges
-replace heart=2 if heart==. //2346 changes
+replace stroke=2 if stroke==. //2496 chnges
+replace heart=2 if heart==. //2344 changes
 
 
-** Spelling corrections from the above list reviews; Also emailed to KG on 11jul2022 to update in multi-year REDCap deathdb
+** Spelling corrections from the above list reviews; Also emailed to KG on 25jan2023 to update in multi-year REDCap deathdb
 replace coddeath=subinstr(coddeath,"CARE","CERE",.) if record_id==34334
 replace coddeath=subinstr(coddeath,"CARDIAC F","CARDIAC FAILURE",.) if record_id==36714
 replace coddeath=subinstr(coddeath,"HEMDOMA","HEMATOMA",.) if record_id==37006
@@ -695,6 +691,7 @@ replace coddeath=subinstr(coddeath,"SUSOECTED","SUSPECTED",.) if record_id==3446
 replace coddeath=subinstr(coddeath,"TYROID","THYROID",.) if record_id==34834
 replace coddeath=subinstr(coddeath,"HEMITOMA","HEMATOMA",.) if record_id==34948
 replace coddeath=subinstr(coddeath,"INFARCTION","INFECTION",.) if record_id==35926|record_id==35991
+replace coddeath=subinstr(coddeath,"ANTOCOAGULATION","ANTICOAGULATION",.) if record_id==36023 //JC found this after list emailed to KG so updated it directly in multi-yr death db.
 
 
 ** Create cod categorical variable for stroke
@@ -702,8 +699,8 @@ gen codstroke=.
 label define codstroke_lab 1 "Dead of stroke" 2 "Dead of other cause" 3 "Not known" 4 "NA", modify
 label values codstroke codstroke_lab
 label var codstroke "COD categories: Stroke"
-replace codstroke=1 if stroke==1 //316 changes
-replace codstroke=2 if stroke==2 //2833 changes
+replace codstroke=1 if stroke==1 //318 changes
+replace codstroke=2 if stroke==2 //2831 changes
 replace codstroke=3 if coddeath=="99"|(regexm(coddeath,"INDETERMINATE")|regexm(coddeath,"UNDETERMINED")|regexm(coddeath,"UNKNOWN CAUSE")|regexm(coddeath,"NO ANATOMICAL CAUSE")) //30 changes
 //list record_id coddeath if cod==3
 
@@ -713,44 +710,16 @@ gen codheart=.
 label define codheart_lab 1 "Dead of AMI" 2 "Dead of other cause" 3 "Not known" 4 "NA", modify
 label values codheart codheart_lab
 label var codheart "COD categories: Heart"
-replace codheart=1 if heart==1 //333 changes
-replace codheart=2 if heart==2 //2816 changes
+replace codheart=1 if heart==1 //335 changes
+replace codheart=2 if heart==2 //2814 changes
 replace codheart=3 if coddeath=="99"|(regexm(coddeath,"INDETERMINATE")|regexm(coddeath,"UNDETERMINED")|regexm(coddeath,"UNKNOWN CAUSE")|regexm(coddeath,"NO ANATOMICAL CAUSE")) //30 changes
 //list record_id coddeath if cod==3
 
 
 
-STOP - below code copied from cancer mort dofile so need to update!!
-
-** Spotting some duplicates so re-check for duplicates (since 2019 Pt.1 death cleaning was done at different time to 2019 Pt.2 these duplicates were missed)
-** Delete records in multi-year REDCap database
-sort regnum district
-quietly by regnum district:  gen dupreg = cond(_N==1,0,_n)
-sort regnum district
-count if event==1 & dupreg>0  //517 - same reg #s but different pts
-sort regnum pname record_id
-//list record_id dddoa ddda odda pname regnum district nrn if event==1 & dupreg>0, sepby(regnum)
-//list record_id dddoa ddda odda pname regnum district nrn if event==1 & dupreg>0 & inrange(record_id, 26000, 28000)
-//list record_id dddoa ddda odda pname regnum district nrn if event==1 & dupreg>0 & inrange(record_id, 28001, 30000)
-drop dupreg
-
-
-sort pname
-quietly by pname:  gen dup = cond(_N==1,0,_n)
-sort pname
-count if event==1 & dup>0  //28 - all different pts with same name
-sort pname record_id
-//list record_id dddoa ddda odda pname regnum district nrn namematch if event==1 & dup>0, sepby(pname)
-/*
-replace namematch=1 if record_id==|record_id==|record_id==|record_id==|record_id== ///
-					   |record_id==|record_id==|record_id==|record_id==|record_id== ///
-					   |record_id==|record_id==|record_id==|record_id==|record_id== ///
-					   |record_id==|record_id==|record_id==|record_id== // changes
-drop if record_id==|record_id== // deleted
-*/
-//drop if event==1 & dup>0 & namematch==. // deleted
-drop dup
-
+****************
+** FORMATTING **
+****************
 ** Create DOB variable to correspond with 2021 incidence dataset
 order record_id natregno age
 count if natregno==""|natregno=="." //87
@@ -776,18 +745,48 @@ drop yr yr1 natregno2 nrn2
 
 
 ** Convert names to lower case and strip possible leading/trailing blanks
-replace fname = lower(rtrim(ltrim(itrim(fname)))) //2493 changes
-replace mname = lower(rtrim(ltrim(itrim(mname)))) //713 changes
-replace lname = lower(rtrim(ltrim(itrim(lname)))) //2493 changes
+replace fname = lower(rtrim(ltrim(itrim(fname)))) //0 changes
+replace mname = lower(rtrim(ltrim(itrim(mname)))) //0 changes
+replace lname = lower(rtrim(ltrim(itrim(lname)))) //0 changes
 
-rename deathid record_id
 order record_id pname fname mname lname namematch
+
 
 *************************
 ** Checking & Removing ** 
 **   Duplicate Death   **
 **    Registrations    **
 *************************
+** Spotting some duplicates so re-check for duplicates (since 2019 Pt.1 death cleaning was done at different time to 2019 Pt.2 these duplicates were missed)
+** Delete records in multi-year REDCap database
+sort regnum district
+quietly by regnum district:  gen dupreg = cond(_N==1,0,_n)
+sort regnum district
+count if event==1 & dupreg>0  //543 - same reg #s but different pts
+sort regnum pname record_id
+//list record_id dddoa ddda odda pname regnum district nrn if event==1 & dupreg>0, sepby(regnum)
+//list record_id dddoa ddda odda pname regnum district nrn if event==1 & dupreg>0 & inrange(record_id, 26000, 28000)
+//list record_id dddoa ddda odda pname regnum district nrn if event==1 & dupreg>0 & inrange(record_id, 28001, 30000)
+drop dupreg
+
+
+sort pname
+quietly by pname:  gen dup = cond(_N==1,0,_n)
+sort pname
+count if event==1 & dup>0  //28 - all different pts with same name
+sort pname record_id
+//list record_id dddoa ddda odda pname regnum district nrn namematch if event==1 & dup>0, sepby(pname)
+/*
+replace namematch=1 if record_id==|record_id==|record_id==|record_id==|record_id== ///
+					   |record_id==|record_id==|record_id==|record_id==|record_id== ///
+					   |record_id==|record_id==|record_id==|record_id==|record_id== ///
+					   |record_id==|record_id==|record_id==|record_id== // changes
+drop if record_id==|record_id== // deleted
+*/
+//drop if event==1 & dup>0 & namematch==. // deleted
+drop dup
+
+
 /* 
 NB: These deaths were cleaned previously for importing into DeathData REDCapdb 
 so the field namematch can be used as a guide for checking duplicates
@@ -847,7 +846,7 @@ list record_id namematch fname lname nrn dod sex age if dupdod>0
 count if dupdod>0 & namematch!=1 //0
 drop dupname dupdod
 
-count //3142
+count //3149
 
 
 
@@ -868,7 +867,7 @@ label var pod "Place of Death from National Register"
 
 replace pod=1 if regexm(placeofdeath, "ELIZABETH HOSP") & pod==. //0 changes
 replace pod=1 if regexm(placeofdeath, "QUEEN ELZ") & pod==. //0 changes
-replace pod=1 if regexm(placeofdeath, "QEH") & pod==. //1439 changes
+replace pod=1 if regexm(placeofdeath, "QEH") & pod==. //1442 changes
 replace pod=1 if regexm(placeofdeath, "Q.E.H") & pod==. //0 changes
 replace pod=3 if regexm(placeofdeath, "GERIATRIC") & pod==. //80 changes
 replace pod=3 if regexm(placeofdeath, "GERIACTIRC") & pod==. //0 changes
@@ -907,14 +906,14 @@ replace pod=99 if placeofdeath=="" & pod==. //0 changes
 replace pod=99 if placeofdeath=="99" //20 changes
 
 order record_id address placeofdeath parish deathparish coddeath
-count if pod==. & parish!=deathparish & (regexm(coddeath, "CORONA")|regexm(coddeath, "COVID")) //217
-replace pod=12 if pod==. & parish!=deathparish & (regexm(coddeath, "CORONA")|regexm(coddeath, "COVID")) //217 changes
+count if pod==. & parish!=deathparish & (regexm(coddeath, "CORONA")|regexm(coddeath, "COVID")) //218
+replace pod=12 if pod==. & parish!=deathparish & (regexm(coddeath, "CORONA")|regexm(coddeath, "COVID")) //218 changes
 count if pod==. & parish!=deathparish //88 - check COD to determine if road accident or at home death
 //list record_id address parish placeofdeath deathparish if pod==. & parish!=deathparish
-count if pod==. //1179 - check address against placeofdeath in Stata Browse window
+count if pod==. //1182 - check address against placeofdeath in Stata Browse window
 //list record_id placeofdeath if pod==.
-replace pod=2 if pod==. & address==placeofdeath //623 changes
-replace pod=2 if pod==. & parish==deathparish //473 changes
+replace pod=2 if pod==. & address==placeofdeath //625 changes
+replace pod=2 if pod==. & parish==deathparish //474 changes
 replace pod=11 if pod==. & parish!=deathparish & address!=placeofdeath //83 changes
 
 //drop placeofdeath
@@ -922,6 +921,12 @@ tab pod ,m //none unassigned
 
 order record_id pname fname mname lname address parish age dod
 
+********************
+** Final Cleaning **
+********************
+*********
+** NRN **
+*********
 count if natregno=="" & nrn!=. //0
 //gen double nrn2=nrn if record_id==28513
 //tostring nrn2 ,replace
@@ -938,6 +943,7 @@ count if age==. //0
 
 
 ** Add missing NRNs flagged above with list of NRNs manually created using electoral list (this ensures dofile remains de-identified)
+** JC 26jan2023: no NRNs were flagged so the below code was disabled but kept in for historical reference - since dofiles are to remain de-identified any identifiable data is to be updated using the below method.
 /*
 preserve
 clear
@@ -963,8 +969,11 @@ drop elec_* _merge
 erase "`datapath'\version09\2-working\electoral_missingnrn.dta"
 */
 
-** Check dob** Creating dob variable as none in national death data
-** perform data cleaning on the age variable
+
+*********
+** DOB **
+*********
+drop tempvarn
 order record_id natregno age
 count if natregno==""|natregno=="." //87
 gen tempvarn=6 if natregno==""|natregno=="."
@@ -1003,20 +1012,27 @@ count if dobcheck!=. & dob==. //0
 replace dob=dobcheck if dobcheck!=. & dob==. //0 changes
 //replace nrn=. if record_id==34112 - KG checked 24jun2022 and confirmed NRN and age are correct since pt's age = 18 months
 //replace natregno="" if record_id==34112
-replace age=ageyrs if tempvarn!=6 & age!=ageyrs & agetxt==6 & ageyrs<100 //3 changes
+replace age=ageyrs if tempvarn!=6 & age!=ageyrs & agetxt==6 & ageyrs<100 //4 changes
 drop day month dyear nrnyr yr yr1 year2 nrndob age2 ageyrs tempvarn dobcheck
 
-** Check age
+
+*********
+** AGE **
+*********
 gen age2 = (dod - dob)/365.25
 gen checkage2=int(age2)
 drop age2
 count if dob!=. & dod!=. & age!=checkage2 //4
-list record_id fname lname dod dob age agetxt checkage2 if dob!=. & dod!=. & age!=checkage2 //all correct
+list record_id fname lname dod dob age agetxt checkage2 if dob!=. & dod!=. & age!=checkage2 //all correct - under 1yr
 //replace age=checkage2 if dob!=. & dod!=. & age!=checkage2 //0 changes
 drop checkage2
 
-** Check no missing dxyr so this can be used in analysis
-tab dodyear ,m //3142 - none missing
+
+****************
+** DEATH YEAR **
+****************
+** Check no missing death year so this can be used in analysis
+tab dodyear ,m //3149 - none missing
 
 count if dodyear!=year(dod) //0
 //list pid record_id dod dodyear if dodyear!=year(dod)
@@ -1024,39 +1040,57 @@ replace dodyear=year(dod) if dodyear!=year(dod) //0 changes
 
 
 ** Remove, relabel variables for matching with incidence dataset
-drop tempvarn
-//rename * dd_*
-rename record_id deathid
+rename * dd_*
+rename dd_record_id dd_deathid
 
 ** JC 15aug2022: Create an identifier for the death dataset in prep for the death-incidence matching/merging process
-gen deathds=1
+** JC 26jan2023: do not add prefix 'dd_' to variable name as this variable will be kept for using in incidence dataset also
+gen casetype=2
+label define casetype_lab 1 "Database" 2 "Death Data", modify
+label values casetype casetype_lab
+label var casetype "Case from CVDdb or death data?"
 
-order record_id dd_pname dd_fname dd_mname dd_lname dd_regnum dd_nrn dd_sex dd_age dd_dod dd_cancer dd_cod1a dd_address dd_parish dd_pod dd_coddeath dd_namematch dd_dddoa dd_ddda dd_odda dd_certtype dd_district dd_agetxt dd_nrnnd dd_mstatus dd_occu dd_durationnum dd_durationtxt dd_onsetnumcod1a dd_onsettxtcod1a dd_cod1b dd_onsetnumcod1b dd_onsettxtcod1b dd_cod1c dd_onsetnumcod1c dd_onsettxtcod1c dd_cod1d dd_onsetnumcod1d dd_onsettxtcod1d dd_cod2a dd_onsetnumcod2a dd_onsettxtcod2a dd_cod2b dd_onsetnumcod2b dd_onsettxtcod2b dd_deathparish dd_regdate dd_certifier dd_certifieraddr dd_cleaned dd_duprec dd_elecmatch dd_cod dd_natregno dd_dob dd_dodyear
+order dd_deathid dd_pname dd_fname dd_mname dd_lname dd_regnum dd_nrn dd_sex dd_age dd_dod dd_heart dd_stroke dd_cod1a dd_address dd_parish dd_pod dd_coddeath dd_namematch dd_dddoa dd_ddda dd_odda dd_certtype dd_district dd_agetxt dd_nrnnd dd_mstatus dd_occu dd_durationnum dd_durationtxt dd_onsetnumcod1a dd_onsettxtcod1a dd_cod1b dd_onsetnumcod1b dd_onsettxtcod1b dd_cod1c dd_onsetnumcod1c dd_onsettxtcod1c dd_cod1d dd_onsetnumcod1d dd_onsettxtcod1d dd_cod2a dd_onsetnumcod2a dd_onsettxtcod2a dd_cod2b dd_onsetnumcod2b dd_onsettxtcod2b dd_deathparish dd_regdate dd_certifier dd_certifieraddr dd_cleaned dd_duprec dd_elecmatch dd_codheart dd_codstroke dd_natregno dd_dob dd_dodyear casetype
 
 
 ** Create dataset for matching with CVD incidence dataset
-label data "BNR MORTALITY data 2021"
-notes _dta :These data prepared from BB national death register & Redcap deathdata database
-save "`datapath'\version03\3-output\2021_prep mort_ALL" ,replace
-note: TS This dataset can be used for merging 2021 deaths with 2021 CVD incidence data
-note: TS This dataset includes all 2021 CODs
-
-/*
-label data "BNR MORTALITY data 2021"
-notes _dta :These data prepared from BB national death register & Redcap deathdata database
-save "`datapath'\version03\2-working\2021_deaths_for_matching" ,replace
-note: TS This dataset can be used for merging 2021 deaths with 2021 CVD incidence data
-*/
-
-drop dup_id
-
-order record_id did fname lname age age5 age_10 sex dob nrn parish dod dodyear cancer siteiarc siteiarchaem pod coddeath
-
 label data "BNR MORTALITY data 2021: Identifiable Dataset"
 notes _dta :These data prepared from BB national death register & Redcap deathdata database
 save "`datapath'\version03\3-output\2021_prep mort_identifiable_ALL" ,replace
 note: TS This dataset can be used for merging 2021 deaths with 2021 CVD incidence data
 note: TS This dataset includes all 2021 CODs
+
+
+rename dd_* *
+
+*****************************************
+** Create age-groups in prep for analysis
+*****************************************
+** Age labelling
+gen age5 = recode(age,4,9,14,19,24,29,34,39,44,49,54,59,64,69,74,79,84,200)
+recode age5 4=1 9=2 14=3 19=4 24=5 29=6 34=7 39=8 44=9 49=10 54=11 59=12 64=13 /// 
+			69=14 74=15 79=16 84=17 200=18
+label define age5_lab 	1 "0-4"	   2 "5-9"    3 "10-14"		///
+						4 "15-19"  5 "20-24"  6 "25-29"		///
+						7 "30-34"  8 "35-39"  9 "40-44"		///
+						10 "45-49" 11 "50-54" 12 "55-59"	///
+						13 "60-64" 14 "65-69" 15 "70-74"	///
+						16 "75-79" 17 "80-84" 18 "85 & over", modify
+label values age5 age5_lab
+
+tab age5 sex ,m
+** None missing age or sex
+
+gen age_10 = recode(age5,3,5,7,9,11,13,15,17,200)
+recode age_10 3=1 5=2 7=3 9=4 11=5 13=6 15=7 17=8 200=9
+label define age_10_lab 	1 "0-14"   2 "15-24"  3 "25-34"	///
+							4 "35-44"  5 "45-54"  6 "55-64"	///
+							7 "65-74"  8 "75-84"  9 "85 & over" , modify
+label values age_10 age_10_lab
+sort sex age_10
+
+tab age_10 sex ,m
+** None missing age or sex
 
 preserve
 ** Create corrected dataset with reportable cases but de-identified data (STROKE)
