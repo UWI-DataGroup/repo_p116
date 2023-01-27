@@ -4,10 +4,11 @@
     //  project:                BNR-CVD
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      02-NOV-2022
-    // 	date last modified      13-DEC-2022
+    // 	date last modified      26-JAN-2023
     //  algorithm task          Cleaning variables in the REDCap Casefinding form
     //  status                  Completed
-    //  objective               To have a cleaned 2021 cvd incidence dataset ready for analysis
+    //  objective               (1) To have a cleaned 2021 cvd incidence dataset ready for analysis
+	//							(2) To have a list with errors and corrections for DAs to correct data directly into CVDdb
     //  methods                 Using missing and invalid checks to correct data
 	//  support:                Natasha Sobers and Ian R Hambleton
 
@@ -36,7 +37,7 @@
 ** HEADER -----------------------------------------------------
 
 ** Load prepared 2021 dataset
-use "`datapath'\version03\2-working\BNRCVDCORE_PreparedData", clear
+use "`datapath'\version03\2-working\BNRCVDCORE_FlaggedData", clear
 
 ** JC 01dec2022: Review and remove cases that are ineligible and/or duplicates prior to cleaning to reduce number of records to be cleaned
 count if cstatus==2 //1093
@@ -51,18 +52,52 @@ order record_id sd_etype ineligible initialdx finaldx cfcods duprec
 
 ** Update the 1st admission record with re-admission info 
 //replace ineligible=2 if record_id=="2077" & sd_etype==2|record_id=="2255" & sd_etype==2
-replace cstatus=2 if record_id=="4982"|record_id=="5116"
+destring flag73 ,replace
+destring flag998 ,replace
+destring flag75 ,replace
+destring flag1000 ,replace
+replace flag73=cstatus if record_id=="4982"|record_id=="5116" 
+replace cstatus=2 if record_id=="4982"|record_id=="5116" 
+replace flag998=cstatus if record_id=="4982"|record_id=="5116"
+replace flag75=ineligible if record_id=="4982"|record_id=="5116"
 replace ineligible=3 if record_id=="4982"|record_id=="5116"
+replace flag1000=ineligible if record_id=="4982"|record_id=="5116"
 
+destring flag850,replace
+destring flag1775 ,replace
+destring flag851 ,replace
+destring flag1776 ,replace
+destring flag852 ,replace
+destring flag1777 ,replace
+destring flag853 ,replace
+destring flag1778 ,replace
+format flag851 flag852 flag1776 flag1777 %dM_d,_CY
+
+replace flag850=readmit if record_id=="2064"
 replace readmit=1 if record_id=="2064"
+replace flag1775=readmit if record_id=="2064"
+replace flag851=readmitadm if record_id=="2064"
 replace readmitadm=d(02may2021) if record_id=="2064"
+replace flag1776=readmitadm if record_id=="2064"
+replace flag852=readmitdis if record_id=="2064"
 replace readmitdis=d(09may2021) if record_id=="2064"
+replace flag1777=readmitdis if record_id=="2064"
+replace flag853=readmitdays if record_id=="2064"
 replace readmitdays=readmitdis-readmitadm if record_id=="2064"
+replace flag1778=readmitdays if record_id=="2064"
 
+replace flag850=readmit if record_id=="3144"
 replace readmit=1 if record_id=="3144"
+replace flag1775=readmit if record_id=="3144"
+replace flag851=readmitadm if record_id=="3144"
 replace readmitadm=d(07jun2021) if record_id=="3144"
+replace flag1776=readmitadm if record_id=="3144"
+replace flag852=readmitdis if record_id=="3144"
 replace readmitdis=d(01jul2021) if record_id=="3144"
+replace flag1777=readmitdis if record_id=="3144"
+replace flag853=readmitdays if record_id=="3144"
 replace readmitdays=readmitdis-readmitadm if record_id=="3144"
+replace flag1778=readmitdays if record_id=="3144"
 
 count if cstatus==3 //2 cases listed as pending review
 
@@ -157,6 +192,28 @@ Confirmed but NOT fully abstracted at c |         43        2.34        3.43
                                   Total |      1,837      100.00
 */
 
+/*
+** Export corrections before dropping ineligible cases since errors maybe in these records (I only exported the flags with errors/corrections from above)
+** Prepare this dataset for export to excel
+** NOTE: once this list is generated then the code can be disabled to avoid generating multiple lists that will take up storage space on SharePoint
+preserve
+sort record_id
+
+** Format the date flags so they are exported as dates not numbers
+format flag851 flag852 flag1776 flag1777 %dM_d,_CY
+
+** Create excel errors list before deleting incorrect records
+** Use below code to automate file names using current date
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+capture export_excel record_id sd_etype flag73 flag75 flag850 flag851 flag852 flag853 if ///
+		flag73!=. | flag75!=. | flag850!=. | flag851!=. | flag852!=. | flag853!=. ///
+using "`datapath'\version03\3-output\CVDCleaning2021_CF1_`listdate'.xlsx", sheet("ERRORS") firstrow(varlabels)
+capture export_excel record_id sd_etype flag998 flag1000 flag1775 flag1776 flag1777 flag1778 if ///
+		 flag998!=. | flag1000!=. | flag1775!=. | flag1776!=. | flag1777!=. | flag1778!=. /// ///
+using "`datapath'\version03\3-output\CVDCleaning2021_CF1_`listdate'.xlsx", sheet("CORRECTIONS") firstrow(varlabels)
+restore
+*/
+
 ** Remove true ineligibles
 drop if ineligible!=. //1097
 count //737; 740
@@ -223,10 +280,18 @@ count if evolution==1 //5 - records 1729, 2309, 2353, 2853, 3247; now 4 as ineli
 //no symptoms data to populate after above records reviewed
 drop if evolution==1 & redcap_repeat_instance==2 | record_id=="2853" //6 deleted - 2853 is a duplicate of 3247; now 4 deleted as ineligibles removed above
 ** Populate re-admission data using dates from 2nd admission in CVDdb (record_id 2309, 2353, 2853, 3247 already entered by DA)
+replace flag850=readmit if record_id=="1729"
 replace readmit=1 if record_id=="1729"
+replace flag1775=readmit if record_id=="1729"
+replace flag851=readmitadm if record_id=="1729"
 replace readmitadm=d(08feb2021) if record_id=="1729"
+replace flag1776=readmitadm if record_id=="1729"
+replace flag852=readmitdis if record_id=="1729"
 replace readmitdis=d(12feb2021) if record_id=="1729"
+replace flag1777=readmitdis if record_id=="1729"
+replace flag853=readmitdays if record_id=="1729"
 replace readmitdays=readmitdis-readmitadm if record_id=="1729"
+replace flag1778=readmitdays if record_id=="1729"
 
 
 *****************
@@ -270,7 +335,12 @@ count if retsource<20 & hstatus==1
 ** Invalid (retsource NOT=death rec; sourcetype=hosp and slc=deceased)
 count if retsource!=21 & sourcetype==1 & slc==2 //8
 //list record_id sd_etype cstatus retsource if retsource!=21 & sourcetype==1 & slc==2
+destring flag39 ,replace
+destring flag964 ,replace
+replace flag39=retsource if retsource!=21 & sourcetype==1 & slc==2
 replace retsource=21 if retsource!=21 & sourcetype==1 & slc==2 //8 changes
+replace flag964=retsource if record_id=="1882"|record_id=="2300"|record_id=="2302"|record_id=="2348" ///
+							|record_id=="2481"|record_id=="3018"|record_id=="3366"|record_id=="3754"
 ** Invalid (retsource=death rec and slc NOT=deceased)
 count if retsource==21 & slc!=2 //0
 ** Invalid (retsource NOT=med rec/A&E; hosp.status=discharged and slc NOT=deceased)
@@ -404,24 +474,35 @@ count if dob!=dob_nrn2 & natregno!=99 //25; now 12
 //list record_id redcap_event_name dob dob_nrn2 cfage natregno if dob!=dob_nrn2 & natregno!=99
 
 ** Corrections for missing
+destring flag45 ,replace
+destring flag970 ,replace
+format flag45 flag970 %dM_d,_CY
+
+replace flag45=dob if record_id=="2256"|record_id=="2728"|record_id=="2808"|record_id=="3021"|record_id=="3191"|record_id=="3247" ///
+					 |record_id=="3291"|record_id=="3306"|record_id=="3410"|record_id=="3610"|record_id=="3757"
 replace dob=dob_nrn2 if record_id=="2256" //|record_id=="4117"
 ** Corrections for invalid
 replace dob=dob_nrn2 if record_id=="2728"|record_id=="2808"| ///
 						record_id=="3021"|record_id=="3191"|record_id=="3247"| ///
-						record_id=="3291"|record_id=="3306"|record_id=="3410"|record_id=="3610"|record_id=="3757" //19 changes; now 10 changes
-						//|record_id=="3728"|record_id=="3441"|record_id=="3541"|record_id=="3555"|record_id=="3192"|record_id=="3170"|record_id=="2882"|record_id=="2274"|record_id=="2675"
+						record_id=="3291"|record_id=="3306"|record_id=="3410"|record_id=="3610"|record_id=="3757" //19 changes; now 10 changes		//|record_id=="3728"|record_id=="3441"|record_id=="3541"|record_id=="3555"|record_id=="3192"|record_id=="3170"|record_id=="2882"|record_id=="2274"|record_id=="2675"
+replace flag970=dob if record_id=="2256"|record_id=="2728"|record_id=="2808"|record_id=="3021"|record_id=="3191"|record_id=="3247" ///
+					  |record_id=="3291"|record_id=="3306"|record_id=="3410"|record_id=="3610"|record_id=="3757"
 //replace sd_natregno=subinstr(sd_natregno,"69","79",.) if record_id=="2192"
 //replace sd_natregno=subinstr(sd_natregno,"10","40",.) if record_id=="2194"
 //replace sd_natregno=subinstr(sd_natregno,"20","10",.) if record_id=="2482"
 //replace sd_natregno=subinstr(sd_natregno,"89","86",.) if record_id=="2551"
 //replace sd_natregno=subinstr(sd_natregno,"31","13",.) if record_id=="3397"
+replace flag51=sd_natregno if record_id=="2280"
 replace sd_natregno=subinstr(sd_natregno,"02","10",.) if record_id=="2280"
 replace sd_natregno=subinstr(sd_natregno,"03","30",.) if record_id=="2280"
+replace flag976=sd_natregno if record_id=="2280"
 ** Corrections for NRN from above
 gen nrn=sd_natregno
 destring nrn ,replace
 replace natregno=nrn if record_id=="2280" //record_id=="2192"|record_id=="2194"|record_id=="2482"|record_id=="2551"|record_id=="3397" //6 changes; now 1 change
+replace flag45=dob if record_id=="2280"
 replace dob=dob+241 if record_id=="2280"
+replace flag970=dob if record_id=="2280"
 drop dob_nrn* nrn
 
 
@@ -438,7 +519,11 @@ gen nrnid=substr(sd_natregno, -4,4)
 count if sex==1 & nrnid!="9999" & regex(substr(sd_natregno,-2,1), "[1,3,5,7,9]") //123; now 28 - checked in MedData
 //list record_id fname lname sex sd_natregno dob if sex==1 & nrnid!="9999" & regex(substr(sd_natregno,-2,1), "[1,3,5,7,9]")
 ** Corrections
+destring flag44 ,replace
+destring flag969 ,replace
+replace flag44=sex if record_id=="2060"
 replace sex=2 if record_id=="2060"
+replace flag969=sex if record_id=="2060"
 		//record_id=="1799"||record_id=="2463"|record_id=="2586"|record_id=="2907"|record_id=="2911"|record_id=="3601"|record_id=="4116"|record_id=="4357" 
 //incidental corrections from above review
 //replace fname=subinstr(fname,"s","",.) if record_id=="2907"
@@ -447,11 +532,15 @@ replace sex=2 if record_id=="2060"
 count if sex==2 & nrnid!="9999" & regex(substr(sd_natregno,-2,1), "[0,2,4,6,8]") //12; now 3
 //list record_id fname lname sex sd_natregno dob if sex==2 & nrnid!="9999" & regex(substr(sd_natregno,-2,1), "[0,2,4,6,8]")
 ** Corrections
+replace flag44=sex if record_id=="2150"
 replace sex=1 if record_id=="2150" 
+replace flag969=sex if record_id=="2150"
 				//record_id=="1817"|record_id=="1853"|record_id=="2018"|record_id=="2050"|record_id=="2557"|record_id=="2649"|record_id=="3738"|record_id=="4354"
 //incidental corrections from above review
 gen fname2=substr(fname,7,5) if record_id=="2150"
+replace flag41=fname if record_id=="2150"
 replace fname=fname2 if record_id=="2150"
+replace flag966=fname if record_id=="2150"
 drop fname2 nrnid
 
 
@@ -461,7 +550,12 @@ drop fname2 nrnid
 *****************************
 ** Missing
 count if cfadmdate==. //1 - checked MedData but last encounter was outpatient months before death; I think dod is adm date (check with NS)
+destring flag57 ,replace
+destring flag982 ,replace
+format flag57 flag982 %dM_d,_CY
+replace flag57=cfadmdate if record_id=="2830"
 replace cfadmdate=cfdod if record_id=="2830" //see above
+replace flag982=cfadmdate if record_id=="2830"
 //incidental correction for NRN
 preserve
 clear
@@ -483,8 +577,12 @@ merge m:1 record_id using "`datapath'\version03\2-working\missing_nrn" ,force
     -----------------------------------------
 */
 replace natregno=elec_natregno if _merge==3 //2 changes
+replace flag51=sd_natregno if _merge==3
 replace sd_natregno=elec_sd_natregno if _merge==3
+replace flag976=sd_natregno if _merge==3
+replace flag45=dob if _merge==3
 replace dob=elec_dob if _merge==3
+replace flag970=dob if _merge==3
 drop elec_* _merge
 erase "`datapath'\version03\2-working\missing_nrn.dta"
 
@@ -562,6 +660,10 @@ count if hstatus==1 & dlc==. & cfdod==. //15; now 4
 //list record_id fname mname lname natregno cfadmdate if hstatus==1 & dlc==. & cfdod==.
 
 //corrections from above using MedData and Deathdb
+destring flag61 ,replace
+destring flag986 ,replace
+format flag61 flag986 %dM_d,_CY
+replace flag61=dlc if record_id=="1823"|record_id=="4335"|record_id=="4404"
 replace dlc=d(13mar2021) if record_id=="1823"
 //replace cfdod=d(07aug2021) if record_id=="3179"
 //replace slc=2 if record_id=="3179"
@@ -570,6 +672,7 @@ replace dlc=d(18nov2021) if record_id=="4335"
 //replace dlc=d(28nov2021) if record_id=="4354"
 //replace dlc=d(09dec2021) if record_id=="4363"
 replace dlc=d(08jan2022) if record_id=="4404"
+replace flag986=dlc if record_id=="1823"|record_id=="4335"|record_id=="4404"
 ** Invalid (on ward but has DLC/DOD)
 count if hstatus==2 & (dlc!=.|cfdod!=.) //0
 
@@ -596,9 +699,15 @@ merge m:1 record_id using "`datapath'\version03\2-working\missing_nrn" ,force
     -----------------------------------------
 */
 replace natregno=elec_natregno if _merge==3 //2 changes
+replace flag51=sd_natregno if _merge==3
 replace sd_natregno=elec_sd_natregno if _merge==3
+replace flag976=sd_natregno if _merge==3
+replace flag45=dob if _merge==3
 replace dob=elec_dob if _merge==3
+replace flag970=dob if _merge==3
+replace flag56=recnum if _merge==3
 replace recnum=elec_recnum if _merge==3
+replace flag981=recnum if _merge==3
 drop elec_* _merge
 replace cfage=64 if record_id=="4404"
 replace cfage=38 if record_id=="4335"
@@ -614,14 +723,23 @@ erase "`datapath'\version03\2-working\missing_nrn.dta"
 count if slc==. //0
 ** Invalid (slc=alive but cfdod/dod not blank or 28d vstatus=deceased)
 count if slc==1 & (cfdod!=. | dod!=. | f1vstatus==2) //3
+destring flag60 ,replace
+destring flag985 ,replace
+destring flag65 ,replace
+destring flag990 ,replace
+format flag65 flag990 %dM_d,_CY
+replace flag60=slc if record_id=="2704" & sd_etype==2|record_id=="2840" & sd_etype==2|record_id=="3362" & sd_etype==1
+replace flag65=cfdod if record_id=="2704" & sd_etype==2|record_id=="2840" & sd_etype==2|record_id=="2126" & sd_etype==1
 replace slc=2 if record_id=="2704" & sd_etype==2
 replace cfdod=d(20oct2021) if record_id=="2704" & sd_etype==2
 replace slc=2 if record_id=="2840" & sd_etype==2
 replace cfdod=d(09oct2021) if record_id=="2840" & sd_etype==2
 replace slc=2 if record_id=="3362" & sd_etype==1 //cannot find pt in 2022 or multi-yr Deathdb + no death info in MedData
+replace flag985=slc if record_id=="2704" & sd_etype==2|record_id=="2840" & sd_etype==2|record_id=="3362" & sd_etype==1
 ** Invalid (slc=deceased but cfdod/dod=blank or 28d vstatus=alive)
 count if slc==2 & cfdod==. & dod==. & f1vstatus!=2 //1
 replace cfdod=d(31may2021) if record_id=="2126" & sd_etype==1
+replace flag990=cfdod if record_id=="2704" & sd_etype==2|record_id=="2840" & sd_etype==2|record_id=="2126" & sd_etype==1
 ** Invalid (slc=deceased but cfdod/dod=blank)
 count if slc==2 & cfdod==. & dod==. //1 - record 3362 cannot find pt in Deathdb (see above)
 
@@ -722,8 +840,12 @@ count if slc!=1 & hstatus!=1 & finaldx!="" //0
 ***********************
 ** Missing
 count if slc==2 & cfcods=="" //10 - record 3362 (stroke) cannot find in DeathDbs
+replace flag61=dlc if record_id=="1882" & sd_etype==2
+replace flag65=cfdod if record_id=="1882" & sd_etype==2
 replace dlc=cfdod if record_id=="1882" & sd_etype==2
 replace cfdod=cfdod + 19 if record_id=="1882" & sd_etype==2
+replace flag986=dlc if record_id=="1882" & sd_etype==2
+replace flag990=cfdod if record_id=="1882" & sd_etype==2
 ** Invalid missing code (88, 99, 999, 9999 are invalid)
 count if regexm(cfcods,"9") //10 - check for CODs in DeathDbs and add to excel corrections sheet
 //list record_id fname lname cfage cfage_da natregno dob cfdod cfcods if regexm(cfcods,"9")
@@ -750,7 +872,9 @@ merge m:1 record_id using "`datapath'\version03\2-working\missing_cods" ,force
     Matched                                18  (_merge==3)
     -----------------------------------------
 */
+replace flag70=cfcods if _merge==3
 replace cfcods=elec_cfcods if _merge==3
+replace flag995=cfcods if _merge==3
 drop elec_* _merge
 erase "`datapath'\version03\2-working\missing_cods.dta"
 
@@ -776,8 +900,12 @@ merge m:1 record_id using "`datapath'\version03\2-working\missing_nrn" ,force
     -----------------------------------------
 */
 replace natregno=elec_natregno if _merge==3 //2 changes
+replace flag51=sd_natregno if _merge==3
 replace sd_natregno=elec_sd_natregno if _merge==3
+replace flag976=sd_natregno if _merge==3
+replace flag45=dob if _merge==3
 replace dob=elec_dob if _merge==3
+replace flag970=dob if _merge==3
 replace cfage=elec_cfage if _merge==3
 drop elec_* _merge
 erase "`datapath'\version03\2-working\missing_nrn.dta"
@@ -835,7 +963,12 @@ count if (eligible==7|eligible==8) & evolution!=1 //0
 ** Invalid (eligible=pending 28d f/u; 28d form completed)
 count if eligible==4 & fu1type==1 //13
 count if eligible==4 & fu1type==1 & (hxdoa!=.|tdoa!=.|dxdoa!=.|rxdoa!=.) //12
+destring flag74 ,replace
+destring flag999 ,replace
+replace flag74=eligible if eligible==4 & fu1type==1 & (hxdoa!=.|tdoa!=.|dxdoa!=.|rxdoa!=.)
 replace eligible=9 if eligible==4 & fu1type==1 & (hxdoa!=.|tdoa!=.|dxdoa!=.|rxdoa!=.) //12 changes
+replace flag999=eligible if record_id=="1862"|record_id=="1982"|record_id=="1991"|record_id=="2267"|record_id=="2647"|record_id=="2734" ///
+						   |record_id=="2806"|record_id=="2837"|record_id=="2881"|record_id=="3047"|record_id=="3110"|record_id=="4115"
 
 
 
@@ -918,6 +1051,30 @@ tab eligible toabs ,m
 tab ineligible toabs ,m
 tab pendrv toabs ,m
 
+
+/*
+** Export corrections before dropping ineligible cases since errors maybe in these records (I only exported the flags with errors/corrections from above)
+** Prepare this dataset for export to excel
+** NOTE: once this list is generated then the code can be disabled to avoid generating multiple lists that will take up storage space on SharePoint
+preserve
+sort record_id
+
+** Format the date flags so they are exported as dates not numbers
+format flag851 flag852 flag1776 flag1777 flag45 flag970 flag57 flag982 flag61 flag986 flag65 flag990  %dM_d,_CY
+
+** Create excel errors list before deleting incorrect records
+** Use below code to automate file names using current date
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+capture export_excel record_id sd_etype flag39 flag41 flag44 flag45 flag51 flag56 flag57 flag61 flag65 flag70 flag74 flag850 flag851 flag852 flag853 if ///
+		flag39!=. | flag41!="" | flag44!=. | flag45!=. | flag51!="" | flag56!="" | flag57!=. | flag61!=. | flag65!=. | flag70!="" ///
+		| flag74!=. | flag850!=. | flag851!=. | flag852!=. | flag853!=. ///
+using "`datapath'\version03\3-output\CVDCleaning2021_CF2_`listdate'.xlsx", sheet("ERRORS") firstrow(varlabels)
+capture export_excel record_id sd_etype flag964 flag966 flag969 flag970 flag976 flag981 flag982 flag986 flag990 flag995 flag999 flag1775 flag1776 flag1777 flag1778 if ///
+		 flag964!=. | flag966!="" | flag969!=. | flag970!=. | flag976!="" | flag981!="" | flag982!=. | flag986!=. | flag990!=. ///
+		 | flag995!="" | flag999!=. | flag1775!=. | flag1776!=. | flag1777!=. | flag1778!=. ///
+using "`datapath'\version03\3-output\CVDCleaning2021_CF2_`listdate'.xlsx", sheet("CORRECTIONS") firstrow(varlabels)
+restore
+*/
 
 ** Remove unnecessary variables (i.e. variables used for db functionality but not needed for cleaning and analysis)
 drop cfadmdatemon cfadmdatemondash fname_eve lname_eve sex_eve slc_eve cstatus_eve eligible_eve f1vstatus_eve edateyr_rx edatemondash_rx sd_currentdate

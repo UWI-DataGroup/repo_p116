@@ -247,6 +247,13 @@ replace link_id = subinstr(link_id,"-1","-2",.) if dup>0 & redcap_repeat_instanc
 order link_id
 drop dup
 
+** JC 26jan2023: Create an identifier for the death dataset in prep for the death-incidence matching/merging process
+** This variable has been created in the death dataset also
+gen casetype=1
+label define casetype_lab 1 "Database" 2 "Death Data", modify
+label values casetype casetype_lab
+label var casetype "Case from CVDdb or death data?"
+
 count //1834; 1837
 
 ** Create prepared dataset
