@@ -4,14 +4,14 @@
     //  project:                BNR-CVD
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      13-DEC-2022
-    // 	date last modified      04-JAN-2023
+    // 	date last modified      30-JAN-2023
     //  algorithm task          Identifying, reviewing and removing duplicates
-    //  status                  Pending
+    //  status                  Completed
     //  objective               To have a cleaned 2021 cvd incidence dataset ready for analysis
     //  methods                 Using Stata command quietly sort to:
 	//							(1) identify and remove duplicate admissions (i.e. same patient with same admissions entered in different records)
 	//							(2) identify multiple events (i.e. same patient with another event >28 days after first event)
-	//							(3) identify and update re-admission info (i.e. same patient with different admissions for same event)
+	//							(3) identify and update re-admission + stroke-in-evolution info (i.e. same patient with different admissions for same event)
 	//  support:                Natasha Sobers and Ian R Hambleton
 
     ** General algorithm set-up
@@ -128,26 +128,42 @@ replace sd_bothevent=2 if record_id=="3641"|record_id=="3290"|record_id=="2682"|
 //drop sd_ovrf1
 
 ** Create a variable to identify patients with multiple events in 2021
+/* 
+	JC 30jan2023: Based on feedback at CVD team meeting on 23jan2023, definition of multiple events differ for heart and stroke:
+	- HEART multiple event definition: time period between heart events DOES NOT apply, each event is seen as a new event.
+	- STROKE multiple event definition: if the subsequent stroke occurs more than 28 days after the first stroke then this is considered a multiple event; 
+									    if the subsequent stroke occurs on/before 28 days after first stroke then this is considered a stroke-in-evolution.
+*/
 gen sd_multievent=.
 label var sd_multievent "SD-Record with Multiple Events of Stroke or AMI"
 label define sd_multievent_lab 1 "First Event" 2 "Second Event" 3 "Third Event", modify
 label values sd_multievent sd_multievent_lab
 replace sd_multievent=1 if record_id=="2514"|record_id=="2432"|record_id=="1899"|record_id=="2060"|record_id=="1722" ///
 						  |record_id=="2071"|record_id=="1839"|record_id=="1862"|record_id=="2137"|record_id=="2836" ///
-						  |record_id=="2008"|record_id=="1871"|record_id=="1956"|record_id=="3362"
+						  |record_id=="2008"|record_id=="1871"|record_id=="1956"|record_id=="3362"|record_id=="2494" ///
+						  |record_id=="3030"|record_id=="2071"|record_id=="1839"|record_id=="1862"|record_id=="2954" ///
+						  |record_id=="2137"|record_id=="2836"|record_id=="3654"|record_id=="4046"|record_id=="2142" ///
+						  |record_id=="3362"
 replace sd_multievent=2 if record_id=="2806"|record_id=="2812"|record_id=="3774"|record_id=="2059"|record_id=="3305" ///
 						  |record_id=="2535"|record_id=="2075"|record_id=="2420"|record_id=="2623"|record_id=="3005" ///
-						  |record_id=="3163"|record_id=="2989"|record_id=="3847"|record_id=="3272"
-replace sd_multievent=3 if record_id=="3203"
+						  |record_id=="3163"|record_id=="2989"|record_id=="3847"|record_id=="3272"|record_id=="3350" ///
+						  |record_id=="4106"|record_id=="2535"|record_id=="2075"|record_id=="2420"|record_id=="3031" ///
+						  |record_id=="2623"|record_id=="3005"|record_id=="3292"|record_id=="3735"|record_id=="3026" ///
+						  |record_id=="3272"
+replace sd_multievent=3 if record_id=="3203"|record_id=="3203"
 
 ** Incidental corrections from above duplicates checks
+replace flag51=sd_natregno if record_id=="3362"|record_id=="2865"
 replace sd_natregno=subinstr(sd_natregno,"3","2",.) if record_id=="3362"
 replace sd_natregno=subinstr(sd_natregno,"49","46",.) if record_id=="2865"
 gen nrn=sd_natregno
 destring nrn ,replace
 replace natregno=nrn if record_id=="3362"|record_id=="2865"
 drop nrn
+replace flag976=sd_natregno if record_id=="3362"|record_id=="2865"
 
+
+replace flag45=dob if record_id=="2865"|record_id=="1833"
 replace sd_dob=subinstr(sd_dob,"90","60",.) if record_id=="2865"
 gen dob2=dob if record_id=="1833"
 fillmissing dob2
@@ -157,19 +173,126 @@ fillmissing cfage2
 replace cfage=cfage2 if record_id=="2865"
 drop dob2 cfage2
 replace age=cfage if record_id=="2865"
+replace flag970=dob if record_id=="2865"|record_id=="1833"
 
-STOP
 
-Awaiting team's feedback on heart:
-- 3030 + 4106: merge into one record VS register as 2 different events
-- 2954 + 3031: merge into one record VS register as 2 different events
-- 4046 + 3735: merge into one record VS register as 2 different events
+preserve
+clear
+import excel using "`datapath'\version03\2-working\MissingNRN_20230130.xlsx" , firstrow case(lower)
+tostring record_id, replace
+destring elec_natregno, replace
+tostring elec_sd_natregno, replace
+save "`datapath'\version03\2-working\missing_nrn" ,replace
+restore
 
-Awaiting team's feedback on stroke:
-- 3654, 2728 + 3292: merge 3654 + 2728 into one record and register 3292 as different event VS register as 3 different events
-- 2142 + 3026: merge into one record VS register as 2 different events
-- 3577 + 1985: unsure if this is the same pt - check MedData later as password expired and nodal srv down.
-- 3136 + 4331: merge into one record VS register as 2 different events
+merge m:1 record_id using "`datapath'\version03\2-working\missing_nrn" ,force
+/*
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                           735
+        from master                       734  (_merge==1)
+        from using                          1  (_merge==2)
+
+    Matched                                 1  (_merge==3)
+    -----------------------------------------
+*/
+replace natregno=elec_natregno if _merge==3 //2 changes
+replace flag51=sd_natregno if _merge==3
+replace sd_natregno=elec_sd_natregno if _merge==3
+replace flag976=sd_natregno if _merge==3
+replace flag45=dob if _merge==3
+replace dob=elec_dob if _merge==3
+replace flag970=dob if _merge==3
+replace cfage=elec_cfage if _merge==3
+replace flag42=mname if _merge==3
+replace mname=elec_mname if _merge==3
+replace flag967=mname if _merge==3
+drop elec_* _merge
+erase "`datapath'\version03\2-working\missing_nrn.dta"
+
+
+***************************
+** 	  POPULATING DATA 	 **
+** (Stroke-in-evolution) **
+***************************
+** Populate data from 2nd admission for the stroke-in-evolution into the record for the 1st admission loosely based on AH's method in 2020 cleaning dofile called '2_clean_stroke_Abs.do'
+
+** Stroke-in-evolution #1
+** Populating data from 2nd admission (2728) into 1st admission (3654) based on manually reviewing both records in CVDdb + Stata's Data (Browse) Editor window
+preserve
+drop if record!="2728" & record!="3654"
+local list_of_vars mname mstatus hometel celltel fnamekin lnamekin cellkin relation ssym2 osym osym1 ssym2d osymd nihss pstroke pami smoker alco ovrf assess assess1 assess2 assess3 assess4 assess7 assess8 assess9 assess10 assess12 assess14 dieany dct decg dmri dcerangio dcarangio dcarus decho dctcorang dstress odie ct doct stime ctfeat ctinfarct ctsubhaem ctinthaem hcomp fu1oday fu1sicf fu1con fu1how f1vstatus fu1sit fu1osit fu1readm fu1los furesident ethnicity oethnic education mainwork employ prevemploy pstrsit pstrosit rankin rankin1 rankin2 rankin3 rankin4 rankin5 rankin6 famhxs famhxa mahxs dahxs sibhxs mahxa dahxa sibhxa smoke stopsmoke stopsmkday stopsmkmonth stopsmkyear stopsmokeage smokeage cig pipe cigar otobacco tobacmari marijuana cignum tobgram cigarnum spliffnum alcohol stopalc stopalcday stopalcmonth stopalcyear stopalcage alcage beernumnd spiritnumnd winenumnd beernum spiritnum winenum f1rankin f1rankin1 f1rankin2 f1rankin3 f1rankin4 f1rankin5 f1rankin6
+foreach var of local list_of_vars {
+    replace `var' = `var'[_n-1] if mi(`var') | !mi(`var'[_n-1]) & record_id=="3654"
+    replace `var' = `var'[_n+1] if mi(`var') | !mi(`var'[_n+1]) & record_id=="3654"
+}
+drop if record_id=="2728"
+save "`datapath'\version03\2-working\populating", replace
+restore
+
+count //736
+drop if record_id=="3654"|record_id=="2728"
+count //734
+append using "`datapath'\version03\2-working\populating"
+count //735
+erase "`datapath'\version03\2-working\populating.dta"
+
+** Populate re-admission data using dates from 2nd admission in CVDdb (record_id 2728)
+replace readmit=1 if record_id=="3654"
+replace readmitadm=d(08jul2021) if record_id=="3654"
+replace readmitdis=d(17jul2021) if record_id=="3654"
+replace readmitdays=readmitdis-readmitadm if record_id=="3654"
+
+
+** Stroke-in-evolution #2
+** Populating data from 2nd admission (4331) into 1st admission (3136) based on manually reviewing both records in CVDdb + Stata's Data (Browse) Editor window
+preserve
+drop if record!="3136" & record!="4331"
+local list_of_vars ssym2 ssym2d sign4 swalldate cardmon alco
+foreach var of local list_of_vars {
+    replace `var' = `var'[_n-1] if mi(`var') | !mi(`var'[_n-1]) & record_id=="3136"
+    replace `var' = `var'[_n+1] if mi(`var') | !mi(`var'[_n+1]) & record_id=="3136"
+}
+drop if record_id=="4331"
+save "`datapath'\version03\2-working\populating", replace
+restore
+
+count //735
+drop if record_id=="3136"|record_id=="4331"
+count //733
+append using "`datapath'\version03\2-working\populating"
+count //734
+erase "`datapath'\version03\2-working\populating.dta"
+
+** Populate re-admission data using dates from 2nd admission in CVDdb (record_id 4331)
+replace readmit=1 if record_id=="3136"
+replace readmitadm=d(14nov2021) if record_id=="3136"
+replace readmitdis=d(15nov2021) if record_id=="3136"
+replace readmitdays=readmitdis-readmitadm if record_id=="3136"
+
+
+
+/*
+** Export corrections before dropping ineligible cases since errors maybe in these records (I only exported the flags with errors/corrections from above)
+** Prepare this dataset for export to excel
+** NOTE: once this list is generated then the code can be disabled to avoid generating multiple lists that will take up storage space on SharePoint
+preserve
+sort record_id
+
+** Format the date flags so they are exported as dates not numbers
+format flag45 flag970 %dM_d,_CY
+
+** Create excel errors list before deleting incorrect records
+** Use below code to automate file names using current date
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+capture export_excel record_id sd_etype flag42 flag45 flag51 if ///
+		flag42!="" | flag45!=. | flag51!="" ///
+using "`datapath'\version03\3-output\CVDCleaning2021_CF3_`listdate'.xlsx", sheet("ERRORS") firstrow(varlabels)
+capture export_excel record_id sd_etype flag967 flag970 flag976 if ///
+		 flag967!="" | flag970!=. | flag976!="" ///
+using "`datapath'\version03\3-output\CVDCleaning2021_CF3_`listdate'.xlsx", sheet("CORRECTIONS") firstrow(varlabels)
+restore
+*/
 
 
 ** Create cleaned non-duplicates dataset
