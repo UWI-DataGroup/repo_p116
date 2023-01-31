@@ -230,11 +230,11 @@ drop if record_id=="2728"
 save "`datapath'\version03\2-working\populating", replace
 restore
 
-count //736
-drop if record_id=="3654"|record_id=="2728"
-count //734
-append using "`datapath'\version03\2-working\populating"
 count //735
+drop if record_id=="3654"|record_id=="2728"
+count //733
+append using "`datapath'\version03\2-working\populating"
+count //734
 erase "`datapath'\version03\2-working\populating.dta"
 
 ** Populate re-admission data using dates from 2nd admission in CVDdb (record_id 2728)
@@ -257,11 +257,11 @@ drop if record_id=="4331"
 save "`datapath'\version03\2-working\populating", replace
 restore
 
-count //735
-drop if record_id=="3136"|record_id=="4331"
-count //733
-append using "`datapath'\version03\2-working\populating"
 count //734
+drop if record_id=="3136"|record_id=="4331"
+count //732
+append using "`datapath'\version03\2-working\populating"
+count //733
 erase "`datapath'\version03\2-working\populating.dta"
 
 ** Populate re-admission data using dates from 2nd admission in CVDdb (record_id 4331)
@@ -297,3 +297,19 @@ restore
 
 ** Create cleaned non-duplicates dataset
 save "`datapath'\version03\2-working\BNRCVDCORE_CleanedData_nodups_cf", replace
+
+** Create dataset for merging with death dataset using NRN
+** Remove records with blank NRNs as the incidence and death datasets will not correctly merge using NRN but save the blanks so they can be added back into the ds after the merge in dofile 3c_death match_cvd.do
+preserve
+count //733
+count if sd_natregno==""|sd_natregno=="99" //34
+drop if sd_natregno==""|sd_natregno=="99" //34 deleted
+save "`datapath'\version03\2-working\nomissNRNs_incidence" ,replace
+restore
+
+preserve
+count //733
+count if sd_natregno==""|sd_natregno=="99" //34
+drop if sd_natregno!="" & sd_natregno!="99" //699 deleted
+save "`datapath'\version03\2-working\missNRNs_incidence" ,replace
+restore

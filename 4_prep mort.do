@@ -1060,6 +1060,31 @@ save "`datapath'\version03\3-output\2021_prep mort_identifiable_ALL" ,replace
 note: TS This dataset can be used for merging 2021 deaths with 2021 CVD incidence data
 note: TS This dataset includes all 2021 CODs
 
+** Create dataset for merging with CVD incidence dataset using NRN
+** Remove records with blank NRNs as the incidence and death datasets will not correctly merge using NRN but save the blanks so they can be added back into the ds after the merge in dofile 3c_death match_cvd.do
+preserve
+count //3149
+count if dd_natregno=="" //87
+drop if dd_natregno=="" //87 deleted
+
+label data "BNR MORTALITY data 2021: Identifiable Dataset - No blank/missing NRNs"
+notes _dta :These data prepared from BB national death register & Redcap deathdata database
+save "`datapath'\version03\2-working\nomissNRNs_death" ,replace
+note: TS This dataset can be used for merging 2021 deaths with 2021 CVD incidence data
+note: TS This dataset includes all 2021 CODs
+restore
+
+preserve
+count //3149
+count if dd_natregno=="" //87
+drop if dd_natregno!="" //3062 deleted
+
+label data "BNR MORTALITY data 2021: Identifiable Dataset - Blank/missing NRNs"
+notes _dta :These data prepared from BB national death register & Redcap deathdata database
+save "`datapath'\version03\2-working\missNRNs_death" ,replace
+note: TS This dataset can be used for merging 2021 deaths with 2021 CVD incidence data
+note: TS This dataset includes all 2021 CODs
+restore
 
 rename dd_* *
 
