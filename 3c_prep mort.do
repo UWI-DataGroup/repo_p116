@@ -1,6 +1,6 @@
 ** HEADER -----------------------------------------------------
 **  DO-FILE METADATA
-    //  algorithm name          4_prep mort.do
+    //  algorithm name          3c_prep mort.do
     //  project:                BNR
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      11-JAN-2023
@@ -32,7 +32,7 @@
 
     ** Close any open log file and open a new log file
     capture log close
-    log using "`logpath'\4_prep mort.smcl", replace
+    log using "`logpath'\3c_prep mort.smcl", replace
 ** HEADER -----------------------------------------------------
 
 **************************************
@@ -1045,10 +1045,10 @@ rename dd_record_id dd_deathid
 
 ** JC 15aug2022: Create an identifier for the death dataset in prep for the death-incidence matching/merging process
 ** JC 26jan2023: do not add prefix 'dd_' to variable name as this variable will be kept for using in incidence dataset also
-gen casetype=2
-label define casetype_lab 1 "Database" 2 "Death Data", modify
-label values casetype casetype_lab
-label var casetype "Case from CVDdb or death data?"
+gen sd_casetype=2
+label define sd_casetype_lab 1 "Database" 2 "Death Data", modify
+label values sd_casetype sd_casetype_lab
+label var sd_casetype "Case from CVDdb or death data?"
 
 order dd_deathid dd_pname dd_fname dd_mname dd_lname dd_regnum dd_nrn dd_sex dd_age dd_dod dd_heart dd_stroke dd_cod1a dd_address dd_parish dd_pod dd_coddeath dd_namematch dd_dddoa dd_ddda dd_odda dd_certtype dd_district dd_agetxt dd_nrnnd dd_mstatus dd_occu dd_durationnum dd_durationtxt dd_onsetnumcod1a dd_onsettxtcod1a dd_cod1b dd_onsetnumcod1b dd_onsettxtcod1b dd_cod1c dd_onsetnumcod1c dd_onsettxtcod1c dd_cod1d dd_onsetnumcod1d dd_onsettxtcod1d dd_cod2a dd_onsetnumcod2a dd_onsettxtcod2a dd_cod2b dd_onsetnumcod2b dd_onsettxtcod2b dd_deathparish dd_regdate dd_certifier dd_certifieraddr dd_cleaned dd_duprec dd_elecmatch dd_codheart dd_codstroke dd_natregno dd_dob dd_dodyear casetype
 

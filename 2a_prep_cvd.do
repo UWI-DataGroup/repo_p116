@@ -249,10 +249,10 @@ drop dup
 
 ** JC 26jan2023: Create an identifier for the death dataset in prep for the death-incidence matching/merging process
 ** This variable has been created in the death dataset also
-gen casetype=1
-label define casetype_lab 1 "Database" 2 "Death Data", modify
-label values casetype casetype_lab
-label var casetype "Case from CVDdb or death data?"
+gen sd_casetype=1
+label define sd_casetype_lab 1 "Database" 2 "Death Data", modify
+label values sd_casetype sd_casetype_lab
+label var sd_casetype "Case from CVDdb or death data?"
 
 count //1834; 1837
 
