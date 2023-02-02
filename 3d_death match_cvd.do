@@ -12,8 +12,7 @@
     //  methods                 (1) Merge deaths with incidence using dd_natregno (death ds) and sd_natregno (incidence ds)
 	//							(2) Review merged records to ensure matched with correct person
 	//							(3) Perform duplicates checks using NRN, DOB and NAMES for all unmerged records
-	//							(4) Fill in record_id (incidence ds) variables in matched death record 
-	//							(5) Prep matched deaths for merge with ds in dofile 3d
+	//							(4) After verified matches are merged, update analysis variables in DCOs
 	//  support:                Natasha Sobers and Ian R Hambleton
 
     ** General algorithm set-up
@@ -441,7 +440,7 @@ restore
 
 
 ** Remove unnecessary variables
-drop sd_casetype _merge match c d
+drop _merge match c d
 
 ** To reduce storage space on SharePoint, remove temporary datasets used in the above process
 erase "`datapath'\version03\2-working\nomissNRNs_death.dta"

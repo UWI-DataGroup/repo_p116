@@ -6,7 +6,7 @@
     //  date first created      11-JAN-2023
     //  date last modified	  	26-JAN-2023
     //  algorithm task          Prep and format 2021 death data
-    //  status                  Pending
+    //  status                  Completed
     //  objective               To have multiple datasets with cleaned 2021 death data for:
 	//							(1) matching/merging with incidence dataset
 	//							(2) analysis/reporting mortality rates
