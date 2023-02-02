@@ -6,7 +6,7 @@
     //  date first created      31-JAN-2023
     // 	date last modified      01-FEB-2023
     //  algorithm task          Matching cleaned, current CVD incidence dataset with cleaned death 2021 dataset
-    //  status                  Pending
+    //  status                  Completed
     //  objective               To have a cleaned and matched dataset with updated vital status and
 	//							append any reportable deaths that were missed during data collection
     //  methods                 (1) Merge deaths with incidence using dd_natregno (death ds) and sd_natregno (incidence ds)
@@ -394,8 +394,28 @@ drop if record_id=="" & dd_heart!=1 & dd_stroke!=1 //2478 deleted
 count if record_id=="" //414
 count //1147
 
-STOP
-Update event date fields, fields needed for analysis etc. for DCO cases
+
+** Update incidence variables with death variables info for DCO cases as these are needed for cleaning and analysis
+replace fname=dd_fname if (fname==""|fname=="99") & dd_fname!="" //414 changes
+replace mname=dd_mname if (mname==""|mname=="99") & dd_mname!="" // changes
+replace lname=dd_lname if (lname==""|lname=="99") & dd_lname!="" // changes
+replace natregno=dd_nrn if (natregno==.|natregno==88|natregno==99) & dd_nrn!=. // changes
+replace sex=dd_sex if sex==. & dd_sex!=. // changes
+replace age=dd_age if age==. & dd_age!=. // changes - none of the DCOs are under 1 so don't need to change dd_age=0
+replace cfdod=dd_dod if cfdod==. & dd_dod!=. //414 changes
+replace addr=dd_address if addr=="" & dd_address!="" // changes
+replace parish=dd_parish if (parish==.|parish==99) & dd_parish!=. // changes
+replace mstatus=dd_mstatus if (mstatus==.|mstatus==99) & dd_mstatus!=. // changes
+replace dob=dd_dob if dob==. & dd_dob!=. // changes
+replace sd_etype=1 if sd_etype==. & dd_stroke==1 // changes
+replace sd_etype=2 if sd_etype==. & dd_heart==1 // changes
+replace sd_etype=3 if sd_etype==. & dd_stroke==1 & dd_heart==1 // changes
+replace dlc=dd_dod if (dlc==.|dlc==99) & dd_dod!=. // changes
+replace slc=2 if cfdod!=. // changes
+replace edate=cfdod if edate==. & sd_casetype==2 //414 changes
+replace etime="99" if etime=="" & sd_casetype==2 //414 changes - ask NS if to update this variable because we're changing the meaning of the 99 since time of event for DCOs would never be documented anyways.
+
+count if slc==2 & cfdod==. //1 - stroke record 3362: cannot find pt in 2022 or multi-yr Deathdb + no death info in MedData but documented as dead on 28d form
 
 /*
 ** Export corrections before dropping ineligible cases since errors maybe in these records (I only exported the flags with errors/corrections from above)
@@ -418,6 +438,10 @@ capture export_excel record_id sd_etype flag970 flag976 flag981 flag985 flag990 
 using "`datapath'\version03\3-output\CVDCleaning2021_CF4_`listdate'.xlsx", sheet("CORRECTIONS") firstrow(varlabels)
 restore
 */
+
+
+** Remove unnecessary variables
+drop sd_casetype _merge match c d
 
 ** To reduce storage space on SharePoint, remove temporary datasets used in the above process
 erase "`datapath'\version03\2-working\nomissNRNs_death.dta"

@@ -5,7 +5,7 @@
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      02-NOV-2022
     // 	date last modified      26-JAN-2023
-    //  algorithm task          Cleaning variables in the REDCap Casefinding form
+    //  algorithm task          Cleaning variables in the REDCap CVDdb Casefinding form
     //  status                  Completed
     //  objective               (1) To have a cleaned 2021 cvd incidence dataset ready for analysis
 	//							(2) To have a list with errors and corrections for DAs to correct data directly into CVDdb
@@ -36,7 +36,7 @@
     log using "`logpath'\3a_clean cf_cvd.smcl", replace
 ** HEADER -----------------------------------------------------
 
-** Load prepared 2021 dataset
+** Load prepared 2021 dataset with flags
 use "`datapath'\version03\2-working\BNRCVDCORE_FlaggedData", clear
 
 ** JC 01dec2022: Review and remove cases that are ineligible and/or duplicates prior to cleaning to reduce number of records to be cleaned
@@ -320,9 +320,9 @@ count if cfsource___1==0 & cfsource___2==0 & cfsource___3==0 & cfsource___4==0 &
 //1 - blank heart record but there's a valid stroke record with same id
 drop if record_id=="1945" & sd_etype==2 //1 deleted
 
-*********************
+**********************
 ** Retrieval Source **
-*********************
+**********************
 ** Missing
 count if retsource==. //0
 count if retsource==98 & oretsrce=="" //0
@@ -734,7 +734,7 @@ replace slc=2 if record_id=="2704" & sd_etype==2
 replace cfdod=d(20oct2021) if record_id=="2704" & sd_etype==2
 replace slc=2 if record_id=="2840" & sd_etype==2
 replace cfdod=d(09oct2021) if record_id=="2840" & sd_etype==2
-replace slc=2 if record_id=="3362" & sd_etype==1 //cannot find pt in 2022 or multi-yr Deathdb + no death info in MedData
+replace slc=2 if record_id=="3362" & sd_etype==1 //cannot find pt in 2022 or multi-yr Deathdb + no death info in MedData but documented as dead on 28d form
 replace flag985=slc if record_id=="2704" & sd_etype==2|record_id=="2840" & sd_etype==2|record_id=="3362" & sd_etype==1
 ** Invalid (slc=deceased but cfdod/dod=blank or 28d vstatus=alive)
 count if slc==2 & cfdod==. & dod==. & f1vstatus!=2 //1
