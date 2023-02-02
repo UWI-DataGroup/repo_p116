@@ -396,21 +396,26 @@ count //1147
 
 ** Update incidence variables with death variables info for DCO cases as these are needed for cleaning and analysis
 replace fname=dd_fname if (fname==""|fname=="99") & dd_fname!="" //414 changes
-replace mname=dd_mname if (mname==""|mname=="99") & dd_mname!="" // changes
-replace lname=dd_lname if (lname==""|lname=="99") & dd_lname!="" // changes
-replace natregno=dd_nrn if (natregno==.|natregno==88|natregno==99) & dd_nrn!=. // changes
-replace sex=dd_sex if sex==. & dd_sex!=. // changes
-replace age=dd_age if age==. & dd_age!=. // changes - none of the DCOs are under 1 so don't need to change dd_age=0
+replace mname=dd_mname if (mname==""|mname=="99") & dd_mname!="" //164 changes
+replace lname=dd_lname if (lname==""|lname=="99") & dd_lname!="" //414 changes
+replace sd_natregno=dd_natregno if sd_natregno=="" & dd_natregno!="" //401 changes
+replace natregno=dd_nrn if (natregno==.|natregno==88|natregno==99) & dd_nrn!=. //407 changes
+replace sex=dd_sex if sex==. & dd_sex!=. //414 changes
+replace age=dd_age if age==. & dd_age!=. //442 changes - none of the DCOs are under 1 so don't need to change dd_age=0
 replace cfdod=dd_dod if cfdod==. & dd_dod!=. //414 changes
-replace addr=dd_address if addr=="" & dd_address!="" // changes
-replace parish=dd_parish if (parish==.|parish==99) & dd_parish!=. // changes
-replace mstatus=dd_mstatus if (mstatus==.|mstatus==99) & dd_mstatus!=. // changes
-replace dob=dd_dob if dob==. & dd_dob!=. // changes
-replace sd_etype=1 if sd_etype==. & dd_stroke==1 // changes
-replace sd_etype=2 if sd_etype==. & dd_heart==1 // changes
-replace sd_etype=3 if sd_etype==. & dd_stroke==1 & dd_heart==1 // changes
-replace dlc=dd_dod if (dlc==.|dlc==99) & dd_dod!=. // changes
-replace slc=2 if cfdod!=. // changes
+replace addr=dd_address if addr=="" & dd_address!="" //424 changes
+replace parish=dd_parish if (parish==.|parish==99) & dd_parish!=. //425 changes
+replace mstatus=dd_mstatus if (mstatus==.|mstatus==99) & dd_mstatus!=. //482 changes
+replace dob=dd_dob if dob==. & dd_dob!=. //401 changes
+replace sd_etype=1 if sd_etype==. & dd_stroke==1 //160 changes
+replace sd_etype=2 if sd_etype==. & dd_heart==1 //254 changes
+tab sd_etype ,m
+count if dd_heart==1 & dd_stroke==1 //17
+count if dd_heart==1 & dd_stroke==1 & sd_bothevent==. //11
+tab sd_bothevent ,m //don't update sd_bothevent until later the final cleaning dofile after the datasets are split into heart and stroke
+replace sd_etype=3 if sd_etype==. & dd_stroke==1 & dd_heart==1 //0 changes
+replace dlc=dd_dod if (dlc==.|dlc==99) & dd_dod!=. //414 changes
+replace slc=2 if cfdod!=. //414 changes
 replace edate=cfdod if edate==. & sd_casetype==2 //414 changes
 replace etime="99" if etime=="" & sd_casetype==2 //414 changes - ask NS if to update this variable because we're changing the meaning of the 99 since time of event for DCOs would never be documented anyways.
 
