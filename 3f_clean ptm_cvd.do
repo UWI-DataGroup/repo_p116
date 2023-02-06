@@ -1,11 +1,11 @@
 ** HEADER -----------------------------------------------------
 **  DO-FILE METADATA
-    //  algorithm name          3e_clean demo_cvd.do
+    //  algorithm name          3f_clean ptm_cvd.do
     //  project:                BNR-CVD
     //  analysts:               Jacqueline CAMPBELL
-    //  date first created      02-FEB-2023
+    //  date first created      06-FEB-2023
     // 	date last modified      06-FEB-2023
-    //  algorithm task          Cleaning variables in the REDCap CVDdb Demographics form
+    //  algorithm task          Cleaning variables in the REDCap CVDdb Patient Management form
     //  status                  Completed
     //  objective               (1) To have a cleaned 2021 cvd incidence dataset ready for analysis
 	//							(2) To have a list with errors and corrections for DAs to correct data directly into CVDdb
@@ -33,78 +33,125 @@
 
     ** Close any open log file and open a new log file
     capture log close
-    log using "`logpath'\3e_clean demo_cvd.smcl", replace
+    log using "`logpath'\3f_clean ptm_cvd.smcl", replace
 ** HEADER -----------------------------------------------------
 
-** Load merged unduplicated 2021 dataset (from dofile 3d_death match_cvd.do)
-use "`datapath'\version03\2-working\BNRCVDCORE_CleanedData_nodups_merged_cf", clear
+** Load cleaned demo form 2021 dataset
+use "`datapath'\version03\2-working\BNRCVDCORE_CleanedData_demo", clear
 
 
 ** Cleaning each variable as they appear in REDCap BNRCVD_CORE db
 
-********************
-** Marital Status **
-********************
-** Missing
-count if mstatus==. & demographics_complete!=0 & demographics_complete!=. //0
-** Invalid missing code
-count if mstatus==88|mstatus==999|mstatus==9999 //0
 
-*********************
-** Resident Status **
-*********************
+** First Medical Contact **
+
+**************************
+** Referral to Hospital **
+**************************
 ** Missing
-count if resident==. & demographics_complete!=0 & demographics_complete!=. //0
+count if fmc==. & patient_management_complete!=0 & patient_management_complete!=. //0 - note we have to add in the form status variable since cases wherein dx was confirmed but case not abstracted as year was closed would have NO data in this form.
 ** Invalid missing code
-count if resident==88|resident==999|resident==9999 //0
-** possibly Invalid (resident=Yes but 28d resident=less than 6 months) - need to review for eligibility
-count if resident==1 & furesident==1 //1 - stroke record 3110 ask NS if this case is eligible. YES eligible after reviewed by NS + NR on 06-Feb-2023.
-** possibly Invalid (resident=No but 28d resident=more than 6 months) - need to review for eligibility
-count if resident==2 & furesident==2 //1 - stroke record 1718
-** Invalid (resident not Yes but NRN not blank)
-count if resident!=. & resident!=1 & sd_natregno!="" & !(strmatch(strupper(sd_natregno), "*9999*")) //20 - ask NS
-** Invalid (resident=ND but case status NOT=ineligible)
-count if resident==99 & cstatus!=2 //19
+count if fmc==88|fmc==999|fmc==9999 //0
+
+*******************
+** Referred From **
+*******************
+** Missing
+count if fmcplace==. & fmc==1 //0
+** Invalid missing code
+count if fmcplace==88|fmcplace==999|fmcplace==9999 //0
+** possibly Invalid (fmcplace=other; other place=one of the fmcplace options)
+count if fmcplace==98 //34 - reviewed and are correct
+
+***********************
+** Visit Date & Time **
+***********************
+** Missing
+count if fmcdate==. & fmc==1 //9 - checked CVDdb and these have fmcdate=99 so no need to update
+** Invalid (not 2021)
+count if fmcdate!=. & year(fmcdate)!=2021 //1 - stroke record 3963 incorrect as event was mistakenly entered as 2021 but all other dates in abs=2022
+** Invalid (before DOB)
+count if dob!=. & fmcdate!=. & fmcdate<dob //0
+** Invalid (after CFAdmDate)
+count if fmcdate!=. & cfadmdate!=. & fmcdate>cfadmdate //0
+** Invalid (after DLC/DOD)
+count if dlc!=. & fmcdate!=. & fmcdate>dlc //0
+count if cfdod!=. & fmcdate!=. & fmcdate>cfdod //0
+** Invalid (after A&EAdmDate)
+count if fmcdate!=. & dae!=. & fmcdate>dae //0
+** Invalid (after WardAdmDate)
+count if fmcdate!=. & doh!=. & fmcdate>doh //0
+** Invalid (future date)
+gen currentd=c(current_date)
+gen double sd_currentdate=date(currentd, "DMY", 2017)
+drop currentd
+format sd_currentdate %dD_m_CY
+count if fmcdate!=. & fmcdate>sd_currentdate //0
+** Invalid (fmcdate partial missing codes for all)
+count if fmcdate==88 & fmcdday==. & fmcdmonth==. & fmcdyear==. //0
+** Invalid (fmcdate not partial but partial field not blank)
+count if fmcdate!=88 & fmcdday!=. & fmcdmonth!=. & fmcdyear!=. //0
+count if fmcdate!=88 & (fmcdday!=. | fmcdmonth!=. | fmcdyear!=.) //0
+** Invalid missing code (fmcdate partial fields)
+count if fmcdday==88|fmcdday==999|fmcdday==9999 //0
+count if fmcdmonth==88|fmcdmonth==999|fmcdmonth==9999 //0
+count if fmcdyear==88|fmcdyear==999|fmcdyear==9999 //0
+** Missing
+count if fmctime=="" & fmc==1 //0
+** Invalid (fmctime format)
+count if fmctime!="" & fmctime!="88" & fmctime!="99" & (length(fmctime)<5|length(fmctime)>5) //0
+count if fmctime!="" & fmctime!="88" & fmctime!="99" & !strmatch(strupper(fmctime), "*:*") //0
+generate byte non_numeric_fmctime = indexnot(fmctime, "0123456789.-:")
+count if non_numeric_fmctime //0
+** Invalid missing code
+count if fmctime=="999"|fmctime=="9999" //0
+** Invalid (fmctime=88 and am/pm is missing)
+count if fmctime=="88" & fmcampm==. //0
+
+**********************
+** Name of Hospital **
+**********************
+** Missing
+count if hospital==. & sd_casetype!=2 & eligible!=6 //2 - checked CVDdb and corrected below
+//list sd_etype record_id cstatus eligible fmc sd_casetype if hospital==. & sd_casetype!=2 & eligible!=6
+** Invalid missing code
+count if hospital==88|hospital==999|hospital==9999 //0
+** Invalid (relation=other; other relation=one of the relation options)
+count if hospital==98 //0
+
 
 ** Corrections from above checks
-destring flag89 ,replace
-destring flag1014 ,replace
+destring flag267 ,replace
+destring flag1192 ,replace
+format flag267 flag1192 %dM_d,_CY
 
-replace flag89=resident if record_id=="1718"
-replace resident=1 if record_id=="1718"
-replace flag1014=resident if record_id=="1718"
+replace flag267=edate if record_id=="3963"
+replace edate=edate+365 if record_id=="3963" //see above
+replace flag1192=edate if record_id=="3963"
+//remove this record at the end of this dofile after the corrections list has been generated
 
-replace flag89=resident if resident!=. & resident!=1 & sd_natregno!="" & !(strmatch(strupper(sd_natregno), "*9999*"))
-replace resident=1 if resident!=. & resident!=1 & sd_natregno!="" & !(strmatch(strupper(sd_natregno), "*9999*")) //19 changes
-replace flag1014=resident if flag89!=. //19 changes
+replace flag74=eligible if record_id=="2791"|record_id=="2830"
+replace eligible=6 if record_id=="2791"|record_id=="2830"
+replace flag999=eligible if record_id=="2791"|record_id=="2830"
 
-********************
-** Citizen Status **
-********************
+replace flag267=edate if record_id=="2830"
+replace edate=dd_dod if record_id=="2830"
+replace flag1192=edate if record_id=="2830"
+//heart record 2830 was a missed reportable abstraction - only CF form was completed
+
+
+
+** A&E Info **
+
+******************
+** Seen in A&E? **
+******************
 ** Missing
-count if citizen==. & demographics_complete!=0 & demographics_complete!=. //0
+count if aeadmit==. & patient_management_complete!=0 & patient_management_complete!=. //0 - note we have to add in the form status variable since cases wherein dx was confirmed but case not abstracted as year was closed would have NO data in this form.
 ** Invalid missing code
-count if citizen==88|citizen==999|citizen==9999 //0
-** Invalid (citizen=Yes but last 4 digits in NRN begins with '8' i.e. permanent resident but not citizen)
-gen nrndigits = substr(sd_natregno,-4,1)
-count if citizen==1 & nrndigits=="8" //21 - ask NS how to handle these cases
-** Invalid (citizen=No but last 4 digits in NRN do not begin with '7' or '8')
-count if citizen==2 & nrndigits!="8" & nrndigits!="" //1 - stroke record 3364 ask NS how to handle - change citizen to Yes based on NRN's last 4 digits.
+count if aeadmit==88|aeadmit==999|aeadmit==9999 //0
 
-** Corrections from above checks
-destring flag90 ,replace
-destring flag1015 ,replace
-
-replace flag90=citizen if record_id=="3364"
-replace citizen=1 if record_id=="3364"
-replace flag1015=citizen if record_id=="3364"
-
-replace flag90=citizen if citizen==1 & nrndigits=="8"
-replace citizen=2 if citizen==1 & nrndigits=="8"
-replace flag1015=citizen if flag90!=. //21 changes
-
-drop nrndigits
-
+STOP
 *************
 ** Address **
 *************
@@ -202,7 +249,7 @@ count if relation==. & slc!=2 & demographics_complete!=0 & demographics_complete
 ** Invalid missing code
 count if relation==88|relation==999|relation==9999 //0
 ** Invalid (relation=other; other relation=one of the relation options)
-count if relation==98 //3 - reviewed and are correct
+count if relation==98 //3 - reviewed and is correct, leave as is
 
 
 
@@ -228,6 +275,10 @@ using "`datapath'\version03\3-output\CVDCleaning2021_DEMO1_`listdate'.xlsx", she
 restore
 */
 
+** Remove 2022 case + unnecessary variables from above 
+drop if record_id=="3963" //1 deleted
+drop sd_currentdate non_numeric_fmctime
+
 
 ** Create cleaned dataset
-save "`datapath'\version03\2-working\BNRCVDCORE_CleanedData_demo" ,replace
+save "`datapath'\version03\2-working\BNRCVDCORE_CleanedData_ptm" ,replace
