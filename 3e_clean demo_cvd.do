@@ -4,7 +4,7 @@
     //  project:                BNR-CVD
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      02-FEB-2023
-    // 	date last modified      02-FEB-2023
+    // 	date last modified      06-FEB-2023
     //  algorithm task          Cleaning variables in the REDCap CVDdb Demographics form
     //  status                  Completed
     //  objective               (1) To have a cleaned 2021 cvd incidence dataset ready for analysis
@@ -57,14 +57,15 @@ count if mstatus==88|mstatus==999|mstatus==9999 //0
 count if resident==. & demographics_complete!=0 & demographics_complete!=. //0
 ** Invalid missing code
 count if resident==88|resident==999|resident==9999 //0
-** Invalid (resident=Yes but 28d resident=less than 6 months)
-count if resident==1 & furesident==1 //1 - stroke record 3110 ask NS if this case is eligible.
-** Invalid (resident=No but 28d resident=more than 6 months)
-count if resident==2 & furesident==2 //1
+** possibly Invalid (resident=Yes but 28d resident=less than 6 months) - need to review for eligibility
+count if resident==1 & furesident==1 //1 - stroke record 3110 ask NS if this case is eligible. YES eligible after reviewed by NS + NR on 06-Feb-2023.
+** possibly Invalid (resident=No but 28d resident=more than 6 months) - need to review for eligibility
+count if resident==2 & furesident==2 //1 - stroke record 1718
 ** Invalid (resident not Yes but NRN not blank)
 count if resident!=. & resident!=1 & sd_natregno!="" & !(strmatch(strupper(sd_natregno), "*9999*")) //20 - ask NS
 ** Invalid (resident=ND but case status NOT=ineligible)
 count if resident==99 & cstatus!=2 //19
+
 ** Corrections from above checks
 destring flag89 ,replace
 destring flag1014 ,replace
@@ -73,6 +74,10 @@ replace flag89=resident if record_id=="1718"
 replace resident=1 if record_id=="1718"
 replace flag1014=resident if record_id=="1718"
 
+replace flag89=resident if resident!=. & resident!=1 & sd_natregno!="" & !(strmatch(strupper(sd_natregno), "*9999*"))
+replace resident=1 if resident!=. & resident!=1 & sd_natregno!="" & !(strmatch(strupper(sd_natregno), "*9999*")) //19 changes
+replace flag1014=resident if flag89!=. //19 changes
+
 ********************
 ** Citizen Status **
 ********************
@@ -80,11 +85,24 @@ replace flag1014=resident if record_id=="1718"
 count if citizen==. & demographics_complete!=0 & demographics_complete!=. //0
 ** Invalid missing code
 count if citizen==88|citizen==999|citizen==9999 //0
-** Invalid (citizen=Yes but last 4 digits in NRN begins with '7' or '8')
+** Invalid (citizen=Yes but last 4 digits in NRN begins with '8' i.e. permanent resident but not citizen)
 gen nrndigits = substr(sd_natregno,-4,1)
-count if citizen==1 & (nrndigits=="7"|nrndigits=="8") //62 - ask NS how to handle these cases
+count if citizen==1 & nrndigits=="8" //21 - ask NS how to handle these cases
 ** Invalid (citizen=No but last 4 digits in NRN do not begin with '7' or '8')
-count if citizen==2 & nrndigits!="7" & nrndigits!="8" & nrndigits!="" //1 - stroke record 3364 ask NS how to handle
+count if citizen==2 & nrndigits!="8" & nrndigits!="" //1 - stroke record 3364 ask NS how to handle - change citizen to Yes based on NRN's last 4 digits.
+
+** Corrections from above checks
+destring flag90 ,replace
+destring flag1015 ,replace
+
+replace flag90=citizen if record_id=="3364"
+replace citizen=1 if record_id=="3364"
+replace flag1015=citizen if record_id=="3364"
+
+replace flag90=citizen if citizen==1 & nrndigits=="8"
+replace citizen=2 if citizen==1 & nrndigits=="8"
+replace flag1015=citizen if flag90!=. //21 changes
+
 drop nrndigits
 
 *************
@@ -187,7 +205,7 @@ count if relation==88|relation==999|relation==9999 //0
 count if relation==98 //3 - reviewed and is correct, leave as is
 
 
-STOP - need NS' feedback on above queries
+
 /*
 ** Export corrections before dropping ineligible cases since errors maybe in these records (I only exported the flags with errors/corrections from above)
 ** Prepare this dataset for export to excel
@@ -201,15 +219,14 @@ sort record_id
 ** Create excel errors list before deleting incorrect records
 ** Use below code to automate file names using current date
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-capture export_excel record_id sd_etype flag89 if ///
-		flag89!=. ///
+capture export_excel record_id sd_etype flag89 flag90 if ///
+		flag89!=. | flag90!=. ///
 using "`datapath'\version03\3-output\CVDCleaning2021_DEMO1_`listdate'.xlsx", sheet("ERRORS") firstrow(varlabels)
-capture export_excel record_id sd_etype flag1014 if ///
-		 flag1014!=. ///
+capture export_excel record_id sd_etype flag1014 flag1015 if ///
+		 flag1014!=. | flag1015!=. ///
 using "`datapath'\version03\3-output\CVDCleaning2021_DEMO1_`listdate'.xlsx", sheet("CORRECTIONS") firstrow(varlabels)
 restore
 */
-
 
 
 ** Create cleaned dataset

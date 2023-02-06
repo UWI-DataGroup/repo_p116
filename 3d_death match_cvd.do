@@ -417,7 +417,7 @@ replace sd_etype=3 if sd_etype==. & dd_stroke==1 & dd_heart==1 //0 changes
 replace dlc=dd_dod if (dlc==.|dlc==99) & dd_dod!=. //414 changes
 replace slc=2 if cfdod!=. //414 changes
 replace edate=cfdod if edate==. & sd_casetype==2 //414 changes
-replace etime="99" if etime=="" & sd_casetype==2 //414 changes - ask NS if to update this variable because we're changing the meaning of the 99 since time of event for DCOs would never be documented anyways.
+//replace etime="99" if etime=="" & sd_casetype==2 //414 changes - ask NS if to update this variable because we're changing the meaning of the 99 since time of event for DCOs would never be documented anyway; leave as blank as noted by NS on 06-Feb-2023 at CVD mtg.
 
 count if slc==2 & cfdod==. //1 - stroke record 3362: cannot find pt in 2022 or multi-yr Deathdb + no death info in MedData but documented as dead on 28d form
 
