@@ -78,6 +78,15 @@ replace flag89=resident if resident!=. & resident!=1 & sd_natregno!="" & !(strma
 replace resident=1 if resident!=. & resident!=1 & sd_natregno!="" & !(strmatch(strupper(sd_natregno), "*9999*")) //19 changes
 replace flag1014=resident if flag89!=. //19 changes
 
+** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
+gen currentd=c(current_date)
+gen double sd_currentdate=date(currentd, "DMY", 2017)
+drop currentd
+format sd_currentdate %dD_m_CY
+
+gen flagdate=sd_currentdate if record_id=="1718"|flag89!=.
+
+
 ********************
 ** Citizen Status **
 ********************
@@ -104,6 +113,9 @@ replace citizen=2 if citizen==1 & nrndigits=="8"
 replace flag1015=citizen if flag90!=. //21 changes
 
 drop nrndigits
+
+** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
+replace flagdate=sd_currentdate if record_id=="3364"|flag90!=.
 
 *************
 ** Address **
@@ -228,6 +240,8 @@ using "`datapath'\version03\3-output\CVDCleaning2021_DEMO1_`listdate'.xlsx", she
 restore
 */
 
+** Remove flagdate so this can be reused in following dofiles
+drop flagdate sd_currentdate
 
 ** Create cleaned dataset
 save "`datapath'\version03\2-working\BNRCVDCORE_CleanedData_demo" ,replace

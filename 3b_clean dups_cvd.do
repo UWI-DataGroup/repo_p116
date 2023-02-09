@@ -176,6 +176,16 @@ replace age=cfage if record_id=="2865"
 replace flag970=dob if record_id=="2865"|record_id=="1833"
 
 
+
+** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
+gen currentd=c(current_date)
+gen double sd_currentdate=date(currentd, "DMY", 2017)
+drop currentd
+format sd_currentdate %dD_m_CY
+
+gen flagdate=sd_currentdate if record_id=="3362"|record_id=="2865"|record_id=="1833"
+
+
 preserve
 clear
 import excel using "`datapath'\version03\2-working\MissingNRN_20230130.xlsx" , firstrow case(lower)
@@ -196,7 +206,7 @@ merge m:1 record_id using "`datapath'\version03\2-working\missing_nrn" ,force
     Matched                                 1  (_merge==3)
     -----------------------------------------
 */
-replace natregno=elec_natregno if _merge==3 //2 changes
+replace natregno=elec_natregno if _merge==3
 replace flag51=sd_natregno if _merge==3
 replace sd_natregno=elec_sd_natregno if _merge==3
 replace flag976=sd_natregno if _merge==3
@@ -207,6 +217,7 @@ replace cfage=elec_cfage if _merge==3
 replace flag42=mname if _merge==3
 replace mname=elec_mname if _merge==3
 replace flag967=mname if _merge==3
+replace flagdate=sd_currentdate if _merge==3 //JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
 drop elec_* _merge
 erase "`datapath'\version03\2-working\missing_nrn.dta"
 
@@ -271,7 +282,6 @@ replace readmitdis=d(15nov2021) if record_id=="3136"
 replace readmitdays=readmitdis-readmitadm if record_id=="3136"
 
 
-
 /*
 ** Export corrections before dropping ineligible cases since errors maybe in these records (I only exported the flags with errors/corrections from above)
 ** Prepare this dataset for export to excel
@@ -293,6 +303,9 @@ capture export_excel record_id sd_etype flag967 flag970 flag976 if ///
 using "`datapath'\version03\3-output\CVDCleaning2021_CF3_`listdate'.xlsx", sheet("CORRECTIONS") firstrow(varlabels)
 restore
 */
+
+** Remove flagdate so this can be reused in following dofiles
+drop flagdate sd_currentdate
 
 
 ** Create cleaned non-duplicates dataset

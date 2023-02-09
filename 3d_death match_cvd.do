@@ -421,6 +421,16 @@ replace edate=cfdod if edate==. & sd_casetype==2 //414 changes
 
 count if slc==2 & cfdod==. //1 - stroke record 3362: cannot find pt in 2022 or multi-yr Deathdb + no death info in MedData but documented as dead on 28d form
 
+
+
+** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
+gen currentd=c(current_date)
+gen double sd_currentdate=date(currentd, "DMY", 2017)
+drop currentd
+format sd_currentdate %dD_m_CY
+
+gen flagdate=sd_currentdate if record_id=="3055"|record_id=="3773"|record_id=="2263"|record_id=="2720"|record_id=="2822"|record_id=="3763"|record_id=="2248"|(flag51!="" & flag976=="")|(flag45!=. & flag970==.)|(flag60!=. & flag985==.)|(flag65!=. & flag990==.)
+
 /*
 ** Export corrections before dropping ineligible cases since errors maybe in these records (I only exported the flags with errors/corrections from above)
 ** Prepare this dataset for export to excel
@@ -445,7 +455,7 @@ restore
 
 
 ** Remove unnecessary variables
-drop _merge match c d
+drop _merge match c d sd_currentdate flagdate
 
 ** To reduce storage space on SharePoint, remove temporary datasets used in the above process
 erase "`datapath'\version03\2-working\nomissNRNs_death.dta"

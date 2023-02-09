@@ -101,6 +101,16 @@ replace flag1778=readmitdays if record_id=="3144"
 
 count if cstatus==3 //2 cases listed as pending review
 
+
+** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
+gen currentd=c(current_date)
+gen double sd_currentdate=date(currentd, "DMY", 2017)
+drop currentd
+format sd_currentdate %dD_m_CY
+
+gen flagdate=sd_currentdate if record_id=="4982"|record_id=="5116"|record_id=="2064"|record_id=="3144"
+
+
 ** Review cases listed as duplicate to (1) ensure re-admission info is completed and (2) duplicate and case status fields are correctly completed
 count if ineligible==2 & duplicate==. //0
 count if ineligible!=2 & duplicate==1 //89
@@ -229,11 +239,6 @@ count if cfdoa==. //0
 ** Invalid (CF Date after ABS Date if not stroke-in-evolution)
 count if evolution!=1 & (cfdoa>adoa & adoa!=.)|evolution!=1 & (cfdoa>adoa & ptmdoa!=.)|evolution!=1 & (cfdoa>adoa & edoa!=.)|evolution!=1 & (cfdoa>adoa & hxdoa!=.)|evolution!=1 & (cfdoa>adoa & tdoa!=.)|evolution!=1 & (cfdoa>adoa & dxdoa!=.)|evolution!=1 & (cfdoa>adoa & rxdoa!=.)|evolution!=1 & (cfdoa>adoa & ddoa!=.) //0
 ** Invalid (future date)
-gen currentd=c(current_date)
-gen double sd_currentdate=date(currentd, "DMY", 2017)
-drop currentd
-format sd_currentdate %dD_m_CY
-label var sd_currentdate "Current date"
 count if cfdoa!=. & cfdoa>sd_currentdate //0
 
 *************
@@ -292,6 +297,9 @@ replace flag1777=readmitdis if record_id=="1729"
 replace flag853=readmitdays if record_id=="1729"
 replace readmitdays=readmitdis-readmitadm if record_id=="1729"
 replace flag1778=readmitdays if record_id=="1729"
+
+** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
+replace flagdate=sd_currentdate if record_id=="1729"
 
 
 *****************
@@ -371,6 +379,10 @@ count if retsource==26 & cfsource___30==0 //0
 count if retsource==27 & cfsource___31==0 //0
 ** Invalid (retsource=other; other retsource=one of the retsource options)
 count if retsource==98 //1 - correct, leave as is
+
+** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
+replace flagdate=sd_currentdate if record_id=="1882"|record_id=="2300"|record_id=="2302"|record_id=="2348" ///
+								  |record_id=="2481"|record_id=="3018"|record_id=="3366"|record_id=="3754"
 
 
 
@@ -505,6 +517,10 @@ replace dob=dob+241 if record_id=="2280"
 replace flag970=dob if record_id=="2280"
 drop dob_nrn* nrn
 
+** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
+replace flagdate=sd_currentdate if record_id=="2256"|record_id=="2728"|record_id=="2808"|record_id=="3021"|record_id=="3191"|record_id=="3247" ///
+								  |record_id=="3291"|record_id=="3306"|record_id=="3410"|record_id=="3610"|record_id=="3757"|record_id=="2280"
+
 
 *********
 ** Sex **
@@ -542,6 +558,9 @@ replace flag41=fname if record_id=="2150"
 replace fname=fname2 if record_id=="2150"
 replace flag966=fname if record_id=="2150"
 drop fname2 nrnid
+
+** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
+replace flagdate=sd_currentdate if record_id=="2060"|record_id=="2150"
 
 
 ** Need to clean cfadmdate first in order to clean age
@@ -583,6 +602,7 @@ replace flag976=sd_natregno if _merge==3
 replace flag45=dob if _merge==3
 replace dob=elec_dob if _merge==3
 replace flag970=dob if _merge==3
+replace flagdate=sd_currentdate if _merge==3 //JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
 drop elec_* _merge
 erase "`datapath'\version03\2-working\missing_nrn.dta"
 
@@ -604,6 +624,9 @@ drop cfadmyr
 gen cfadmyr=year(cfadmdate)
 count if cfadmyr==. //0
 order link_id unique_id record_id redcap_event_name redcap_repeat_instrument redcap_repeat_instance redcap_data_access_group cfdoa cfdoat cfda sri srirec evolution sourcetype firstnf cfsource___1 cfsource___2 cfsource___3 cfsource___4 cfsource___5 cfsource___6 cfsource___7 cfsource___8 cfsource___9 cfsource___10 cfsource___11 cfsource___12 cfsource___13 cfsource___14 cfsource___15 cfsource___16 cfsource___17 cfsource___18 cfsource___19 cfsource___20 cfsource___21 cfsource___22 cfsource___23 cfsource___24 cfsource___25 cfsource___26 cfsource___27 cfsource___28 cfsource___29 cfsource___30 cfsource___31 cfsource___32 retsource oretsrce fname mname lname sex dob dobday dobmonth dobyear cfage cfage_da natregno sd_natregno nrnyear nrnmonth nrnday nrnnum recnum cfadmdate cfadmyr
+
+** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
+replace flagdate=sd_currentdate if record_id=="2830"
 
 
 *********
@@ -708,10 +731,14 @@ replace flag970=dob if _merge==3
 replace flag56=recnum if _merge==3
 replace recnum=elec_recnum if _merge==3
 replace flag981=recnum if _merge==3
+replace flagdate=sd_currentdate if _merge==3 //JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
 drop elec_* _merge
 replace cfage=64 if record_id=="4404"
 replace cfage=38 if record_id=="4335"
 erase "`datapath'\version03\2-working\missing_nrn.dta"
+
+** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
+replace flagdate=sd_currentdate if record_id=="1823"|record_id=="4335"|record_id=="4404"
 
 
 
@@ -742,6 +769,9 @@ replace cfdod=d(31may2021) if record_id=="2126" & sd_etype==1
 replace flag990=cfdod if record_id=="2704" & sd_etype==2|record_id=="2840" & sd_etype==2|record_id=="2126" & sd_etype==1
 ** Invalid (slc=deceased but cfdod/dod=blank)
 count if slc==2 & cfdod==. & dod==. //1 - record 3362 cannot find pt in Deathdb (see above)
+
+** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
+replace flagdate=sd_currentdate if record_id=="2704" & sd_etype==2|record_id=="2840" & sd_etype==2|record_id=="3362" & sd_etype==1|record_id=="2126" & sd_etype==1
 
 
 **************************
@@ -875,6 +905,7 @@ merge m:1 record_id using "`datapath'\version03\2-working\missing_cods" ,force
 replace flag70=cfcods if _merge==3
 replace cfcods=elec_cfcods if _merge==3
 replace flag995=cfcods if _merge==3
+replace flagdate=sd_currentdate if _merge==3 //JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
 drop elec_* _merge
 erase "`datapath'\version03\2-working\missing_cods.dta"
 
@@ -907,8 +938,12 @@ replace flag45=dob if _merge==3
 replace dob=elec_dob if _merge==3
 replace flag970=dob if _merge==3
 replace cfage=elec_cfage if _merge==3
+replace flagdate=sd_currentdate if _merge==3 //JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
 drop elec_* _merge
 erase "`datapath'\version03\2-working\missing_nrn.dta"
+
+** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
+replace flagdate=sd_currentdate if record_id=="1882" & sd_etype==2
 
 
 
@@ -969,6 +1004,10 @@ replace flag74=eligible if eligible==4 & fu1type==1 & (hxdoa!=.|tdoa!=.|dxdoa!=.
 replace eligible=9 if eligible==4 & fu1type==1 & (hxdoa!=.|tdoa!=.|dxdoa!=.|rxdoa!=.) //12 changes
 replace flag999=eligible if record_id=="1862"|record_id=="1982"|record_id=="1991"|record_id=="2267"|record_id=="2647"|record_id=="2734" ///
 						   |record_id=="2806"|record_id=="2837"|record_id=="2881"|record_id=="3047"|record_id=="3110"|record_id=="4115"
+
+** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
+replace flagdate=sd_currentdate if record_id=="1862"|record_id=="1982"|record_id=="1991"|record_id=="2267"|record_id=="2647"|record_id=="2734" ///
+								  |record_id=="2806"|record_id=="2837"|record_id=="2881"|record_id=="3047"|record_id=="3110"|record_id=="4115"
 
 
 
@@ -1077,7 +1116,7 @@ restore
 */
 
 ** Remove unnecessary variables (i.e. variables used for db functionality but not needed for cleaning and analysis)
-drop cfadmdatemon cfadmdatemondash fname_eve lname_eve sex_eve slc_eve cstatus_eve eligible_eve f1vstatus_eve edateyr_rx edatemondash_rx sd_currentdate
+drop cfadmdatemon cfadmdatemondash fname_eve lname_eve sex_eve slc_eve cstatus_eve eligible_eve f1vstatus_eve edateyr_rx edatemondash_rx sd_currentdate flagdate
 
 ** Create cleaned dataset
 save "`datapath'\version03\2-working\BNRCVDCORE_CleanedData_cf", replace
