@@ -4,7 +4,7 @@
     //  project:                BNR-CVD
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      09-FEB-2023
-    // 	date last modified      09-FEB-2023
+    // 	date last modified      10-FEB-2023
     //  algorithm task          Cleaning variables in the REDCap CVDdb Event form
     //  status                  Completed
     //  objective               (1) To have a cleaned 2021 cvd incidence dataset ready for analysis
@@ -207,14 +207,14 @@ count if ssym1d==. & ssym1==1 //4 - checked CVDdb and these have atscene date=99
 count if ssym1d!=. & year(ssym1d)!=2021 //0
 ** Invalid (before DOB)
 count if dob!=. & ssym1d!=. & ssym1d<dob //0
-** Invalid (after CFAdmDate)
+** possibly Invalid (after CFAdmDate)
 count if ssym1d!=. & cfadmdate!=. & ssym1d>cfadmdate & inhosp!=1 //4 - records 2309 + 2885 are strokes-in-evolution; 2 corrected below
-** Invalid (after DLC/DOD)
+** possibly Invalid (after DLC/DOD)
 count if dlc!=. & ssym1d!=. & ssym1d>dlc //3 - 2 corrected below; record 2309 is stroke-in-evolution
 count if cfdod!=. & ssym1d!=. & ssym1d>cfdod //0
-** Invalid (after A&EAdmDate)
+** possibly Invalid (after A&EAdmDate)
 count if ssym1d!=. & dae!=. & ssym1d>dae & inhosp!=1 //4 - records 2309 + 2885 are strokes-in-evolution; 2 corrected below
-** Invalid (after WardAdmDate)
+** possibly Invalid (after WardAdmDate)
 count if ssym1d!=. & doh!=. & ssym1d>doh & inhosp!=1 //3 - records 2309 + 2885 are strokes-in-evolution; 1 corrected below
 ** Invalid (future date)
 gen currentd=c(current_date)
@@ -385,31 +385,30 @@ drop currentd
 format sd_currentdate %dD_m_CY
 
 gen flagdate=sd_currentdate if record_id=="1910"|record_id=="2261"|record_id=="1843"|record_id=="1925"|record_id=="1719"|record_id=="2936"|record_id=="3399"|record_id=="3750"
-STOP
 
 
 ******************************
 ** Diminshed Responsiveness **
 ******************************
 ** Missing
-count if ssym2==. & sd_etype==1 & event_complete!=0 & event_complete!=. //5 - note we have to add in the form status variable since cases wherein dx was confirmed but case not abstracted as year was closed would have NO data in this form; 2 stroke records 1910 + 2261 have all forms completed so these are corrected below.
+count if ssym2==. & sd_etype==1 & event_complete!=0 & event_complete!=. //4 - note we have to add in the form status variable since cases wherein dx was confirmed but case not abstracted as year was closed would have NO data in this form; stroke record 1889 have all forms completed so these are corrected below.
 ** Invalid missing code
 count if ssym2==88|ssym2==999|ssym2==9999 //0
 ** Missing date
-count if ssym2d==. & ssym2==1 //4 - checked CVDdb and these have atscene date=99; record 2965 was partial but month was long in advance of admission so will not use.
+count if ssym2d==. & ssym2==1 //0
 ** Invalid (not 2021)
 count if ssym2d!=. & year(ssym2d)!=2021 //0
 ** Invalid (before DOB)
 count if dob!=. & ssym2d!=. & ssym2d<dob //0
-** Invalid (after CFAdmDate)
-count if ssym2d!=. & cfadmdate!=. & ssym2d>cfadmdate & inhosp!=1 //4 - records 2309 + 2885 are strokes-in-evolution; 2 corrected below
-** Invalid (after DLC/DOD)
-count if dlc!=. & ssym2d!=. & ssym2d>dlc //3 - 2 corrected below; record 2309 is stroke-in-evolution
+** possibly Invalid (after CFAdmDate)
+count if ssym2d!=. & cfadmdate!=. & ssym2d>cfadmdate & inhosp!=1 //6 - records 1729, 2309, 2353 2623, 3136 + 2654 are strokes-in-evolution so leave as is.
+** possibly Invalid (after DLC/DOD)
+count if dlc!=. & ssym2d!=. & ssym2d>dlc //5 - all are strokes-in-evolution
 count if cfdod!=. & ssym2d!=. & ssym2d>cfdod //0
-** Invalid (after A&EAdmDate)
-count if ssym2d!=. & dae!=. & ssym2d>dae & inhosp!=1 //4 - records 2309 + 2885 are strokes-in-evolution; 2 corrected below
-** Invalid (after WardAdmDate)
-count if ssym2d!=. & doh!=. & ssym2d>doh & inhosp!=1 //3 - records 2309 + 2885 are strokes-in-evolution; 1 corrected below
+** possibly Invalid (after A&EAdmDate)
+count if ssym2d!=. & dae!=. & ssym2d>dae & inhosp!=1 //6 - all are strokes-in-evolution
+** possibly Invalid (after WardAdmDate)
+count if ssym2d!=. & doh!=. & ssym2d>doh & inhosp!=1 //5 - all are strokes-in-evolution
 ** Invalid (future date)
 count if ssym2d!=. & ssym2d>sd_currentdate //0
 ** Invalid (date partial missing codes for all)
@@ -425,17 +424,503 @@ count if ssym2day==88|ssym2day==999|ssym2day==9999 //0
 count if ssym2month==88|ssym2month==999|ssym2month==9999 //0
 count if ssym2year==88|ssym2year==99|ssym2year==999 //0
 ** Invalid (after NotifiedDate)
-count if ssym2d!=. & ambcalld!=. & ssym2d>ambcalld & inhosp!=1 //4 - all corrected below
+count if ssym2d!=. & ambcalld!=. & ssym2d>ambcalld & inhosp!=1 //2 - both are strokes-in-evolution
 ** Invalid (after AtSceneDate)
-count if ssym2d!=. & atscnd!=. & ssym2d>atscnd & inhosp!=1 //1 - record 3399 changed at end of ptm dofile when populating atscnd + frmscnd so DAs don't need to correct in CVDdb
-replace atscnd=dae if record_id=="3399"
+count if ssym2d!=. & atscnd!=. & ssym2d>atscnd & inhosp!=1 //2 - both are strokes-in-evolution
 ** Invalid (after FromSceneDate)
-count if ssym2d!=. & frmscnd!=. & ssym2d>frmscnd & inhosp!=1 //1 - record 3399 changed at end of ptm dofile when populating atscnd + frmscnd so DAs don't need to correct in CVDdb
-replace frmscnd=dae if record_id=="3399"
+count if ssym2d!=. & frmscnd!=. & ssym2d>frmscnd & inhosp!=1 //2 - both are strokes-in-evolution
 ** Invalid (after AtHospitalDate)
-count if ssym2d!=. & hospd!=. & ssym2d>hospd & inhosp!=1 //1 - record 3399 corrected below
+count if ssym2d!=. & hospd!=. & ssym2d>hospd & inhosp!=1 //2 - both are strokes-in-evolution
 ** Invalid (before EventDate)
 count if ssym2d!=. & edate!=. & ssym2d<edate //0
+
+
+
+** Corrections from above checks
+destring flag310 ,replace
+destring flag1235 ,replace
+destring flag311 ,replace
+destring flag1236 ,replace
+destring flag313 ,replace
+destring flag1238 ,replace
+destring flag317 ,replace
+destring flag1242 ,replace
+destring flag328 ,replace
+destring flag1253 ,replace
+destring flag342 ,replace
+destring flag1267 ,replace
+destring flag405 ,replace
+destring flag1330 ,replace
+
+replace flag177=ssym2 if record_id=="1889"
+replace ssym2=99 if record_id=="1889" //see above
+replace flag1102=ssym2 if record_id=="1889"
+
+replace flag179=ssym4 if record_id=="1889"
+replace ssym4=99 if record_id=="1889" //see above
+replace flag1104=ssym4 if record_id=="1889"
+
+replace flag254=cardmon if record_id=="1889"
+replace cardmon=99 if record_id=="1889" //see above
+replace flag1179=cardmon if record_id=="1889"
+
+replace flag310=sysbp if record_id=="1889"
+replace sysbp=999 if record_id=="1889" //see above
+replace flag1235=sysbp if record_id=="1889"
+
+replace flag311=diasbp if record_id=="1889"
+replace diasbp=999 if record_id=="1889" //see above
+replace flag1236=diasbp if record_id=="1889"
+
+replace flag313=bgunit if record_id=="1889"
+replace bgunit=99 if record_id=="1889" //see above
+replace flag1238=bgunit if record_id=="1889"
+
+replace flag317=assess if record_id=="1889"
+replace assess=99 if record_id=="1889" //see above
+replace flag1242=assess if record_id=="1889"
+
+replace flag328=dieany if record_id=="1889"
+replace dieany=99 if record_id=="1889" //see above
+replace flag1253=dieany if record_id=="1889"
+
+replace flag342=ct if record_id=="1889"
+replace ct=99 if record_id=="1889" //see above
+replace flag1267=ct if record_id=="1889"
+
+replace flag405=tiany if record_id=="1889"
+replace tiany=99 if record_id=="1889" //see above
+replace flag1330=tiany if record_id=="1889"
+
+
+** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
+replace flagdate=sd_currentdate if record_id=="1889"
+
+
+**************
+** Weakness **
+**************
+** Missing
+count if ssym3==. & sd_etype==1 & event_complete!=0 & event_complete!=. //3 - note we have to add in the form status variable since cases wherein dx was confirmed but case not abstracted as year was closed would have NO data in this form.
+** Invalid missing code
+count if ssym3==88|ssym3==999|ssym3==9999 //0
+** Missing date
+count if ssym3d==. & ssym3==1 //1 - date=99 in CVDdb; leave as is.
+** Invalid (not 2021)
+count if ssym3d!=. & year(ssym3d)!=2021 //1 - corrected below
+** Invalid (before DOB)
+count if dob!=. & ssym3d!=. & ssym3d<dob //0
+** possibly Invalid (after CFAdmDate)
+count if ssym3d!=. & cfadmdate!=. & ssym3d>cfadmdate & inhosp!=1 //3 - records 2309 + 2623 are strokes-in-evolution so leave as is; 1 corrected below.
+** possibly Invalid (after DLC/DOD)
+count if dlc!=. & ssym3d!=. & ssym3d>dlc //2 - all are strokes-in-evolution
+count if cfdod!=. & ssym3d!=. & ssym3d>cfdod //1 - corrected below
+** possibly Invalid (after A&EAdmDate)
+count if ssym3d!=. & dae!=. & ssym3d>dae & inhosp!=1 //3 - 2 are strokes-in-evolution; 1 corrected below
+** possibly Invalid (after WardAdmDate)
+count if ssym3d!=. & doh!=. & ssym3d>doh & inhosp!=1 //2 - all are strokes-in-evolution
+** Invalid (future date)
+count if ssym3d!=. & ssym3d>sd_currentdate //0
+** Invalid (date partial missing codes for all)
+count if ssym3==1 & ssym3d==. & ssym3day==99 & ssym3month==99 & ssym3year==9999 //0
+** possibly Invalid (notified date not partial but partial field not blank)
+count if ssym3d==. & ssym3day!=. & ssym3month!=. & ssym3year!=. //0
+replace ssym3day=. if ssym3d==. & ssym3day!=. & ssym3month!=. & ssym3year!=. //0 changes
+replace ssym3month=. if ssym3d==. & ssym3month!=. & ssym3year!=. //0 changes
+replace ssym3year=. if ssym3d==. & ssym3year!=. //0 changes
+count if ssym3d==. & (ssym3day!=. | ssym3month!=. | ssym3year!=.) //0
+** Invalid missing code (notified date partial fields)
+count if ssym3day==88|ssym3day==999|ssym3day==9999 //0
+count if ssym3month==88|ssym3month==999|ssym3month==9999 //0
+count if ssym3year==88|ssym3year==99|ssym3year==999 //0
+** Invalid (after NotifiedDate)
+count if ssym3d!=. & ambcalld!=. & ssym3d>ambcalld & inhosp!=1 //1 - record 3204 corrected below
+** Invalid (after AtSceneDate)
+count if ssym3d!=. & atscnd!=. & ssym3d>atscnd & inhosp!=1 //1 - record 3204 changed at end of ptm dofile when populating atscnd + frmscnd so DAs don't need to correct in CVDdb; corrected below
+replace atscnd=dae if record_id=="3204"
+** Invalid (after FromSceneDate)
+count if ssym3d!=. & frmscnd!=. & ssym3d>frmscnd & inhosp!=1 //1 - record 3204 changed at end of ptm dofile when populating atscnd + frmscnd so DAs don't need to correct in CVDdb; corrected below
+replace frmscnd=dae if record_id=="3204"
+** Invalid (after AtHospitalDate)
+count if ssym3d!=. & hospd!=. & ssym3d>hospd & inhosp!=1 //0
+** Invalid (before EventDate)
+count if ssym3d!=. & edate!=. & ssym3d<edate //0
+
+
+
+** Corrections from above checks
+destring flag135 ,replace
+destring flag1060 ,replace
+
+replace flag202=ssym3d if record_id=="2906"
+replace ssym3d=edate if record_id=="2906" //see above
+replace flag1127=ssym3d if record_id=="2906"
+
+replace flag129=ambcalld if record_id=="3204"
+replace ambcalld=dae if record_id=="3204" //see above
+replace flag1054=ambcalld if record_id=="3204"
+
+replace flag133=ambcallt if record_id=="3204"
+replace flag140=atscnt if record_id=="3204"
+replace flag147=frmscnt if record_id=="3204"
+replace ambcallt=subinstr(ambcallt,"13","09",.) if record_id=="3204"
+replace atscnt=subinstr(atscnt,"13","09",.) if record_id=="3204"
+replace frmscnt=subinstr(frmscnt,"13","09",.) if record_id=="3204"
+replace flag1058=ambcallt if record_id=="3204"
+replace flag1065=atscnt if record_id=="3204"
+replace flag1072=frmscnt if record_id=="3204"
+
+replace flag135=atscene if record_id=="3204"
+replace atscene=1 if record_id=="3204" //see above
+replace flag1060=atscene if record_id=="3204"
+
+** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
+replace flagdate=sd_currentdate if record_id=="2906"|record_id=="3204"
+
+*************
+** Swallow **
+*************
+** Missing
+count if ssym4==. & sd_etype==1 & event_complete!=0 & event_complete!=. //3 - note we have to add in the form status variable since cases wherein dx was confirmed but case not abstracted as year was closed would have NO data in this form.
+** Invalid missing code
+count if ssym4==88|ssym4==999|ssym4==9999 //0
+** Missing date
+count if ssym4d==. & ssym4==1 //0
+** Invalid (not 2021)
+count if ssym4d!=. & year(ssym4d)!=2021 //0
+** Invalid (before DOB)
+count if dob!=. & ssym4d!=. & ssym4d<dob //0
+** possibly Invalid (after CFAdmDate)
+count if ssym4d!=. & cfadmdate!=. & ssym4d>cfadmdate & inhosp!=1 //0
+** possibly Invalid (after DLC/DOD)
+count if dlc!=. & ssym4d!=. & ssym4d>dlc //0
+count if cfdod!=. & ssym4d!=. & ssym4d>cfdod //0
+** possibly Invalid (after A&EAdmDate)
+count if ssym4d!=. & dae!=. & ssym4d>dae & inhosp!=1 //0
+** possibly Invalid (after WardAdmDate)
+count if ssym4d!=. & doh!=. & ssym4d>doh & inhosp!=1 //0
+** Invalid (future date)
+count if ssym4d!=. & ssym4d>sd_currentdate //0
+** Invalid (date partial missing codes for all)
+count if ssym4==1 & ssym4d==. & ssym4day==99 & ssym4month==99 & ssym4year==9999 //0
+** possibly Invalid (notified date not partial but partial field not blank)
+count if ssym4d==. & ssym4day!=. & ssym4month!=. & ssym4year!=. //0
+replace ssym4day=. if ssym4d==. & ssym4day!=. & ssym4month!=. & ssym4year!=. //0 changes
+replace ssym4month=. if ssym4d==. & ssym4month!=. & ssym4year!=. //0 changes
+replace ssym4year=. if ssym4d==. & ssym4year!=. //0 changes
+count if ssym4d==. & (ssym4day!=. | ssym4month!=. | ssym4year!=.) //0
+** Invalid missing code (notified date partial fields)
+count if ssym4day==88|ssym4day==999|ssym4day==9999 //0
+count if ssym4month==88|ssym4month==999|ssym4month==9999 //0
+count if ssym4year==88|ssym4year==99|ssym4year==999 //0
+** Invalid (after NotifiedDate)
+count if ssym4d!=. & ambcalld!=. & ssym4d>ambcalld & inhosp!=1 //0
+** Invalid (after AtSceneDate)
+count if ssym4d!=. & atscnd!=. & ssym4d>atscnd & inhosp!=1 //0
+** Invalid (after FromSceneDate)
+count if ssym4d!=. & frmscnd!=. & ssym4d>frmscnd & inhosp!=1 //0
+** Invalid (after AtHospitalDate)
+count if ssym4d!=. & hospd!=. & ssym4d>hospd & inhosp!=1 //0
+** Invalid (before EventDate)
+count if ssym4d!=. & edate!=. & ssym4d<edate //0
+
+
+
+** Symptoms (Heart) **
+
+****************
+** Chest Pain **
+****************
+** Missing
+count if hsym1==. & sd_etype==2 & event_complete!=0 & event_complete!=. //4 - all incorrect: records 2256, 2260, 2902 + 2920 corrected below
+** Invalid missing code
+count if hsym1==88|hsym1==999|hsym1==9999 //0
+** Missing date
+count if hsym1d==. & hsym1==1 //0
+** Invalid (not 2021)
+count if hsym1d!=. & year(hsym1d)!=2021 //1 - corrected below
+** Invalid (before DOB)
+count if dob!=. & hsym1d!=. & hsym1d<dob //0
+** possibly Invalid (after CFAdmDate)
+count if hsym1d!=. & cfadmdate!=. & hsym1d>cfadmdate & inhosp!=1 //2 - corrected below; Checked MedData notes for record 3318
+** possibly Invalid (after DLC/DOD)
+count if dlc!=. & hsym1d!=. & hsym1d>dlc //1 - corrected below
+count if cfdod!=. & hsym1d!=. & hsym1d>cfdod //1 - corrected below
+** possibly Invalid (after A&EAdmDate)
+count if hsym1d!=. & dae!=. & hsym1d>dae & inhosp!=1 //2 - corrected below
+** possibly Invalid (after WardAdmDate)
+count if hsym1d!=. & doh!=. & hsym1d>doh & inhosp!=1 //1 - corrected below
+** Invalid (future date)
+count if hsym1d!=. & hsym1d>sd_currentdate //0
+** Invalid (date partial missing codes for all)
+count if hsym1==1 & hsym1d==. & hsym1day==99 & hsym1month==99 & hsym1year==9999 //0
+** possibly Invalid (notified date not partial but partial field not blank)
+count if hsym1d==. & hsym1day!=. & hsym1month!=. & hsym1year!=. //0
+replace hsym1day=. if hsym1d==. & hsym1day!=. & hsym1month!=. & hsym1year!=. //0 changes
+replace hsym1month=. if hsym1d==. & hsym1month!=. & hsym1year!=. //0 changes
+replace hsym1year=. if hsym1d==. & hsym1year!=. //0 changes
+count if hsym1d==. & (hsym1day!=. | hsym1month!=. | hsym1year!=.) //0
+** Invalid missing code (notified date partial fields)
+count if hsym1day==88|hsym1day==999|hsym1day==9999 //0
+count if hsym1month==88|hsym1month==999|hsym1month==9999 //0
+count if hsym1year==88|hsym1year==99|hsym1year==999 //0
+** Invalid (after NotifiedDate)
+count if hsym1d!=. & ambcalld!=. & hsym1d>ambcalld & inhosp!=1 //1 - corrected below
+** Invalid (after AtSceneDate)
+count if hsym1d!=. & atscnd!=. & hsym1d>atscnd & inhosp!=1 //1 - record 4371 changed at end of ptm dofile when populating atscnd + frmscnd so DAs don't need to correct in CVDdb; corrected below
+replace atscnd=dae if record_id=="4371"
+** Invalid (after FromSceneDate)
+count if hsym1d!=. & frmscnd!=. & hsym1d>frmscnd & inhosp!=1 //1 - record 4371 changed at end of ptm dofile when populating atscnd + frmscnd so DAs don't need to correct in CVDdb; corrected below
+replace frmscnd=dae if record_id=="4371"
+** Invalid (after AtHospitalDate)
+count if hsym1d!=. & hospd!=. & hsym1d>hospd & inhosp!=1 //1 - corrected below
+** Invalid (before EventDate)
+count if hsym1d!=. & edate!=. & hsym1d<edate //1 - corrected below
+** Missing time
+count if hsym1t=="" & hsym1==1 //0
+** Invalid (time format)
+count if hsym1t!="" & hsym1t!="88" & hsym1t!="99" & (length(hsym1t)<5|length(hsym1t)>5) //0
+count if hsym1t!="" & hsym1t!="88" & hsym1t!="99" & !strmatch(strupper(hsym1t), "*:*") //0
+generate byte non_numeric_hsym1t = indexnot(hsym1t, "0123456789.-:")
+count if non_numeric_hsym1t //0
+** Invalid missing code
+count if hsym1t=="999"|hsym1t=="9999" //0
+** Invalid (time=88 and am/pm is missing)
+count if hsym1t=="88" & hsym1tampm==. //0
+** Invalid (symptom time after notified time)
+count if hsym1t!="" & hsym1t!="99" & ambcallt!="" & ambcallt!="99" & hsym1t>ambcallt //18 - 15 correct; records 1918, 2425 (query for NS), 2892 (query for NS) corrected below
+** Invalid (symptom time after time at scene)
+count if hsym1t!="" & hsym1t!="99" & atscnt!="" & atscnt!="99" & hsym1t>atscnt //18 - same records as above
+** Invalid (symptom time after time from scene)
+count if hsym1t!="" & hsym1t!="99" & frmscnt!="" & frmscnt!="99" & hsym1t>frmscnt //17 - same records as above
+** Invalid (symptom time after time at hospital)
+count if hsym1t!="" & hsym1t!="99" & hospt!="" & hospt!="99" & hsym1t>hospt //12 - same records as above
+** Invalid (symptom time after event time)
+count if hsym1t!="" & hsym1t!="99" & etime!="" & etime!="99" & hsym1t>etime //1 - record 3361 (query for NS)
+
+
+
+** Corrections from above checks
+destring flag180 ,replace
+destring flag1105 ,replace
+destring flag181 ,replace
+destring flag1106 ,replace
+destring flag182 ,replace
+destring flag1107 ,replace
+destring flag183 ,replace
+destring flag1108 ,replace
+destring flag184 ,replace
+destring flag1109,replace
+destring flag185 ,replace
+destring flag1110 ,replace
+destring flag186 ,replace
+destring flag1111 ,replace
+destring flag271 ,replace
+destring flag1196 ,replace
+destring flag272 ,replace
+destring flag1197 ,replace
+destring flag210 ,replace
+destring flag1135 ,replace
+destring flag216 ,replace
+destring flag1141 ,replace
+destring flag220 ,replace
+destring flag1145 ,replace
+destring flag224 ,replace
+destring flag1149 ,replace
+destring flag232 ,replace
+destring flag1157 ,replace
+destring flag236 ,replace
+destring flag1161 ,replace
+format flag210 flag1135 flag216 flag1141 flag224 flag1149 flag232 flag1157 flag236 flag1161 %dM_d,_CY
+
+replace flag180=hsym1 if record_id=="2256"|record_id=="2260"|record_id=="2902"|record_id=="2920"
+replace hsym1=99 if record_id=="2256"|record_id=="2260"|record_id=="2902"|record_id=="2920" //see above
+replace flag1105=hsym1 if record_id=="2256"|record_id=="2260"|record_id=="2902"|record_id=="2920"
+
+replace flag181=hsym2 if record_id=="2256"|record_id=="2260"|record_id=="2902"
+replace hsym2=99 if record_id=="2256"|record_id=="2260"|record_id=="2902" //see above
+replace flag1106=hsym2 if record_id=="2256"|record_id=="2260"|record_id=="2902"
+
+replace flag182=hsym3 if record_id=="2256"|record_id=="2260"|record_id=="2902"
+replace hsym3=99 if record_id=="2256"|record_id=="2260"|record_id=="2902" //see above
+replace flag1107=hsym3 if record_id=="2256"|record_id=="2260"|record_id=="2902"
+
+replace flag183=hsym4 if record_id=="2256"|record_id=="2260"|record_id=="2902"|record_id=="2920"
+replace hsym4=99 if record_id=="2256"|record_id=="2260"|record_id=="2902"|record_id=="2920" //see above
+replace flag1108=hsym4 if record_id=="2256"|record_id=="2260"|record_id=="2902"|record_id=="2920"
+
+replace flag184=hsym5 if record_id=="2256"|record_id=="2902"|record_id=="2920"
+replace hsym5=99 if record_id=="2256"|record_id=="2902"|record_id=="2920" //see above
+replace flag1109=hsym5 if record_id=="2256"|record_id=="2902"|record_id=="2920"
+
+replace flag185=hsym6 if record_id=="2256"|record_id=="2260"|record_id=="2902"|record_id=="2920"
+replace hsym6=99 if record_id=="2256"|record_id=="2260"|record_id=="2902"|record_id=="2920" //see above
+replace flag1110=hsym6 if record_id=="2256"|record_id=="2260"|record_id=="2902"|record_id=="2920"
+
+replace flag186=hsym7 if record_id=="2256"|record_id=="2260"|record_id=="2902"
+replace hsym7=99 if record_id=="2256"|record_id=="2260"|record_id=="2902" //see above
+replace flag1111=hsym7 if record_id=="2256"|record_id=="2260"|record_id=="2902"
+
+replace flag268=inhosp if record_id=="2256"
+replace inhosp=1 if record_id=="2256" //see above
+replace flag1193=inhosp if record_id=="2256"
+
+replace flag271=cardiac if record_id=="2256"
+replace cardiac=99 if record_id=="2256" //see above
+replace flag1196=cardiac if record_id=="2256"
+
+replace flag272=cardiachosp if record_id=="2256"
+replace cardiachosp=99 if record_id=="2256" //see above
+replace flag1197=cardiachosp if record_id=="2256"
+
+replace flag74=eligible if record_id=="2920"
+replace eligible=6 if record_id=="2920" //see above
+replace flag999=eligible if record_id=="2920"
+//JC 10feb2023: forms History down to Discharge are blank - no comments to indicate reason so changed eligible case status from completed to confirmed but not fully abstracted
+
+replace flag210=hsym1d if record_id=="1946"|record_id=="3318"|record_id=="2863"|record_id=="1918"
+replace hsym1d=edate if record_id=="1946"|record_id=="3318"|record_id=="2863" //see above
+replace hsym1d=hsym1d+1 if record_id=="1918" //see above
+replace flag1135=hsym1d if record_id=="1946"|record_id=="3318"|record_id=="2863"|record_id=="1918"
+
+replace flag216=hsym2d if record_id=="3318"|record_id=="1918"
+replace hsym2d=edate if record_id=="3318" //see above
+replace hsym2d=hsym2d-1 if record_id=="1918" //see above
+replace flag1141=hsym2d if record_id=="3318"|record_id=="1918"
+
+replace flag220=hsym3d if record_id=="1918"
+replace hsym3d=hsym3d+1 if record_id=="1918" //see above
+replace flag1145=hsym3d if record_id=="1918"
+
+replace flag224=hsym4d if record_id=="3318"
+replace hsym4d=edate if record_id=="3318" //see above
+replace flag1149=hsym4d if record_id=="3318"
+
+replace flag232=hsym6d if record_id=="3318"
+replace hsym6d=edate if record_id=="3318" //see above
+replace flag1157=hsym6d if record_id=="3318"
+
+replace flag236=hsym7d if record_id=="3318"|record_id=="1918"
+replace hsym7d=edate if record_id=="3318" //see above
+replace hsym7d=hsym7d+1 if record_id=="1918" //see above
+replace flag1161=hsym7d if record_id=="3318"|record_id=="1918"
+
+replace flag129=ambcalld if record_id=="4371"
+replace ambcalld=dae if record_id=="4371" //see above
+replace flag1054=ambcalld if record_id=="4371"
+
+replace flag150=hospd if record_id=="4371"
+replace hospd=dae if record_id=="4371" //see above
+replace flag1075=hospd if record_id=="4371"
+
+replace flag74=eligible if record_id=="4371"
+replace eligible=4 if record_id=="4371" //see above
+replace flag999=eligible if record_id=="4371"
+//JC 10feb2023: 28d form is blank so changed eligible case status from completed to pending 28d F/U
+
+replace flag267=edate if record_id=="1918"
+replace edate=edate+1 if record_id=="1918" //see above
+replace flag1192=edate if record_id=="1918"
+
+replace flag154=hospt if record_id=="2892"
+replace hospt=subinstr(hospt,"19","09",.) if record_id=="2892"
+replace flag1079=hospt if record_id=="2892"
+
+replace flag269=etime if record_id=="2892"|record_id=="3361"
+replace etime=hsym1t if record_id=="2892"|record_id=="3361"
+replace flag1194=etime if record_id=="2892"|record_id=="3361"
+
+
+** Invalid (eligible NOT=pending 28d f/u; 28d form is blank)
+//order sd_etype record_id eligible casefinding_complete demographics_complete patient_management_complete event_complete history_complete tests_complete complications_dx_complete medications_complete discharge_complete day_fu_complete
+
+count if eligible!=4 & eligible!=6 & day_fu_complete==0 //1
+//JC 10feb2023: Incidentally saw an error for this so for 2022 onwards to add in this above check (I've already added a note in dofile 3a_clean cf_cvd.do)
+replace day_fu_complete=1 if record_id=="1945" //DAs don't need to update CVDdb as the form status for 28d form is already set to Unverified.
+
+count if eligible!=6 & sd_casetype==1 & (casefinding_complete==0|demographics_complete==0|patient_management_complete==0|event_complete==0|history_complete==0|tests_complete==0|complications_dx_complete==0|medications_complete==0|discharge_complete==0|day_fu_complete==0) //2 - 1 correct
+
+replace casefinding_complete=1 if record_id=="1945"
+replace demographics_complete=1 if record_id=="1945"
+replace patient_management_complete=1 if record_id=="1945"
+replace event_complete=1 if record_id=="1945"
+replace history_complete=1 if record_id=="1945"
+replace tests_complete=1 if record_id=="1945"
+replace complications_dx_complete=1 if record_id=="1945"
+replace medications_complete=1 if record_id=="1945"
+replace discharge_complete=1 if record_id=="1945"
+//DAs don't need to update CVDdb as the form status for 28d form is already set to Unverified.
+
+count if eligible!=6 & sd_casetype==1 & (casefinding_complete==.|demographics_complete==.|patient_management_complete==.|event_complete==.|history_complete==.|tests_complete==.|complications_dx_complete==.|medications_complete==.|discharge_complete==.|day_fu_complete==.) //9 - 5 correct; record 1889 missing Tests form in CVDdb so leave as is; 3 corrected below.
+
+replace flag74=eligible if record_id=="2244"|record_id=="2912"|record_id=="4229"
+replace eligible=4 if record_id=="2244"|record_id=="2912"|record_id=="4229" //see above
+replace flag999=eligible if record_id=="2244"|record_id=="2912"|record_id=="4229"
+//JC 10feb2023: 28d form is blank so changed eligible case status from completed to pending 28d F/U
+
+
+** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
+replace flagdate=sd_currentdate if record_id=="2256"|record_id=="2260"|record_id=="2902"|record_id=="2920"|record_id=="1946"|record_id=="3318"|record_id=="2863"|record_id=="1918"|record_id=="4371"|record_id=="2892"|record_id=="3361"|record_id=="2244"|record_id=="2912"|record_id=="4229"
+
+STOP
+
+*********
+** SOB **
+*********
+** Missing
+count if hsym2==. & sd_etype==2 & event_complete!=0 & event_complete!=. //4 - all incorrect: records 2256, 2260, 2902 + 2920 corrected below
+** Invalid missing code
+count if hsym2==88|hsym2==999|hsym2==9999 //0
+** Missing date
+count if hsym2d==. & hsym2==1 //0
+** Invalid (not 2021)
+count if hsym2d!=. & year(hsym2d)!=2021 //1 - corrected below
+** Invalid (before DOB)
+count if dob!=. & hsym2d!=. & hsym2d<dob //0
+** possibly Invalid (after CFAdmDate)
+count if hsym2d!=. & cfadmdate!=. & hsym2d>cfadmdate & inhosp!=1 //2 - corrected below; Checked MedData notes for record 3318
+** possibly Invalid (after DLC/DOD)
+count if dlc!=. & hsym2d!=. & hsym2d>dlc //1 - corrected below
+count if cfdod!=. & hsym2d!=. & hsym2d>cfdod //1 - corrected below
+** possibly Invalid (after A&EAdmDate)
+count if hsym2d!=. & dae!=. & hsym2d>dae & inhosp!=1 //2 - corrected below
+** possibly Invalid (after WardAdmDate)
+count if hsym2d!=. & doh!=. & hsym2d>doh & inhosp!=1 //1 - corrected below
+** Invalid (future date)
+count if hsym2d!=. & hsym2d>sd_currentdate //0
+** Invalid (date partial missing codes for all)
+count if hsym2==1 & hsym2d==. & hsym2day==99 & hsym2month==99 & hsym2year==9999 //0
+** possibly Invalid (notified date not partial but partial field not blank)
+count if hsym2d==. & hsym2day!=. & hsym2month!=. & hsym2year!=. //0
+replace hsym2day=. if hsym2d==. & hsym2day!=. & hsym2month!=. & hsym2year!=. //0 changes
+replace hsym2month=. if hsym2d==. & hsym2month!=. & hsym2year!=. //0 changes
+replace hsym2year=. if hsym2d==. & hsym2year!=. //0 changes
+count if hsym2d==. & (hsym2day!=. | hsym2month!=. | hsym2year!=.) //0
+** Invalid missing code (notified date partial fields)
+count if hsym2day==88|hsym2day==999|hsym2day==9999 //0
+count if hsym2month==88|hsym2month==999|hsym2month==9999 //0
+count if hsym2year==88|hsym2year==99|hsym2year==999 //0
+** Invalid (after NotifiedDate)
+count if hsym2d!=. & ambcalld!=. & hsym2d>ambcalld & inhosp!=1 //1 - corrected below
+** Invalid (after AtSceneDate)
+count if hsym2d!=. & atscnd!=. & hsym2d>atscnd & inhosp!=1 //1 - record 4371 changed at end of ptm dofile when populating atscnd + frmscnd so DAs don't need to correct in CVDdb; corrected below
+replace atscnd=dae if record_id=="4371"
+** Invalid (after FromSceneDate)
+count if hsym2d!=. & frmscnd!=. & hsym2d>frmscnd & inhosp!=1 //1 - record 4371 changed at end of ptm dofile when populating atscnd + frmscnd so DAs don't need to correct in CVDdb; corrected below
+replace frmscnd=dae if record_id=="4371"
+** Invalid (after AtHospitalDate)
+count if hsym2d!=. & hospd!=. & hsym2d>hospd & inhosp!=1 //1 - corrected below
+** Invalid (before EventDate)
+count if hsym2d!=. & edate!=. & hsym2d<edate //1 - corrected below
+
+
+** Corrections from above checks
+
+
+** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
+replace flagdate=sd_currentdate if record_id==""
+
+
 
 STOP
 *******************

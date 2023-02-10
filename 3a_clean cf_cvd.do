@@ -1004,6 +1004,18 @@ replace flag74=eligible if eligible==4 & fu1type==1 & (hxdoa!=.|tdoa!=.|dxdoa!=.
 replace eligible=9 if eligible==4 & fu1type==1 & (hxdoa!=.|tdoa!=.|dxdoa!=.|rxdoa!=.) //12 changes
 replace flag999=eligible if record_id=="1862"|record_id=="1982"|record_id=="1991"|record_id=="2267"|record_id=="2647"|record_id=="2734" ///
 						   |record_id=="2806"|record_id=="2837"|record_id=="2881"|record_id=="3047"|record_id=="3110"|record_id=="4115"
+						
+** JC 10feb2023: for 2022 onwards add in below checks found incidentally when cleaning Event form for 2021 data
+/*   
+** Invalid (eligible NOT=pending 28d f/u; 28d form is Incomplete)
+count if eligible!=4 & eligible!=6 & day_fu_complete==0
+						   
+** Invalid (eligible NOT=confirmed but not abs; forms are Incomplete)
+count if eligible!=6 & sd_casetype==1 & (casefinding_complete==0|demographics_complete==0|patient_management_complete==0|event_complete==0|history_complete==0|tests_complete==0|complications_dx_complete==0|medications_complete==0|discharge_complete==0|day_fu_complete==0)
+						   
+** Invalid (eligible NOT=confirmed but not abs; forms are missing)
+count if eligible!=6 & sd_casetype==1 & (casefinding_complete==.|demographics_complete==.|patient_management_complete==.|event_complete==.|history_complete==.|tests_complete==.|complications_dx_complete==.|medications_complete==.|discharge_complete==.|day_fu_complete==.)
+*/
 
 ** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
 replace flagdate=sd_currentdate if record_id=="1862"|record_id=="1982"|record_id=="1991"|record_id=="2267"|record_id=="2647"|record_id=="2734" ///
