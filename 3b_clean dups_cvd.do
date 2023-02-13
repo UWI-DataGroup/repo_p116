@@ -12,6 +12,8 @@
 	//							(1) identify and remove duplicate admissions (i.e. same patient with same admissions entered in different records)
 	//							(2) identify multiple events (i.e. same patient with another event >28 days after first event)
 	//							(3) identify and update re-admission + stroke-in-evolution info (i.e. same patient with different admissions for same event)
+	//							Note: to differentiate between data missing from patient notes (i.e. 99, 999 or 9999) VS 
+	//								  data missing from database, code 99999 has been used to signify data missing in CVDdb
 	//  support:                Natasha Sobers and Ian R Hambleton
 
     ** General algorithm set-up

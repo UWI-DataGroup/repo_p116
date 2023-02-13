@@ -10,6 +10,8 @@
     //  objective               (1) To have a cleaned 2021 cvd incidence dataset ready for analysis
 	//							(2) To have a list with errors and corrections for DAs to correct data directly into CVDdb
     //  methods                 Using missing and invalid checks to correct data
+	//							Note: to differentiate between data missing from patient notes (i.e. 99, 999 or 9999) VS 
+	//								  data missing from database, code 99999 has been used to signify data missing in CVDdb
 	//  support:                Natasha Sobers and Ian R Hambleton
 
     ** General algorithm set-up

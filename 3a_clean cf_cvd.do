@@ -10,6 +10,8 @@
     //  objective               (1) To have a cleaned 2021 cvd incidence dataset ready for analysis
 	//							(2) To have a list with errors and corrections for DAs to correct data directly into CVDdb
     //  methods                 Using missing and invalid checks to correct data
+	//							Note: to differentiate between data missing from patient notes (i.e. 99, 999 or 9999) VS 
+	//								  data missing from database, code 99999 has been used to signify data missing in CVDdb
 	//  support:                Natasha Sobers and Ian R Hambleton
 
     ** General algorithm set-up
@@ -1016,7 +1018,7 @@ count if eligible!=6 & sd_casetype==1 & (casefinding_complete==0|demographics_co
 ** Invalid (eligible NOT=confirmed but not abs; forms are missing)
 count if eligible!=6 & sd_casetype==1 & (casefinding_complete==.|demographics_complete==.|patient_management_complete==.|event_complete==.|history_complete==.|tests_complete==.|complications_dx_complete==.|medications_complete==.|discharge_complete==.|day_fu_complete==.)
 */
-
+						   
 ** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
 replace flagdate=sd_currentdate if record_id=="1862"|record_id=="1982"|record_id=="1991"|record_id=="2267"|record_id=="2647"|record_id=="2734" ///
 								  |record_id=="2806"|record_id=="2837"|record_id=="2881"|record_id=="3047"|record_id=="3110"|record_id=="4115"

@@ -13,6 +13,8 @@
 	//							(2) Review merged records to ensure matched with correct person
 	//							(3) Perform duplicates checks using NRN, DOB and NAMES for all unmerged records
 	//							(4) After verified matches are merged, update analysis variables in DCOs
+	//							Note: to differentiate between data missing from patient notes (i.e. 99, 999 or 9999) VS 
+	//								  data missing from database, code 99999 has been used to signify data missing in CVDdb
 	//  support:                Natasha Sobers and Ian R Hambleton
 
     ** General algorithm set-up
