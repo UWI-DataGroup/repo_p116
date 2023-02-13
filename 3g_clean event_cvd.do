@@ -4,7 +4,7 @@
     //  project:                BNR-CVD
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      09-FEB-2023
-    // 	date last modified      10-FEB-2023
+    // 	date last modified      13-FEB-2023
     //  algorithm task          Cleaning variables in the REDCap CVDdb Event form
     //  status                  Completed
     //  objective               (1) To have a cleaned 2021 cvd incidence dataset ready for analysis
@@ -49,6 +49,8 @@ count //1145
 ** First reivew and populate data into some variables based on initial and final dx and cfcods and cfadmdate on CF form for cases wherein case was eligible (confirmed but not fully abstracted):
 count if eligible==6 //45
 //list sd_etype record_id initialdx finaldx cfcods cfadmdate stype htype dxtype dstroke review edate etime etimeampm inhosp if eligible==6
+
+** JC 13feb2023: after discussing with NS the best approach to documenting missing DA by DA vs by patient notes (i.e. ND=99/999/9999), it was decided that data missing due to DA leaving fields and/or forms blank would have the code 99999 in order to differentiate with data missing due to lack of documentation in patient notes.
 
 ** Corrections from above checks
 destring flag257 ,replace
@@ -99,15 +101,15 @@ replace htype=4 if record_id=="3730" //1 change
 replace flag1183=htype if eligible==6 & htype!=. & sd_etype==2 //15 changes
 
 replace flag259=dxtype if eligible==6 & dxtype==. & record_id!="3121" //42
-replace dxtype=99 if eligible==6 & dxtype==. & record_id!="3121" //42 changes
+replace dxtype=99999 if eligible==6 & dxtype==. & record_id!="3121" //42 changes
 replace flag1184=dxtype if eligible==6 & dxtype!=. & record_id!="3121" & record_id!="2163" & record_id!="2227" //42 changes
 
 replace flag260=dstroke if eligible==6 & dstroke==. & sd_etype==1 & record_id!="3121" //27
-replace dstroke=1 if eligible==6 & dstroke==. & sd_etype==1 & record_id!="3121" //27 changes
+replace dstroke=99999 if eligible==6 & dstroke==. & sd_etype==1 & record_id!="3121" //27 changes
 replace flag1185=dstroke if eligible==6 & dstroke!=. & sd_etype==1 & record_id!="3121" & record_id!="2163" & record_id!="2227" //27 changes
 
 replace flag261=review if eligible==6 & review==. //42
-replace review=1 if eligible==6 & review==. //42 changes
+replace review=99999 if eligible==6 & review==. //42 changes
 replace flag1186=review if eligible==6 & review!=. & record_id!="3121" & record_id!="2163" & record_id!="2227" //42 changes
 //JC 09feb2023: I added a note in the Closing Off SOP which variables the DAs should complete (see BNR Ops Manual --> Database + Data Entry Protocols --> Database Protocol --> Closing-Off Process) so for 2022 closing off and onwards this will be done.
 
@@ -116,7 +118,7 @@ replace edate=cfadmdate if eligible==6 & edate==. & record_id!="3121" //see abov
 replace flag1192=edate if (record_id=="1876"|record_id=="1964"|record_id=="2155"|record_id=="2323"|record_id=="2331"|record_id=="2590"|record_id=="2666"|record_id=="3082"|record_id=="3104"|record_id=="3108"|record_id=="3173"|record_id=="3440"|record_id=="3551"|record_id=="3663"|record_id=="3723"|record_id=="3730"|record_id=="4112"|record_id=="4335"|record_id=="4336"|record_id=="4348"|record_id=="4361"|record_id=="4404"|record_id=="5495"|record_id=="5496"|record_id=="5497") & record_id!="3121" //25 changes
 
 replace flag269=etime if eligible==6 & etime!="99" & etime=="" & record_id!="3121" //26
-replace etime="99" if eligible==6 & etime!="99" & etime=="" & record_id!="3121" //see above
+replace etime="99999" if eligible==6 & etime!="99" & etime=="" & record_id!="3121" //see above
 replace flag1194=etime if (record_id=="1876"|record_id=="1964"|record_id=="2155"|record_id=="2323"|record_id=="2331"|record_id=="2590"|record_id=="2666"|record_id=="2830"|record_id=="3082"|record_id=="3104"|record_id=="3108"|record_id=="3173"|record_id=="3440"|record_id=="3551"|record_id=="3663"|record_id=="3723"|record_id=="3730"|record_id=="4112"|record_id=="4335"|record_id=="4336"|record_id=="4348"|record_id=="4361"|record_id=="4404"|record_id=="5495"|record_id=="5496"|record_id=="5497") & record_id!="3121" //26 changes
 
 
@@ -288,26 +290,27 @@ destring flag1180 ,replace
 destring flag268 ,replace
 destring flag1193 ,replace
 
-replace flag176=ssym1 if record_id=="1910"|record_id=="2261"
-replace ssym1=99 if record_id=="1910"|record_id=="2261" //see above
-replace flag1101=ssym1 if record_id=="1910"|record_id=="2261"
+** Since the missing code 99999 is only to be used in the cleaning and analysis steps of data handling the DAs do not need to update the CVDdb
+//replace flag176=ssym1 if record_id=="1910"|record_id=="2261"
+replace ssym1=99999 if record_id=="1910"|record_id=="2261" //see above
+//replace flag1101=ssym1 if record_id=="1910"|record_id=="2261"
 
-replace flag177=ssym2 if record_id=="1910"|record_id=="2261"
-replace ssym2=99 if record_id=="1910"|record_id=="2261" //see above
-replace flag1102=ssym2 if record_id=="1910"|record_id=="2261"
+//replace flag177=ssym2 if record_id=="1910"|record_id=="2261"
+replace ssym2=99999 if record_id=="1910"|record_id=="2261" //see above
+//replace flag1102=ssym2 if record_id=="1910"|record_id=="2261"
 
-replace flag178=ssym3 if record_id=="1910"
-replace ssym3=99 if record_id=="1910" //see above
-replace flag1103=ssym3 if record_id=="1910"
+//replace flag178=ssym3 if record_id=="1910"
+replace ssym3=99999 if record_id=="1910" //see above
+//replace flag1103=ssym3 if record_id=="1910"
 
-replace flag179=ssym4 if record_id=="1910"
-replace ssym4=99 if record_id=="1910" //see above
-replace flag1104=ssym4 if record_id=="1910"
+//replace flag179=ssym4 if record_id=="1910"
+replace ssym4=99999 if record_id=="1910" //see above
+//replace flag1104=ssym4 if record_id=="1910"
 
 replace flag187=osym if record_id=="1910"|record_id=="2261"
 replace osym=1 if record_id=="1910" //see above
-replace osym=99 if record_id=="2261" //see above
 replace flag1112=osym if record_id=="1910"|record_id=="2261"
+replace osym=99999 if record_id=="2261" //see above
 
 replace flag188=osym1 if record_id=="1910"
 replace osym1="HEADACHE" if record_id=="1910" //see above
@@ -329,37 +332,37 @@ replace flag240=osymd if record_id=="1910"
 replace osymd=edate if record_id=="1910" //see above
 replace flag1165=osymd if record_id=="1910"
 
-replace flag244=sign1 if record_id=="1910"|record_id=="2261"
+//replace flag244=sign1 if record_id=="1910"|record_id=="2261"
 replace sign1=99 if record_id=="1910"|record_id=="2261" //see above
-replace flag1169=sign1 if record_id=="1910"|record_id=="2261"
+//replace flag1169=sign1 if record_id=="1910"|record_id=="2261"
 
 replace flag245=sign2 if record_id=="1910"
-replace sign2=99 if record_id=="1910" //see above
+replace sign2=99999 if record_id=="1910" //see above
 replace flag1170=sign2 if record_id=="1910"
 
-replace flag246=sign3 if record_id=="1910"|record_id=="2261"
-replace sign3=99 if record_id=="1910"|record_id=="2261" //see above
-replace flag1171=sign3 if record_id=="1910"|record_id=="2261"
+//replace flag246=sign3 if record_id=="1910"|record_id=="2261"
+replace sign3=99999 if record_id=="1910"|record_id=="2261" //see above
+//replace flag1171=sign3 if record_id=="1910"|record_id=="2261"
 
-replace flag247=sign4 if record_id=="1910"
-replace sign4=99 if record_id=="1910" //see above
-replace flag1172=sign4 if record_id=="1910"
+//replace flag247=sign4 if record_id=="1910"
+replace sign4=99999 if record_id=="1910" //see above
+//replace flag1172=sign4 if record_id=="1910"
 
-replace flag248=sonset if record_id=="1910"
-replace sonset=99 if record_id=="1910" //see above
-replace flag1173=sonset if record_id=="1910"
+//replace flag248=sonset if record_id=="1910"
+replace sonset=99999 if record_id=="1910" //see above
+//replace flag1173=sonset if record_id=="1910"
 
-replace flag249=sday if record_id=="1910"
-replace sday=99 if record_id=="1910" //see above
-replace flag1174=sday if record_id=="1910"
+//replace flag249=sday if record_id=="1910"
+replace sday=99999 if record_id=="1910" //see above
+//replace flag1174=sday if record_id=="1910"
 
-replace flag254=cardmon if record_id=="1910"|record_id=="2261"
-replace cardmon=99 if record_id=="1910"|record_id=="2261" //see above
-replace flag1179=cardmon if record_id=="1910"|record_id=="2261"
+//replace flag254=cardmon if record_id=="1910"|record_id=="2261"
+replace cardmon=99999 if record_id=="1910"|record_id=="2261" //see above
+//replace flag1179=cardmon if record_id=="1910"|record_id=="2261"
 
-replace flag255=nihss if record_id=="1910"
-replace nihss=99 if record_id=="1910" //see above
-replace flag1180=nihss if record_id=="1910"
+//replace flag255=nihss if record_id=="1910"
+replace nihss=99999 if record_id=="1910" //see above
+//replace flag1180=nihss if record_id=="1910"
 //stroke record 1910 was missing all the symptoms + signs info although all forms were completed - used symptom from initial dx on CF form
 //stroke record 2261 was missing some of the symptoms + signs info although all forms were completed
 
@@ -391,7 +394,7 @@ gen flagdate=sd_currentdate if record_id=="1910"|record_id=="2261"|record_id=="1
 ** Diminshed Responsiveness **
 ******************************
 ** Missing
-count if ssym2==. & sd_etype==1 & event_complete!=0 & event_complete!=. //4 - note we have to add in the form status variable since cases wherein dx was confirmed but case not abstracted as year was closed would have NO data in this form; stroke record 1889 have all forms completed so these are corrected below.
+count if ssym2==. & sd_etype==1 & event_complete!=0 & event_complete!=. //4 - note we have to add in the form status variable since cases wherein dx was confirmed but case not abstracted as year was closed would have NO data in this form; stroke record 1889 does not have all fields and/or forms completed so these are corrected below.
 ** Invalid missing code
 count if ssym2==88|ssym2==999|ssym2==9999 //0
 ** Missing date
@@ -452,49 +455,49 @@ destring flag1267 ,replace
 destring flag405 ,replace
 destring flag1330 ,replace
 
-replace flag177=ssym2 if record_id=="1889"
-replace ssym2=99 if record_id=="1889" //see above
-replace flag1102=ssym2 if record_id=="1889"
+//replace flag177=ssym2 if record_id=="1889"
+replace ssym2=99999 if record_id=="1889" //see above
+//replace flag1102=ssym2 if record_id=="1889"
 
-replace flag179=ssym4 if record_id=="1889"
-replace ssym4=99 if record_id=="1889" //see above
-replace flag1104=ssym4 if record_id=="1889"
+//replace flag179=ssym4 if record_id=="1889"
+replace ssym4=99999 if record_id=="1889" //see above
+//replace flag1104=ssym4 if record_id=="1889"
 
-replace flag254=cardmon if record_id=="1889"
-replace cardmon=99 if record_id=="1889" //see above
-replace flag1179=cardmon if record_id=="1889"
+//replace flag254=cardmon if record_id=="1889"
+replace cardmon=99999 if record_id=="1889" //see above
+//replace flag1179=cardmon if record_id=="1889"
 
-replace flag310=sysbp if record_id=="1889"
-replace sysbp=999 if record_id=="1889" //see above
-replace flag1235=sysbp if record_id=="1889"
+//replace flag310=sysbp if record_id=="1889"
+replace sysbp=99999 if record_id=="1889" //see above
+//replace flag1235=sysbp if record_id=="1889"
 
-replace flag311=diasbp if record_id=="1889"
-replace diasbp=999 if record_id=="1889" //see above
-replace flag1236=diasbp if record_id=="1889"
+//replace flag311=diasbp if record_id=="1889"
+replace diasbp=99999 if record_id=="1889" //see above
+//replace flag1236=diasbp if record_id=="1889"
 
-replace flag313=bgunit if record_id=="1889"
-replace bgunit=99 if record_id=="1889" //see above
-replace flag1238=bgunit if record_id=="1889"
+//replace flag313=bgunit if record_id=="1889"
+replace bgunit=99999 if record_id=="1889" //see above
+//replace flag1238=bgunit if record_id=="1889"
 
-replace flag317=assess if record_id=="1889"
-replace assess=99 if record_id=="1889" //see above
-replace flag1242=assess if record_id=="1889"
+//replace flag317=assess if record_id=="1889"
+replace assess=99999 if record_id=="1889" //see above
+//replace flag1242=assess if record_id=="1889"
 
-replace flag328=dieany if record_id=="1889"
-replace dieany=99 if record_id=="1889" //see above
-replace flag1253=dieany if record_id=="1889"
+//replace flag328=dieany if record_id=="1889"
+replace dieany=99999 if record_id=="1889" //see above
+//replace flag1253=dieany if record_id=="1889"
 
-replace flag342=ct if record_id=="1889"
-replace ct=99 if record_id=="1889" //see above
-replace flag1267=ct if record_id=="1889"
+//replace flag342=ct if record_id=="1889"
+replace ct=99999 if record_id=="1889" //see above
+//replace flag1267=ct if record_id=="1889"
 
-replace flag405=tiany if record_id=="1889"
-replace tiany=99 if record_id=="1889" //see above
-replace flag1330=tiany if record_id=="1889"
+//replace flag405=tiany if record_id=="1889"
+replace tiany=99999 if record_id=="1889" //see above
+//replace flag1330=tiany if record_id=="1889"
 
 
 ** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
-replace flagdate=sd_currentdate if record_id=="1889"
+//replace flagdate=sd_currentdate if record_id=="1889"
 
 
 **************
@@ -689,6 +692,7 @@ count if hsym1t=="999"|hsym1t=="9999" //0
 count if hsym1t=="88" & hsym1tampm==. //0
 ** Invalid (symptom time after notified time)
 count if hsym1t!="" & hsym1t!="99" & ambcallt!="" & ambcallt!="99" & hsym1t>ambcallt //18 - 15 correct; records 1918, 2425 (query for NS), 2892 (query for NS) corrected below
+gen comments="JC 13feb2023: after reviewing case with NS today, note the irregularity with ambulance times and chest pain time will remain as cannot confirm event time in MedData or any other external source at this point in data handling." if record_id=="2425"
 ** Invalid (symptom time after time at scene)
 count if hsym1t!="" & hsym1t!="99" & atscnt!="" & atscnt!="99" & hsym1t>atscnt //18 - same records as above
 ** Invalid (symptom time after time from scene)
@@ -733,45 +737,45 @@ destring flag236 ,replace
 destring flag1161 ,replace
 format flag210 flag1135 flag216 flag1141 flag224 flag1149 flag232 flag1157 flag236 flag1161 %dM_d,_CY
 
-replace flag180=hsym1 if record_id=="2256"|record_id=="2260"|record_id=="2902"|record_id=="2920"
-replace hsym1=99 if record_id=="2256"|record_id=="2260"|record_id=="2902"|record_id=="2920" //see above
-replace flag1105=hsym1 if record_id=="2256"|record_id=="2260"|record_id=="2902"|record_id=="2920"
+//replace flag180=hsym1 if record_id=="2256"|record_id=="2260"|record_id=="2902"|record_id=="2920"
+replace hsym1=99999 if record_id=="2256"|record_id=="2260"|record_id=="2902"|record_id=="2920" //see above
+//replace flag1105=hsym1 if record_id=="2256"|record_id=="2260"|record_id=="2902"|record_id=="2920"
 
-replace flag181=hsym2 if record_id=="2256"|record_id=="2260"|record_id=="2902"
-replace hsym2=99 if record_id=="2256"|record_id=="2260"|record_id=="2902" //see above
-replace flag1106=hsym2 if record_id=="2256"|record_id=="2260"|record_id=="2902"
+//replace flag181=hsym2 if record_id=="2256"|record_id=="2260"|record_id=="2902"
+replace hsym2=99999 if record_id=="2256"|record_id=="2260"|record_id=="2902" //see above
+//replace flag1106=hsym2 if record_id=="2256"|record_id=="2260"|record_id=="2902"
 
-replace flag182=hsym3 if record_id=="2256"|record_id=="2260"|record_id=="2902"
-replace hsym3=99 if record_id=="2256"|record_id=="2260"|record_id=="2902" //see above
-replace flag1107=hsym3 if record_id=="2256"|record_id=="2260"|record_id=="2902"
+//replace flag182=hsym3 if record_id=="2256"|record_id=="2260"|record_id=="2902"
+replace hsym3=99999 if record_id=="2256"|record_id=="2260"|record_id=="2902" //see above
+//replace flag1107=hsym3 if record_id=="2256"|record_id=="2260"|record_id=="2902"
 
-replace flag183=hsym4 if record_id=="2256"|record_id=="2260"|record_id=="2902"|record_id=="2920"
-replace hsym4=99 if record_id=="2256"|record_id=="2260"|record_id=="2902"|record_id=="2920" //see above
-replace flag1108=hsym4 if record_id=="2256"|record_id=="2260"|record_id=="2902"|record_id=="2920"
+//replace flag183=hsym4 if record_id=="2256"|record_id=="2260"|record_id=="2902"|record_id=="2920"
+replace hsym4=99999 if record_id=="2256"|record_id=="2260"|record_id=="2902"|record_id=="2920" //see above
+//replace flag1108=hsym4 if record_id=="2256"|record_id=="2260"|record_id=="2902"|record_id=="2920"
 
-replace flag184=hsym5 if record_id=="2256"|record_id=="2902"|record_id=="2920"
-replace hsym5=99 if record_id=="2256"|record_id=="2902"|record_id=="2920" //see above
-replace flag1109=hsym5 if record_id=="2256"|record_id=="2902"|record_id=="2920"
+//replace flag184=hsym5 if record_id=="2256"|record_id=="2902"|record_id=="2920"
+replace hsym5=99999 if record_id=="2256"|record_id=="2902"|record_id=="2920" //see above
+//replace flag1109=hsym5 if record_id=="2256"|record_id=="2902"|record_id=="2920"
 
-replace flag185=hsym6 if record_id=="2256"|record_id=="2260"|record_id=="2902"|record_id=="2920"
-replace hsym6=99 if record_id=="2256"|record_id=="2260"|record_id=="2902"|record_id=="2920" //see above
-replace flag1110=hsym6 if record_id=="2256"|record_id=="2260"|record_id=="2902"|record_id=="2920"
+//replace flag185=hsym6 if record_id=="2256"|record_id=="2260"|record_id=="2902"|record_id=="2920"
+replace hsym6=99999 if record_id=="2256"|record_id=="2260"|record_id=="2902"|record_id=="2920" //see above
+//replace flag1110=hsym6 if record_id=="2256"|record_id=="2260"|record_id=="2902"|record_id=="2920"
 
-replace flag186=hsym7 if record_id=="2256"|record_id=="2260"|record_id=="2902"
-replace hsym7=99 if record_id=="2256"|record_id=="2260"|record_id=="2902" //see above
-replace flag1111=hsym7 if record_id=="2256"|record_id=="2260"|record_id=="2902"
+//replace flag186=hsym7 if record_id=="2256"|record_id=="2260"|record_id=="2902"
+replace hsym7=99999 if record_id=="2256"|record_id=="2260"|record_id=="2902" //see above
+//replace flag1111=hsym7 if record_id=="2256"|record_id=="2260"|record_id=="2902"
 
 replace flag268=inhosp if record_id=="2256"
 replace inhosp=1 if record_id=="2256" //see above
 replace flag1193=inhosp if record_id=="2256"
 
-replace flag271=cardiac if record_id=="2256"
-replace cardiac=99 if record_id=="2256" //see above
-replace flag1196=cardiac if record_id=="2256"
+//replace flag271=cardiac if record_id=="2256"
+replace cardiac=99999 if record_id=="2256" //see above
+//replace flag1196=cardiac if record_id=="2256"
 
-replace flag272=cardiachosp if record_id=="2256"
-replace cardiachosp=99 if record_id=="2256" //see above
-replace flag1197=cardiachosp if record_id=="2256"
+//replace flag272=cardiachosp if record_id=="2256"
+replace cardiachosp=99999 if record_id=="2256" //see above
+//replace flag1197=cardiachosp if record_id=="2256"
 
 replace flag74=eligible if record_id=="2920"
 replace eligible=6 if record_id=="2920" //see above
@@ -849,6 +853,7 @@ replace tests_complete=1 if record_id=="1945"
 replace complications_dx_complete=1 if record_id=="1945"
 replace medications_complete=1 if record_id=="1945"
 replace discharge_complete=1 if record_id=="1945"
+//1945 was mistakenly entered into heart arm by DA so that's why these forms appear as incomplete but this record contains the stroke data as the heart record was dropped when the records were merged in the prep dofile
 //DAs don't need to update CVDdb as the form status for 28d form is already set to Unverified.
 
 count if eligible!=6 & sd_casetype==1 & (casefinding_complete==.|demographics_complete==.|patient_management_complete==.|event_complete==.|history_complete==.|tests_complete==.|complications_dx_complete==.|medications_complete==.|discharge_complete==.|day_fu_complete==.) //9 - 5 correct; record 1889 missing Tests form in CVDdb so leave as is; 3 corrected below.
@@ -862,30 +867,28 @@ replace flag999=eligible if record_id=="2244"|record_id=="2912"|record_id=="4229
 ** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
 replace flagdate=sd_currentdate if record_id=="2256"|record_id=="2260"|record_id=="2902"|record_id=="2920"|record_id=="1946"|record_id=="3318"|record_id=="2863"|record_id=="1918"|record_id=="4371"|record_id=="2892"|record_id=="3361"|record_id=="2244"|record_id=="2912"|record_id=="4229"
 
-STOP
-
 *********
 ** SOB **
 *********
 ** Missing
-count if hsym2==. & sd_etype==2 & event_complete!=0 & event_complete!=. //4 - all incorrect: records 2256, 2260, 2902 + 2920 corrected below
+count if hsym2==. & sd_etype==2 & event_complete!=0 & event_complete!=. //1 - all incorrect: records 3290 corrected below
 ** Invalid missing code
 count if hsym2==88|hsym2==999|hsym2==9999 //0
 ** Missing date
-count if hsym2d==. & hsym2==1 //0
+count if hsym2d==. & hsym2==1 //1 - correct as hsym2d=99 in CVDdb
 ** Invalid (not 2021)
-count if hsym2d!=. & year(hsym2d)!=2021 //1 - corrected below
+count if hsym2d!=. & year(hsym2d)!=2021 //0
 ** Invalid (before DOB)
 count if dob!=. & hsym2d!=. & hsym2d<dob //0
 ** possibly Invalid (after CFAdmDate)
-count if hsym2d!=. & cfadmdate!=. & hsym2d>cfadmdate & inhosp!=1 //2 - corrected below; Checked MedData notes for record 3318
+count if hsym2d!=. & cfadmdate!=. & hsym2d>cfadmdate & inhosp!=1 //0
 ** possibly Invalid (after DLC/DOD)
-count if dlc!=. & hsym2d!=. & hsym2d>dlc //1 - corrected below
-count if cfdod!=. & hsym2d!=. & hsym2d>cfdod //1 - corrected below
+count if dlc!=. & hsym2d!=. & hsym2d>dlc //0
+count if cfdod!=. & hsym2d!=. & hsym2d>cfdod //0
 ** possibly Invalid (after A&EAdmDate)
-count if hsym2d!=. & dae!=. & hsym2d>dae & inhosp!=1 //2 - corrected below
+count if hsym2d!=. & dae!=. & hsym2d>dae & inhosp!=1 //0
 ** possibly Invalid (after WardAdmDate)
-count if hsym2d!=. & doh!=. & hsym2d>doh & inhosp!=1 //1 - corrected below
+count if hsym2d!=. & doh!=. & hsym2d>doh & inhosp!=1 //0
 ** Invalid (future date)
 count if hsym2d!=. & hsym2d>sd_currentdate //0
 ** Invalid (date partial missing codes for all)
@@ -901,28 +904,347 @@ count if hsym2day==88|hsym2day==999|hsym2day==9999 //0
 count if hsym2month==88|hsym2month==999|hsym2month==9999 //0
 count if hsym2year==88|hsym2year==99|hsym2year==999 //0
 ** Invalid (after NotifiedDate)
-count if hsym2d!=. & ambcalld!=. & hsym2d>ambcalld & inhosp!=1 //1 - corrected below
+count if hsym2d!=. & ambcalld!=. & hsym2d>ambcalld & inhosp!=1 //0
 ** Invalid (after AtSceneDate)
-count if hsym2d!=. & atscnd!=. & hsym2d>atscnd & inhosp!=1 //1 - record 4371 changed at end of ptm dofile when populating atscnd + frmscnd so DAs don't need to correct in CVDdb; corrected below
-replace atscnd=dae if record_id=="4371"
+count if hsym2d!=. & atscnd!=. & hsym2d>atscnd & inhosp!=1 //00
 ** Invalid (after FromSceneDate)
-count if hsym2d!=. & frmscnd!=. & hsym2d>frmscnd & inhosp!=1 //1 - record 4371 changed at end of ptm dofile when populating atscnd + frmscnd so DAs don't need to correct in CVDdb; corrected below
-replace frmscnd=dae if record_id=="4371"
+count if hsym2d!=. & frmscnd!=. & hsym2d>frmscnd & inhosp!=1 //0
 ** Invalid (after AtHospitalDate)
-count if hsym2d!=. & hospd!=. & hsym2d>hospd & inhosp!=1 //1 - corrected below
+count if hsym2d!=. & hospd!=. & hsym2d>hospd & inhosp!=1 //0
 ** Invalid (before EventDate)
-count if hsym2d!=. & edate!=. & hsym2d<edate //1 - corrected below
+count if hsym2d!=. & edate!=. & hsym2d<edate //0
 
 
 ** Corrections from above checks
 
+** Below are blank/unanswered in CVDdb
+replace hsym2=99999 if record_id=="3290" //see above
+replace hsym4=99999 if record_id=="3290"
+replace hsym5=99999 if record_id=="3290"
+replace hsym6=99999 if record_id=="3290"
+replace hsym7=99999 if record_id=="3290"
+
 
 ** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
-replace flagdate=sd_currentdate if record_id==""
+//replace flagdate=sd_currentdate if record_id==""
 
 
+***************
+** Vomitting **
+***************
+** Missing
+count if hsym3==. & sd_etype==2 & event_complete!=0 & event_complete!=. //0
+** Invalid missing code
+count if hsym3==88|hsym3==999|hsym3==9999 //0
+** Missing date
+count if hsym3d==. & hsym3==1 //2 - correct as hsym3d=99 in CVDdb
+** Invalid (not 2021)
+count if hsym3d!=. & year(hsym3d)!=2021 //0
+** Invalid (before DOB)
+count if dob!=. & hsym3d!=. & hsym3d<dob //0
+** possibly Invalid (after CFAdmDate)
+count if hsym3d!=. & cfadmdate!=. & hsym3d>cfadmdate & inhosp!=1 //0
+** possibly Invalid (after DLC/DOD)
+count if dlc!=. & hsym3d!=. & hsym3d>dlc //0
+count if cfdod!=. & hsym3d!=. & hsym3d>cfdod //0
+** possibly Invalid (after A&EAdmDate)
+count if hsym3d!=. & dae!=. & hsym3d>dae & inhosp!=1 //0
+** possibly Invalid (after WardAdmDate)
+count if hsym3d!=. & doh!=. & hsym3d>doh & inhosp!=1 //0
+** Invalid (future date)
+count if hsym3d!=. & hsym3d>sd_currentdate //0
+** Invalid (date partial missing codes for all)
+count if hsym3==1 & hsym3d==. & hsym3day==99 & hsym3month==99 & hsym3year==9999 //0
+** possibly Invalid (notified date not partial but partial field not blank)
+count if hsym3d==. & hsym3day!=. & hsym3month!=. & hsym3year!=. //0
+replace hsym3day=. if hsym3d==. & hsym3day!=. & hsym3month!=. & hsym3year!=. //0 changes
+replace hsym3month=. if hsym3d==. & hsym3month!=. & hsym3year!=. //0 changes
+replace hsym3year=. if hsym3d==. & hsym3year!=. //0 changes
+count if hsym3d==. & (hsym3day!=. | hsym3month!=. | hsym3year!=.) //0
+** Invalid missing code (notified date partial fields)
+count if hsym3day==88|hsym3day==999|hsym3day==9999 //0
+count if hsym3month==88|hsym3month==999|hsym3month==9999 //0
+count if hsym3year==88|hsym3year==99|hsym3year==999 //0
+** Invalid (after NotifiedDate)
+count if hsym3d!=. & ambcalld!=. & hsym3d>ambcalld & inhosp!=1 //0
+** Invalid (after AtSceneDate)
+count if hsym3d!=. & atscnd!=. & hsym3d>atscnd & inhosp!=1 //00
+** Invalid (after FromSceneDate)
+count if hsym3d!=. & frmscnd!=. & hsym3d>frmscnd & inhosp!=1 //0
+** Invalid (after AtHospitalDate)
+count if hsym3d!=. & hospd!=. & hsym3d>hospd & inhosp!=1 //0
+** Invalid (before EventDate)
+count if hsym3d!=. & edate!=. & hsym3d<edate //1  heart record 2549: check MedData notes section re vomit date as it looks to be an error.
+
+
+** Corrections from above checks
+replace flag220=hsym3d if record_id=="2549"
+replace hsym3d=edate if record_id=="2549" //see above
+replace flag1145=hsym3d if record_id=="2549"
+
+
+
+** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
+replace flagdate=sd_currentdate if record_id=="2549"
+
+
+***************
+** Dizziness **
+***************
+** Missing
+count if hsym4==. & sd_etype==2 & event_complete!=0 & event_complete!=. //0
+** Invalid missing code
+count if hsym4==88|hsym4==999|hsym4==9999 //0
+** Missing date
+count if hsym4d==. & hsym4==1 //0
+** Invalid (not 2021)
+count if hsym4d!=. & year(hsym4d)!=2021 //0
+** Invalid (before DOB)
+count if dob!=. & hsym4d!=. & hsym4d<dob //0
+** possibly Invalid (after CFAdmDate)
+count if hsym4d!=. & cfadmdate!=. & hsym4d>cfadmdate & inhosp!=1 //0
+** possibly Invalid (after DLC/DOD)
+count if dlc!=. & hsym4d!=. & hsym4d>dlc //0
+count if cfdod!=. & hsym4d!=. & hsym4d>cfdod //0
+** possibly Invalid (after A&EAdmDate)
+count if hsym4d!=. & dae!=. & hsym4d>dae & inhosp!=1 //0
+** possibly Invalid (after WardAdmDate)
+count if hsym4d!=. & doh!=. & hsym4d>doh & inhosp!=1 //0
+** Invalid (future date)
+count if hsym4d!=. & hsym4d>sd_currentdate //0
+** Invalid (date partial missing codes for all)
+count if hsym4==1 & hsym4d==. & hsym4day==99 & hsym4month==99 & hsym4year==9999 //0
+** possibly Invalid (notified date not partial but partial field not blank)
+count if hsym4d==. & hsym4day!=. & hsym4month!=. & hsym4year!=. //0
+replace hsym4day=. if hsym4d==. & hsym4day!=. & hsym4month!=. & hsym4year!=. //0 changes
+replace hsym4month=. if hsym4d==. & hsym4month!=. & hsym4year!=. //0 changes
+replace hsym4year=. if hsym4d==. & hsym4year!=. //0 changes
+count if hsym4d==. & (hsym4day!=. | hsym4month!=. | hsym4year!=.) //0
+** Invalid missing code (notified date partial fields)
+count if hsym4day==88|hsym4day==999|hsym4day==9999 //0
+count if hsym4month==88|hsym4month==999|hsym4month==9999 //0
+count if hsym4year==88|hsym4year==99|hsym4year==999 //0
+** Invalid (after NotifiedDate)
+count if hsym4d!=. & ambcalld!=. & hsym4d>ambcalld & inhosp!=1 //0
+** Invalid (after AtSceneDate)
+count if hsym4d!=. & atscnd!=. & hsym4d>atscnd & inhosp!=1 //00
+** Invalid (after FromSceneDate)
+count if hsym4d!=. & frmscnd!=. & hsym4d>frmscnd & inhosp!=1 //0
+** Invalid (after AtHospitalDate)
+count if hsym4d!=. & hospd!=. & hsym4d>hospd & inhosp!=1 //0
+** Invalid (before EventDate)
+count if hsym4d!=. & edate!=. & hsym4d<edate //0
+
+
+** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
+//replace flagdate=sd_currentdate if record_id==""
+
+
+*********
+** LOC **
+*********
+** Missing
+count if hsym5==. & sd_etype==2 & event_complete!=0 & event_complete!=. //0
+** Invalid missing code
+count if hsym5==88|hsym5==999|hsym5==9999 //0
+** Missing date
+count if hsym5d==. & hsym5==1 //0
+** Invalid (not 2021)
+count if hsym5d!=. & year(hsym5d)!=2021 //0
+** Invalid (before DOB)
+count if dob!=. & hsym5d!=. & hsym5d<dob //0
+** possibly Invalid (after CFAdmDate)
+count if hsym5d!=. & cfadmdate!=. & hsym5d>cfadmdate & inhosp!=1 //0
+** possibly Invalid (after DLC/DOD)
+count if dlc!=. & hsym5d!=. & hsym5d>dlc //0
+count if cfdod!=. & hsym5d!=. & hsym5d>cfdod //0
+** possibly Invalid (after A&EAdmDate)
+count if hsym5d!=. & dae!=. & hsym5d>dae & inhosp!=1 //0
+** possibly Invalid (after WardAdmDate)
+count if hsym5d!=. & doh!=. & hsym5d>doh & inhosp!=1 //0
+** Invalid (future date)
+count if hsym5d!=. & hsym5d>sd_currentdate //0
+** Invalid (date partial missing codes for all)
+count if hsym5==1 & hsym5d==. & hsym5day==99 & hsym5month==99 & hsym5year==9999 //0
+** possibly Invalid (notified date not partial but partial field not blank)
+count if hsym5d==. & hsym5day!=. & hsym5month!=. & hsym5year!=. //0
+replace hsym5day=. if hsym5d==. & hsym5day!=. & hsym5month!=. & hsym5year!=. //0 changes
+replace hsym5month=. if hsym5d==. & hsym5month!=. & hsym5year!=. //0 changes
+replace hsym5year=. if hsym5d==. & hsym5year!=. //0 changes
+count if hsym5d==. & (hsym5day!=. | hsym5month!=. | hsym5year!=.) //0
+** Invalid missing code (notified date partial fields)
+count if hsym5day==88|hsym5day==999|hsym5day==9999 //0
+count if hsym5month==88|hsym5month==999|hsym5month==9999 //0
+count if hsym5year==88|hsym5year==99|hsym5year==999 //0
+** Invalid (after NotifiedDate)
+count if hsym5d!=. & ambcalld!=. & hsym5d>ambcalld & inhosp!=1 //0
+** Invalid (after AtSceneDate)
+count if hsym5d!=. & atscnd!=. & hsym5d>atscnd & inhosp!=1 //00
+** Invalid (after FromSceneDate)
+count if hsym5d!=. & frmscnd!=. & hsym5d>frmscnd & inhosp!=1 //0
+** Invalid (after AtHospitalDate)
+count if hsym5d!=. & hospd!=. & hsym5d>hospd & inhosp!=1 //0
+** Invalid (before EventDate)
+count if hsym5d!=. & edate!=. & hsym5d<edate //00
+
+
+** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
+//replace flagdate=sd_currentdate if record_id==""
+
+
+******************
+** Palpitations **
+******************
+** Missing
+count if hsym6==. & sd_etype==2 & event_complete!=0 & event_complete!=. //0
+** Invalid missing code
+count if hsym6==88|hsym6==999|hsym6==9999 //0
+** Missing date
+count if hsym6d==. & hsym6==1 //1 - correct as hsym6d=99 in CVDdb
+** Invalid (not 2021)
+count if hsym6d!=. & year(hsym6d)!=2021 //0
+** Invalid (before DOB)
+count if dob!=. & hsym6d!=. & hsym6d<dob //0
+** possibly Invalid (after CFAdmDate)
+count if hsym6d!=. & cfadmdate!=. & hsym6d>cfadmdate & inhosp!=1 //0
+** possibly Invalid (after DLC/DOD)
+count if dlc!=. & hsym6d!=. & hsym6d>dlc //0
+count if cfdod!=. & hsym6d!=. & hsym6d>cfdod //0
+** possibly Invalid (after A&EAdmDate)
+count if hsym6d!=. & dae!=. & hsym6d>dae & inhosp!=1 //0
+** possibly Invalid (after WardAdmDate)
+count if hsym6d!=. & doh!=. & hsym6d>doh & inhosp!=1 //0
+** Invalid (future date)
+count if hsym6d!=. & hsym6d>sd_currentdate //0
+** Invalid (date partial missing codes for all)
+count if hsym6==1 & hsym6d==. & hsym6day==99 & hsym6month==99 & hsym6year==9999 //0
+** possibly Invalid (notified date not partial but partial field not blank)
+count if hsym6d==. & hsym6day!=. & hsym6month!=. & hsym6year!=. //0
+replace hsym6day=. if hsym6d==. & hsym6day!=. & hsym6month!=. & hsym6year!=. //0 changes
+replace hsym6month=. if hsym6d==. & hsym6month!=. & hsym6year!=. //0 changes
+replace hsym6year=. if hsym6d==. & hsym6year!=. //0 changes
+count if hsym6d==. & (hsym6day!=. | hsym6month!=. | hsym6year!=.) //0
+** Invalid missing code (notified date partial fields)
+count if hsym6day==88|hsym6day==999|hsym6day==9999 //0
+count if hsym6month==88|hsym6month==999|hsym6month==9999 //0
+count if hsym6year==88|hsym6year==99|hsym6year==999 //0
+** Invalid (after NotifiedDate)
+count if hsym6d!=. & ambcalld!=. & hsym6d>ambcalld & inhosp!=1 //0
+** Invalid (after AtSceneDate)
+count if hsym6d!=. & atscnd!=. & hsym6d>atscnd & inhosp!=1 //00
+** Invalid (after FromSceneDate)
+count if hsym6d!=. & frmscnd!=. & hsym6d>frmscnd & inhosp!=1 //0
+** Invalid (after AtHospitalDate)
+count if hsym6d!=. & hospd!=. & hsym6d>hospd & inhosp!=1 //0
+** Invalid (before EventDate)
+count if hsym6d!=. & edate!=. & hsym6d<edate //0
+
+
+** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
+//replace flagdate=sd_currentdate if record_id==""
+
+
+**************
+** Sweating **
+**************
+** Missing
+count if hsym7==. & sd_etype==2 & event_complete!=0 & event_complete!=. //0
+** Invalid missing code
+count if hsym7==88|hsym7==999|hsym7==9999 //0
+** Missing date
+count if hsym7d==. & hsym7==1 //1 - correct as hsym7d=99 in CVDdb
+** Invalid (not 2021)
+count if hsym7d!=. & year(hsym7d)!=2021 //0
+** Invalid (before DOB)
+count if dob!=. & hsym7d!=. & hsym7d<dob //0
+** possibly Invalid (after CFAdmDate)
+count if hsym7d!=. & cfadmdate!=. & hsym7d>cfadmdate & inhosp!=1 //0
+** possibly Invalid (after DLC/DOD)
+count if dlc!=. & hsym7d!=. & hsym7d>dlc //0
+count if cfdod!=. & hsym7d!=. & hsym7d>cfdod //0
+** possibly Invalid (after A&EAdmDate)
+count if hsym7d!=. & dae!=. & hsym7d>dae & inhosp!=1 //0
+** possibly Invalid (after WardAdmDate)
+count if hsym7d!=. & doh!=. & hsym7d>doh & inhosp!=1 //0
+** Invalid (future date)
+count if hsym7d!=. & hsym7d>sd_currentdate //0
+** Invalid (date partial missing codes for all)
+count if hsym7==1 & hsym7d==. & hsym7day==99 & hsym7month==99 & hsym7year==9999 //0
+** possibly Invalid (notified date not partial but partial field not blank)
+count if hsym7d==. & hsym7day!=. & hsym7month!=. & hsym7year!=. //0
+replace hsym7day=. if hsym7d==. & hsym7day!=. & hsym7month!=. & hsym7year!=. //0 changes
+replace hsym7month=. if hsym7d==. & hsym7month!=. & hsym7year!=. //0 changes
+replace hsym7year=. if hsym7d==. & hsym7year!=. //0 changes
+count if hsym7d==. & (hsym7day!=. | hsym7month!=. | hsym7year!=.) //0
+** Invalid missing code (notified date partial fields)
+count if hsym7day==88|hsym7day==999|hsym7day==9999 //0
+count if hsym7month==88|hsym7month==999|hsym7month==9999 //0
+count if hsym7year==88|hsym7year==99|hsym7year==999 //0
+** Invalid (after NotifiedDate)
+count if hsym7d!=. & ambcalld!=. & hsym7d>ambcalld & inhosp!=1 //0
+** Invalid (after AtSceneDate)
+count if hsym7d!=. & atscnd!=. & hsym7d>atscnd & inhosp!=1 //00
+** Invalid (after FromSceneDate)
+count if hsym7d!=. & frmscnd!=. & hsym7d>frmscnd & inhosp!=1 //0
+** Invalid (after AtHospitalDate)
+count if hsym7d!=. & hospd!=. & hsym7d>hospd & inhosp!=1 //0
+** Invalid (before EventDate)
+count if hsym7d!=. & edate!=. & hsym7d<edate //0
+
+
+** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
+//replace flagdate=sd_currentdate if record_id==""
 
 STOP
+
+**********************
+**  Other Symptoms  **
+** (Heart + Stroke) **
+**********************
+** Missing
+count if osym==. & event_complete!=0 & event_complete!=. //3 - note we have to add in the form status variable since cases wherein dx was confirmed but case not abstracted as year was closed would have NO data in this form; stroke records 1985, 2227, 2611 do not have all fields and/or forms completed so these are corrected below - but need to use code 99999 for all of these wherein eligible=6(confirmed but not fully abstracted).
+** Invalid missing code
+count if osym==88|osym==999|osym==9999 //0
+** Missing (other sym options=1 but other sym text blank)
+count if osym==1 & osym1=="" //0
+** Invalid (other sym options=ND/None but other sym text NOT=blank)
+count if (osym==7|osym==99|osym==99999) & osym1!="" //0
+** possibly Invalid (other symptom=one of the symptom options)
+count if osym1!="" //... - reviewed and are correct
+
+
+
+** Corrections from above checks
+** Below are blank/unanswered in CVDdb for those wherein eligible=6 (confirmed but not fully abstracted)
+replace ssym1=99999 if eligible==6 & sd_etype==1 & ssym1==. //see above
+replace ssym2=99999 if eligible==6 & sd_etype==1 & ssym2==.
+replace ssym3=99999 if eligible==6 & sd_etype==1 & ssym3==.
+replace ssym4=99999 if eligible==6 & sd_etype==1 & ssym4==.
+replace osym=99999 if eligible==6 & sd_etype==1 & osym==.
+replace sign1=99999 if eligible==6 & sd_etype==1 & sign1==.
+replace sign2=99999 if eligible==6 & sd_etype==1 & sign2==.
+replace sign3=99999 if eligible==6 & sd_etype==1 & sign3==.
+replace sign4=99999 if eligible==6 & sd_etype==1 & sign4==.
+replace sonset=99999 if eligible==6 & sd_etype==1 & sonset==.
+replace sday=99999 if eligible==6 & sd_etype==1 & sday==.
+replace cardmon=99999 if eligible==6 & sd_etype==1 & cardmon==.
+replace nihss=99999 if eligible==6 & sd_etype==1 & nihss==.
+
+
+replace hsym1=99999 if eligible==6 & sd_etype==2 & hsym1==. //see above
+replace hsym2=99999 if eligible==6 & sd_etype==2 & hsym2==.
+replace hsym3=99999 if eligible==6 & sd_etype==2 & hsym3==.
+replace hsym4=99999 if eligible==6 & sd_etype==2 & hsym4==.
+replace hsym5=99999 if eligible==6 & sd_etype==2 & hsym5==.
+replace hsym6=99999 if eligible==6 & sd_etype==2 & hsym6==.
+replace hsym7=99999 if eligible==6 & sd_etype==2 & hsym7==.
+replace osym=99999 if eligible==6 & sd_etype==2 & osym==.
+replace timi=99999 if eligible==6 & sd_etype==2 & timi==.
+replace cardiac=99999 if eligible==6 & sd_etype==2 & cardiac==.
+replace cardiachosp=99999 if eligible==6 & sd_etype==2 & cardiachosp==.
+
+STOP
+
 *******************
 ** Referred From **
 *******************
