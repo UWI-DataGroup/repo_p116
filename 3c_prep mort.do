@@ -49,11 +49,12 @@
 ** Excel data generated using the REDCap report in multi-yr death db (BNRDeathData20082021) called 'CVD matching 2021 deaths'.
 
 ** JC 11jan2023: decided not to use the dataset prepared in p141 as this would not have the record_id from the multi-year database so will import and prep based on multi-year death db
+** JC 13feb2023: 2 more late registrations added for 2021 deaths
 
 ** LOAD the national registry deaths 2021 excel dataset
-import excel using "`datapath'\version03\1-input\BNRDeathData20082021-CVDMatching2021Death_DATA_2023-01-18_0815_excel.xlsx" , firstrow case(lower)
+import excel using "`datapath'\version03\1-input\BNRDeathData20082021-CVDMatching2021Death_DATA_2023-02-13_0930_excel.xlsx" , firstrow case(lower)
 
-count //3148; 3149 (JC 18jan2023: added a late registration)
+count //3148; 3149 (JC 18jan2023: added a late registration); 3151 (JC 13feb2023: added 2 late registrations)
 
 
 *******************
@@ -1063,7 +1064,7 @@ note: TS This dataset includes all 2021 CODs
 ** Create dataset for merging with CVD incidence dataset using NRN
 ** Remove records with blank NRNs as the incidence and death datasets will not correctly merge using NRN but save the blanks so they can be added back into the ds after the merge in dofile 3c_death match_cvd.do
 preserve
-count //3149
+count //3149; 3151
 count if dd_natregno=="" //87
 drop if dd_natregno=="" //87 deleted
 
@@ -1075,9 +1076,9 @@ note: TS This dataset includes all 2021 CODs
 restore
 
 preserve
-count //3149
+count //3149; 3151
 count if dd_natregno=="" //87
-drop if dd_natregno!="" //3062 deleted
+drop if dd_natregno!="" //3062; 3064 deleted
 
 label data "BNR MORTALITY data 2021: Identifiable Dataset - Blank/missing NRNs"
 notes _dta :These data prepared from BB national death register & Redcap deathdata database

@@ -56,6 +56,15 @@ merge m:1 dd_natregno using "`datapath'\version03\2-working\nomissNRNs_death"
 /*
     Result                      Number of obs
     -----------------------------------------
+    Not matched                         3,270
+        from master                       448  (_merge==1)
+        from using                      2,822  (_merge==2)
+
+    Matched                               251  (_merge==3)
+    -----------------------------------------
+
+    Result                      Number of obs
+    -----------------------------------------
     Not matched                         3,278
         from master                       453  (_merge==1)
         from using                      2,825  (_merge==2)
@@ -64,7 +73,7 @@ merge m:1 dd_natregno using "`datapath'\version03\2-working\nomissNRNs_death"
     -----------------------------------------
 */
 
-count //3524
+count //3524; 3521
 
 ** Create variable to differentiate records that have been matched/merged in prep for later matches using NRN, DOB and NAMES
 gen match=1 if _merge==3 //246 changes
@@ -90,9 +99,9 @@ drop dup
 
 ** Now add back in the blank/missing NRNs from the incidence and death datasets
 append using "`datapath'\version03\2-working\missNRNs_incidence"
-count //3558
+count //3558; 3555
 append using "`datapath'\version03\2-working\missNRNs_death"
-count //3645
+count //3645; 3642
 
 ** Incidental spelling correction
 replace fname=subinstr(fname,"Ã©","e",.) if record_id=="3024" //1 change - it's a misspelling error due to importing into Stata so DAs don't need to correct in CVDdb
@@ -103,15 +112,15 @@ replace fname=subinstr(fname,"Ã©","e",.) if record_id=="3024" //1 change - it'
 ** DOB **
 *********
 ** Create one DOB variable
-replace dd_dob=dob if dd_dob==. & dob!=. //463 changes
+replace dd_dob=dob if dd_dob==. & dob!=. //463; 458 changes
 
 
 ** Identify possible matches using DOB
 sort dd_dob
 quietly by dd_dob : gen dup = cond(_N==1,0,_n)
 sort dd_dob lname
-count if dup>0 //709 - review these in Stata's Browse/Edit window
-count if dup>0 & _merge!=3 //660 - review these in Stata's Browse/Edit window
+count if dup>0 //709; 703 - review these in Stata's Browse/Edit window
+count if dup>0 & _merge!=3 //660; 654 - review these in Stata's Browse/Edit window
 //only review records that haven't already been merged 
 //check electoral list (Sync/DM/Data/Electoral&Boundaries List/2019+2021_ElectoralList_20220516.xlsx) + MedData to see which NRN is correct
 //JC 31jan2023: I manually corrected NRNs from above in multi-year REDCap death db
@@ -149,6 +158,15 @@ merge m:1 record_id using "`datapath'\version03\2-working\missing_nrn" ,force
 /*
     Result                      Number of obs
     -----------------------------------------
+    Not matched                         3,641
+        from master                     3,641  (_merge==1)
+        from using                          0  (_merge==2)
+
+    Matched                                 1  (_merge==3)
+    -----------------------------------------
+
+    Result                      Number of obs
+    -----------------------------------------
     Not matched                         3,644
         from master                     3,644  (_merge==1)
         from using                          0  (_merge==2)
@@ -182,7 +200,7 @@ save "`datapath'\version03\2-working\DOBs_death" ,replace
 restore
 
 
-count //3645
+count //3645; 3642
 
 ** Remove death records in prep for merge
 drop if match==1 & sd_casetype==2 //6 deleted
@@ -191,6 +209,18 @@ drop if record_id=="" //2906 deleted
 
 merge 1:1 record_id using "`datapath'\version03\2-working\DOBs_death" ,update
 /*
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                           730
+        from master                       727  (_merge==1)
+        from using                          3  (_merge==2)
+
+    Matched                                 3
+        not updated                         0  (_merge==3)
+        missing updated                     2  (_merge==4)
+        nonmissing conflict                 1  (_merge==5)
+    -----------------------------------------
+
     Result                      Number of obs
     -----------------------------------------
     Not matched                           727
@@ -207,23 +237,23 @@ count //733
 
 ** Add deaths back in for possible matches by NAMES
 append using "`datapath'\version03\2-working\nomissNRNs_death"
-count //3795
+count //3795; 3797
 append using "`datapath'\version03\2-working\missNRNs_death"
-count //3882
+count //3882; 3884
 
 ***********
 ** NAMES **
 ***********
 ** Update death NAMES variables in incidence dataset so can match using combined NAMES variables
-replace dd_lname=lname if dd_lname=="" & lname!="" //481 changes
-replace dd_fname=fname if dd_fname=="" & fname!="" //481 changes
+replace dd_lname=lname if dd_lname=="" & lname!="" //481; 479 changes
+replace dd_fname=fname if dd_fname=="" & fname!="" //481; 479 changes
 
 drop dup
 sort dd_lname dd_fname
 quietly by dd_lname dd_fname:  gen dup = cond(_N==1,0,_n)
 count if dup>0 //633 - review these in Stata's Browse/Edit window
 count if dup>0 & _merge!=3 //633 - review these in Stata's Browse/Edit window
-count if dup>0 & _merge!=3 & match!=1 //381 - review these in Stata's Browse/Edit window
+count if dup>0 & _merge!=3 & match!=1 //381; 384 - review these in Stata's Browse/Edit window
 //only review records that haven't already been merged so the ones directly above
 //check electoral list (Sync/DM/Data/Electoral&Boundaries List/2019+2021_ElectoralList_20220516.xlsx) to determine which natregno is correct
 //JC 31jan2023: I manually corrected NRNs from above in multi-year REDCap death db
@@ -289,7 +319,7 @@ replace record_id="3763" if dd_deathid==36037
 replace record_id="2331" if dd_deathid==35236
 replace record_id="2536" if dd_deathid==35631
 replace record_id="2915" if dd_deathid==34481
-replace record_id="3521" if dd_deathid==37092
+//replace record_id="3521" if dd_deathid==37092 - 13feb2023 already matched above since running updated multi-yr db dataset
 replace record_id="3524" if dd_deathid==37193
 replace record_id="4196" if dd_deathid==36792
 replace record_id="2248" if dd_deathid==35349
@@ -298,32 +328,44 @@ replace record_id="2938" if dd_deathid==35995
 
 ** Create variable to separate out the records to merge using corrected NRNs above
 replace match=1 if dd_deathid==34388|dd_deathid==35809|dd_deathid==34525|dd_deathid==35695|dd_deathid==36037|dd_deathid==35236 ///
-				  |dd_deathid==35631|dd_deathid==34481|dd_deathid==37092|dd_deathid==37193|dd_deathid==36792|dd_deathid==35349 ///
-				  |dd_deathid==37081|dd_deathid==35995
+				  |dd_deathid==35631|dd_deathid==34481|dd_deathid==37193|dd_deathid==36792|dd_deathid==35349 ///
+				  |dd_deathid==37081|dd_deathid==35995 //|dd_deathid==37092
 replace sd_casetype=2 if dd_deathid==34388|dd_deathid==35809|dd_deathid==34525|dd_deathid==35695|dd_deathid==36037|dd_deathid==35236 ///
-				  |dd_deathid==35631|dd_deathid==34481|dd_deathid==37092|dd_deathid==37193|dd_deathid==36792|dd_deathid==35349 ///
-				  |dd_deathid==37081|dd_deathid==35995
+				  |dd_deathid==35631|dd_deathid==34481|dd_deathid==37193|dd_deathid==36792|dd_deathid==35349 ///
+				  |dd_deathid==37081|dd_deathid==35995 //|dd_deathid==37092
 replace match=1 if record_id=="2263"|record_id=="2720"|record_id=="2155"|record_id=="2822"|record_id=="3763"|record_id=="2331" ///
-				  |record_id=="2536"|record_id=="2915"|record_id=="3521"|record_id=="3524"|record_id=="4196"|record_id=="2248" ///
-				  |record_id=="4115"|record_id=="2938"
+				  |record_id=="2536"|record_id=="2915"|record_id=="3524"|record_id=="4196"|record_id=="2248" ///
+				  |record_id=="4115"|record_id=="2938" //|record_id=="3521"
 
 preserve
 keep if match==1 & sd_casetype==2
 keep record_id dd_deathid dd_dob dd_natregno dd_pname dd_age dd_coddeath dd_fname dd_mname dd_lname dd_regnum dd_nrn dd_sex dd_dod dd_heart dd_stroke dd_cod1a dd_address dd_parish dd_pod dd_namematch dd_dddoa dd_ddda dd_odda dd_certtype dd_district dd_agetxt dd_nrnnd dd_mstatus dd_occu dd_durationnum dd_durationtxt dd_onsetnumcod1a dd_onsettxtcod1a dd_cod1b dd_onsetnumcod1b dd_onsettxtcod1b dd_cod1c dd_onsetnumcod1c dd_onsettxtcod1c dd_cod1d dd_onsetnumcod1d dd_onsettxtcod1d dd_cod2a dd_onsetnumcod2a dd_onsettxtcod2a dd_cod2b dd_onsetnumcod2b dd_onsettxtcod2b dd_deathparish dd_regdate dd_certifier dd_certifieraddr dd_cleaned dd_duprec dd_elecmatch dd_codheart dd_codstroke dd_dodyear dd_placeofdeath dd_redcap_event_name dd_recstatdc dd_event
-count //14
+count //14; 13
 save "`datapath'\version03\2-working\NAMES_death" ,replace
 restore
 
 
-count //3882
+count //3882; 3884
 
 ** Remove death records in prep for merge
-drop if match==1 & sd_casetype==2 //14 deleted
-drop if record_id=="" //3135 deleted
+drop if match==1 & sd_casetype==2 //14; 13 deleted
+drop if record_id=="" //3135; 3138 deleted
 
 drop _merge
 merge 1:1 record_id using "`datapath'\version03\2-working\NAMES_death" ,update
 /*
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                           720
+        from master                       720  (_merge==1)
+        from using                          0  (_merge==2)
+
+    Matched                                13
+        not updated                         0  (_merge==3)
+        missing updated                    13  (_merge==4)
+        nonmissing conflict                 0  (_merge==5)
+    -----------------------------------------
+
     Result                      Number of obs
     -----------------------------------------
     Not matched                           719
