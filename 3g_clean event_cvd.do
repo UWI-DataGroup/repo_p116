@@ -4,7 +4,7 @@
     //  project:                BNR-CVD
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      09-FEB-2023
-    // 	date last modified      13-FEB-2023
+    // 	date last modified      14-FEB-2023
     //  algorithm task          Cleaning variables in the REDCap CVDdb Event form
     //  status                  Completed
     //  objective               (1) To have a cleaned 2021 cvd incidence dataset ready for analysis
@@ -974,7 +974,7 @@ count if hsym3d!=. & frmscnd!=. & hsym3d>frmscnd & inhosp!=1 //0
 ** Invalid (after AtHospitalDate)
 count if hsym3d!=. & hospd!=. & hsym3d>hospd & inhosp!=1 //0
 ** Invalid (before EventDate)
-count if hsym3d!=. & edate!=. & hsym3d<edate //1  heart record 2549: check MedData notes section re vomit date as it looks to be an error.
+count if hsym3d!=. & edate!=. & hsym3d<edate //1  heart record 2549: checked MedData notes section re vomit date as it looks to be an error but cannot confirm so will leave as is.
 
 
 ** Corrections from above checks
@@ -1195,7 +1195,6 @@ count if hsym7d!=. & edate!=. & hsym7d<edate //0
 ** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
 //replace flagdate=sd_currentdate if record_id==""
 
-STOP
 
 **********************
 **  Other Symptoms  **
@@ -1206,12 +1205,117 @@ count if osym==. & event_complete!=0 & event_complete!=. //3 - note we have to a
 ** Invalid missing code
 count if osym==88|osym==999|osym==9999 //0
 ** Missing (other sym options=1 but other sym text blank)
+***************
+** Oth Sym 1 **
+***************
 count if osym==1 & osym1=="" //0
 ** Invalid (other sym options=ND/None but other sym text NOT=blank)
 count if (osym==7|osym==99|osym==99999) & osym1!="" //0
 ** possibly Invalid (other symptom=one of the symptom options)
-count if osym1!="" //... - reviewed and are correct
+count if sd_etype==1 & osym1!="" //... - reviewed and are correct
+count if sd_etype==1 & (regexm(osym1,"slurred")|regexm(osym1,"speech")|regexm(osym1,"unresponsive")|regexm(osym1,"drows")|regexm(osym1,"unilateral")|regexm(osym1,"facial")|regexm(osym1,"weak")|regexm(osym1,"swallow")) //7 - ask NS re rt upper limb weakness stroke record 3300
+count if sd_etype==2 & (regexm(osym1,"chest")|regexm(osym1,"breath")|regexm(osym1,"vomit")|regexm(osym1,"dizz")|regexm(osym1,"vertigo")|regexm(osym1,"conscious")|regexm(osym1,"palpit")|regexm(osym1,"heart")|regexm(osym1,"sweat")|regexm(osym1,"diaphore")) //0
+***************
+** Oth Sym 2 **
+***************
+** Missing (other sym options=2 but other sym text blank)
+count if osym==2 & osym2=="" //0
+** Invalid (other sym options=ND/None but other sym text NOT=blank)
+count if (osym==7|osym==99|osym==99999) & osym2!="" //0
+** possibly Invalid (other symptom=one of the symptom options)
+//count if sd_etype==1 & osym2!="" //... - reviewed and are correct
+count if sd_etype==1 & (regexm(osym2,"slurred")|regexm(osym2,"speech")|regexm(osym2,"unresponsive")|regexm(osym2,"drows")|regexm(osym2,"unilateral")|regexm(osym2,"facial")|regexm(osym2,"weak")|regexm(osym2,"swallow")) //3 - correct
+count if sd_etype==2 & (regexm(osym2,"chest")|regexm(osym2,"breath")|regexm(osym2,"vomit")|regexm(osym2,"dizz")|regexm(osym2,"vertigo")|regexm(osym2,"conscious")|regexm(osym2,"palpit")|regexm(osym2,"heart")|regexm(osym2,"sweat")|regexm(osym2,"diaphore")) //0
+***************
+** Oth Sym 3 **
+***************
+** Missing (other sym options=2 but other sym text blank)
+count if osym==3 & osym3=="" //0
+** Invalid (other sym options=ND/None but other sym text NOT=blank)
+count if (osym==7|osym==99|osym==99999) & osym3!="" //0
+** possibly Invalid (other symptom=one of the symptom options)
+//count if sd_etype==1 & osym3!="" //... - reviewed and are correct
+count if sd_etype==1 & (regexm(osym3,"slurred")|regexm(osym3,"speech")|regexm(osym3,"unresponsive")|regexm(osym3,"drows")|regexm(osym3,"unilateral")|regexm(osym3,"facial")|regexm(osym3,"weak")|regexm(osym3,"swallow")) //2 - correct
+count if sd_etype==2 & (regexm(osym3,"chest")|regexm(osym3,"breath")|regexm(osym3,"vomit")|regexm(osym3,"dizz")|regexm(osym3,"vertigo")|regexm(osym3,"conscious")|regexm(osym3,"palpit")|regexm(osym3,"heart")|regexm(osym3,"sweat")|regexm(osym3,"diaphore")) //0
+***************
+** Oth Sym 4 **
+***************
+** Missing (other sym options=2 but other sym text blank)
+count if osym==4 & osym4=="" //0
+** Invalid (other sym options=ND/None but other sym text NOT=blank)
+count if (osym==7|osym==99|osym==99999) & osym4!="" //0
+** possibly Invalid (other symptom=one of the symptom options)
+//count if sd_etype==1 & osym4!="" //... - reviewed and are correct
+count if sd_etype==1 & (regexm(osym4,"slurred")|regexm(osym4,"speech")|regexm(osym4,"unresponsive")|regexm(osym4,"drows")|regexm(osym4,"unilateral")|regexm(osym4,"facial")|regexm(osym4,"weak")|regexm(osym4,"swallow")) //3 - correct
+count if sd_etype==2 & (regexm(osym4,"chest")|regexm(osym4,"breath")|regexm(osym4,"vomit")|regexm(osym4,"dizz")|regexm(osym4,"vertigo")|regexm(osym4,"conscious")|regexm(osym4,"palpit")|regexm(osym4,"heart")|regexm(osym4,"sweat")|regexm(osym4,"diaphore")) //0
+***************
+** Oth Sym 5 **
+***************
+** Missing (other sym options=2 but other sym text blank)
+count if osym==5 & osym5=="" //0
+** Invalid (other sym options=ND/None but other sym text NOT=blank)
+count if (osym==7|osym==99|osym==99999) & osym5!="" //0
+** possibly Invalid (other symptom=one of the symptom options)
+//count if sd_etype==1 & osym5!="" //... - reviewed and are correct
+count if sd_etype==1 & (regexm(osym5,"slurred")|regexm(osym5,"speech")|regexm(osym5,"unresponsive")|regexm(osym5,"drows")|regexm(osym5,"unilateral")|regexm(osym5,"facial")|regexm(osym5,"weak")|regexm(osym5,"swallow")) //0
+count if sd_etype==2 & (regexm(osym5,"chest")|regexm(osym5,"breath")|regexm(osym5,"vomit")|regexm(osym5,"dizz")|regexm(osym5,"vertigo")|regexm(osym5,"conscious")|regexm(osym5,"palpit")|regexm(osym5,"heart")|regexm(osym5,"sweat")|regexm(osym5,"diaphore")) //0
+***************
+** Oth Sym 6 **
+***************
+** Missing (other sym options=2 but other sym text blank)
+count if osym==6 & osym6=="" //0
+** Invalid (other sym options=ND/None but other sym text NOT=blank)
+count if (osym==7|osym==99|osym==99999) & osym6!="" //0
+** possibly Invalid (other symptom=one of the symptom options)
+//count if sd_etype==1 & osym6!="" //... - reviewed and are correct
+count if sd_etype==1 & (regexm(osym6,"slurred")|regexm(osym6,"speech")|regexm(osym6,"unresponsive")|regexm(osym6,"drows")|regexm(osym6,"unilateral")|regexm(osym6,"facial")|regexm(osym6,"weak")|regexm(osym6,"swallow")) //0
+count if sd_etype==2 & (regexm(osym6,"chest")|regexm(osym6,"breath")|regexm(osym6,"vomit")|regexm(osym6,"dizz")|regexm(osym6,"vertigo")|regexm(osym6,"conscious")|regexm(osym6,"palpit")|regexm(osym6,"heart")|regexm(osym6,"sweat")|regexm(osym6,"diaphore")) //0
 
+
+**************
+** Oth Date **
+**************
+** Missing
+count if osym==. & event_complete!=0 & event_complete!=. //3 - note we have to add in the form status variable since cases wherein dx was confirmed but case not abstracted as year was closed would have NO data in this form; stroke records 1985, 2227, 2611 do not have all fields and/or forms completed so these are corrected below - but need to use code 99999 for all of these wherein eligible=6(confirmed but not fully abstracted).
+** Missing date
+count if osymd==. & osym==1 //7 - stroke record 1889, heart record 2256 oth date is blank in CVDdb; but others are correct as osymd=99 in CVDdb
+** Invalid (not 2021)
+count if osymd!=. & year(osymd)!=2021 //0
+** Invalid (before DOB)
+count if dob!=. & osymd!=. & osymd<dob //0
+** possibly Invalid (after CFAdmDate)
+count if osymd!=. & cfadmdate!=. & osymd>cfadmdate & inhosp!=1 //1 - stroke record 3654's oth sym date from merged stroke-in-evolution 2728
+** possibly Invalid (after DLC/DOD)
+count if dlc!=. & osymd!=. & osymd>dlc //1 - stroke record 3654's oth sym date from merged stroke-in-evolution 2728
+count if cfdod!=. & osymd!=. & osymd>cfdod //0
+** possibly Invalid (after A&EAdmDate)
+count if osymd!=. & dae!=. & osymd>dae & inhosp!=1 //1 - stroke record 3654's oth sym date from merged stroke-in-evolution 2728
+** possibly Invalid (after WardAdmDate)
+count if osymd!=. & doh!=. & osymd>doh & inhosp!=1 //0
+** Invalid (future date)
+count if osymd!=. & osymd>sd_currentdate //0
+** Invalid (date partial missing codes for all)
+count if osym==1 & osymd==. & osymday==99 & osymmonth==99 & osymyear==9999 //0
+** possibly Invalid (oth sym date not partial but partial field not blank)
+count if osymd==. & osymday!=. & osymmonth!=. & osymyear!=. //1 - stroke record 1974 corrected below
+replace osymday=. if osymd==. & osymday!=. & osymmonth!=. & osymyear!=. //1 change
+replace osymmonth=. if osymd==. & osymmonth!=. & osymyear!=. //1 change
+replace osymyear=. if osymd==. & osymyear!=. //1 change
+count if osymd==. & (osymday!=. | osymmonth!=. | osymyear!=.) //0
+** Invalid missing code (notified date partial fields)
+count if osymday==88|osymday==999|osymday==9999 //0
+count if osymmonth==88|osymmonth==999|osymmonth==9999 //0
+count if osymyear==88|osymyear==99|osymyear==999 //0
+** Invalid (after NotifiedDate)
+count if osymd!=. & ambcalld!=. & osymd>ambcalld & inhosp!=1 //0
+** Invalid (after AtSceneDate)
+count if osymd!=. & atscnd!=. & osymd>atscnd & inhosp!=1 //00
+** Invalid (after FromSceneDate)
+count if osymd!=. & frmscnd!=. & osymd>frmscnd & inhosp!=1 //0
+** Invalid (after AtHospitalDate)
+count if osymd!=. & hospd!=. & osymd>hospd & inhosp!=1 //0
+** Invalid (before EventDate)
+count if osymd!=. & edate!=. & osymd<edate //9 - checked MedData but cannot confirm if osymd is incorrect for stroke records 1996, 2076, 2862, 3025, 3047, 3087, 3699 or heart records 2613 + 2900
 
 
 ** Corrections from above checks
@@ -1243,110 +1347,157 @@ replace timi=99999 if eligible==6 & sd_etype==2 & timi==.
 replace cardiac=99999 if eligible==6 & sd_etype==2 & cardiac==.
 replace cardiachosp=99999 if eligible==6 & sd_etype==2 & cardiachosp==.
 
+replace flag269=etime if record_id=="1974"
+replace etime="20:00" if record_id=="1974" //see above - time seen in MedData notes section
+replace flag1194=etime if record_id=="1974"
+replace osymd=d(15jan2021) if record_id=="1974" //used unk day code for this partial date
+
+
+** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
+replace flagdate=sd_currentdate if record_id=="1974"
+
+** Incidental correction
+preserve
+clear
+import excel using "`datapath'\version03\2-working\MissingNRN_20230214.xlsx" , firstrow case(lower)
+tostring record_id, replace
+tostring elec_sd_natregno, replace
+save "`datapath'\version03\2-working\missing_nrn" ,replace
+restore
+
+merge m:1 record_id using "`datapath'\version03\2-working\missing_nrn" ,force
+/*
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                         1,144
+        from master                     1,144  (_merge==1)
+        from using                          0  (_merge==2)
+
+    Matched                                 1  (_merge==3)
+    -----------------------------------------
+*/
+replace natregno=elec_natregno if _merge==3 //2 changes
+replace flag51=sd_natregno if _merge==3
+replace sd_natregno=elec_sd_natregno if _merge==3
+replace flag976=sd_natregno if _merge==3
+replace flag45=dob if _merge==3
+replace dob=elec_dob if _merge==3
+replace flag970=dob if _merge==3
+replace flagdate=sd_currentdate if _merge==3
+replace dd_dob=dob if record_id=="2076"
+replace dd_natregno=sd_natregno if record_id=="2076"
+replace cfage=cfage-1 if record_id=="2076"
+drop elec_* _merge
+erase "`datapath'\version03\2-working\missing_nrn.dta"
+
 STOP
 
-*******************
-** Referred From **
-*******************
+********************
+** Signs + Scores **
+** Heart + Stroke **
+********************
+************
+** Sign 1 **
+************
 ** Missing
-count if fmcplace==. & fmc==1 //0
+count if sign1==. & sd_etype==1 & event_complete!=0 & event_complete!=. //1 - it's 99 in CVDdb according to history button.
 ** Invalid missing code
-count if fmcplace==88|fmcplace==99|fmcplace==999|fmcplace==9999 //0
-** possibly Invalid (fmcplace=other; other place=one of the fmcplace options)
-count if fmcplace==98 //34 - reviewed and are correct
+count if sign1==88|sign1==999|sign1==9999 //0
+************
+** Sign 2 **
+************
+** Missing
+count if sign2==. & sd_etype==1 & event_complete!=0 & event_complete!=. //1 - it's 99 in CVDdb according to history button.
+** Invalid missing code
+count if sign2==88|sign2==999|sign2==9999 //0
+************
+** Sign 3 **
+************
+** Missing
+count if sign3==. & sd_etype==1 & event_complete!=0 & event_complete!=. //1 - it's 99 in CVDdb according to history button.
+** Invalid missing code
+count if sign3==88|sign3==999|sign3==9999 //0
+************
+** Sign 4 **
+************
+** Missing
+count if sign4==. & sd_etype==1 & event_complete!=0 & event_complete!=. //1 - it's 99 in CVDdb according to history button.
+** Invalid missing code
+count if sign4==88|sign4==999|sign4==9999 //0
+**********************
+**   Sudden Onset   **
+** neuro impairment **
+**********************
+** Missing
+count if sonset==. & sd_etype==1 & event_complete!=0 & event_complete!=. //1 - it's 99 in CVDdb according to history button.
+** Invalid missing code
+count if sonset==88|sonset==999|sonset==9999 //0
+****************
+** Symp/death **
+**  in 24hrs  **
+****************
+** Missing
+count if sday==. & sd_etype==1 & event_complete!=0 & event_complete!=. //1 - it's 99 in CVDdb according to history button.
+** Invalid missing code
+count if sday==88|sday==999|sday==9999 //0
 
-
-**************************
-** At Scene Date & Time **
-**************************
+********************
+** Swallow Screen **
+**     Date       **
+********************
 ** Missing date
-count if atscnd==. & arrivalmode==1 & atscene!=1 //3 - checked CVDdb and these have atscene date=99 as ambulance sheet missing from notes so leave as is.
-** Missing invalid codes
-count if atscene==88|atscene==999|atscene==9999 //0
+count if swalldate==. & sign4==1 //7 - stroke record 1889, heart record 2256 oth date is blank in CVDdb; but others are correct as swalldate=99 in CVDdb
 ** Invalid (not 2021)
-count if atscnd!=. & year(atscnd)!=2021 //0
+count if swalldate!=. & year(swalldate)!=2021 //0
 ** Invalid (before DOB)
-count if dob!=. & atscnd!=. & atscnd<dob //0
-** Invalid (after CFAdmDate)
-count if atscnd!=. & cfadmdate!=. & atscnd>cfadmdate //0
-** Invalid (after DLC/DOD)
-count if dlc!=. & atscnd!=. & atscnd>dlc //0
-count if cfdod!=. & atscnd!=. & atscnd>cfdod //0
-** Invalid (after A&EAdmDate)
-count if atscnd!=. & dae!=. & atscnd>dae //0
-** Invalid (after WardAdmDate)
-count if atscnd!=. & doh!=. & atscnd>doh //0
+count if dob!=. & swalldate!=. & swalldate<dob //0
+** possibly Invalid (after CFAdmDate)
+count if swalldate!=. & cfadmdate!=. & swalldate>cfadmdate & inhosp!=1 //1 - stroke record 3654's oth sym date from merged stroke-in-evolution 2728
+** possibly Invalid (after DLC/DOD)
+count if dlc!=. & swalldate!=. & swalldate>dlc //1 - stroke record 3654's oth sym date from merged stroke-in-evolution 2728
+count if cfdod!=. & swalldate!=. & swalldate>cfdod //0
+** possibly Invalid (after A&EAdmDate)
+count if swalldate!=. & dae!=. & swalldate>dae & inhosp!=1 //1 - stroke record 3654's oth sym date from merged stroke-in-evolution 2728
+** possibly Invalid (after WardAdmDate)
+count if swalldate!=. & doh!=. & swalldate>doh & inhosp!=1 //0
 ** Invalid (future date)
-count if atscnd!=. & atscnd>sd_currentdate //0
-** Invalid (notified date partial missing codes for all)
-count if arrivalmode==1 & atscnd==. & atscnday==99 & atscnmonth==99 & atscnyear==9999 //0
-** possibly Invalid (notified date not partial but partial field not blank)
-count if atscnd==. & atscnday!=. & atscnmonth!=. & atscnyear!=. //0
-replace atscnday=. if atscnd==. & atscnday!=. & atscnmonth!=. & atscnyear!=. //0 changes
-replace atscnmonth=. if atscnd==. & atscnmonth!=. & atscnyear!=. //0 changes
-replace atscnyear=. if atscnd==. & atscnyear!=. //0 changes
-count if atscnd==. & (atscnday!=. | atscnmonth!=. | atscnyear!=.) //0
+count if swalldate!=. & swalldate>sd_currentdate //0
+** Invalid (date partial missing codes for all)
+count if sign4==1 & swalldate==. & swalldday==99 & swalldmonth==99 & swalldyear==9999 //0
+** possibly Invalid (oth sym date not partial but partial field not blank)
+count if swalldate==. & swalldday!=. & swalldmonth!=. & swalldyear!=. //1 - stroke record 1974 corrected below
+replace swalldday=. if swalldate==. & swalldday!=. & swalldmonth!=. & swalldyear!=. //1 change
+replace swalldmonth=. if swalldate==. & swalldmonth!=. & swalldyear!=. //1 change
+replace swalldyear=. if swalldate==. & swalldyear!=. //1 change
+count if swalldate==. & (swalldday!=. | swalldmonth!=. | swalldyear!=.) //0
 ** Invalid missing code (notified date partial fields)
-count if atscnday==88|atscnday==999|atscnday==9999 //0
-count if atscnmonth==88|atscnmonth==999|atscnmonth==9999 //0
-count if atscnyear==88|atscnyear==99|atscnyear==999 //0
-** Invalid (before NotifiedDate)
-count if atscnd!=. & ambcalld!=. & atscnd<ambcalld //0
+count if swalldday==88|swalldday==999|swalldday==9999 //0
+count if swalldmonth==88|swalldmonth==999|swalldmonth==9999 //0
+count if swalldyear==88|swalldyear==99|swalldyear==999 //0
+** Invalid (after NotifiedDate)
+count if swalldate!=. & ambcalld!=. & swalldate>ambcalld & inhosp!=1 //0
+** Invalid (after AtSceneDate)
+count if swalldate!=. & atscnd!=. & swalldate>atscnd & inhosp!=1 //00
 ** Invalid (after FromSceneDate)
-count if atscnd!=. & frmscnd!=. & atscnd>frmscnd //0
+count if swalldate!=. & frmscnd!=. & swalldate>frmscnd & inhosp!=1 //0
 ** Invalid (after AtHospitalDate)
-count if atscnd!=. & hospd!=. & atscnd>hospd //0
-** Missing time
-count if atscnt=="" & arrivalmode==1 //3 - ambulance sheet missing from notes; leave as is.
-** Invalid (time format)
-count if atscnt!="" & atscnt!="88" & atscnt!="99" & (length(atscnt)<5|length(atscnt)>5) //0
-count if atscnt!="" & atscnt!="88" & atscnt!="99" & !strmatch(strupper(atscnt), "*:*") //0
-generate byte non_numeric_atscnt = indexnot(atscnt, "0123456789.-:")
-count if non_numeric_atscnt //0
-** Invalid missing code
-count if atscnt=="999"|atscnt=="9999" //0
-** Invalid (time=88 and am/pm is missing)
-count if atscnt=="88" & atscntampm==. //0
-** Invalid (atscene time before notified time)
-count if atscnt!="" & atscnt!="99" & ambcallt!="" & ambcallt!="99" & atscnt<ambcallt //1 - correct
-** Invalid (atscene time after time from scene)
-count if atscnt!="" & atscnt!="99" & frmscnt!="" & frmscnt!="99" & atscnt>frmscnt //3 - all correct
-** Invalid (atscene time after time at hospital)
-count if atscnt!="" & atscnt!="99" & hospt!="" & hospt!="99" & atscnt>hospt //6 - all correct
-*****************************
-** Patient Management Info **
-*****************************
-** Missing (ward info)
-count if ward___1==0 & ward___2==0 & ward___3==0 & ward___4==0 & ward___5==0 & ward___98==0 & patient_management_complete!=0 & patient_management_complete!=. //0 - note we have to add in the form status variable since cases wherein dx was confirmed but case not abstracted as year was closed would have NO data in this form.
-** Invalid (ward=other; other ward=one of the relation options)
-count if ward___98==1 //8 - reviewed and 6 are correct; 2 corrected below
-** Missing (ptm info)
-count if sourcetype==2 & nohosp___1==0 & nohosp___2==0 & nohosp___3==0 & nohosp___4==0 & nohosp___5==0 & nohosp___6==0 & nohosp___98==0 & nohosp___99==0 & patient_management_complete!=0 & patient_management_complete!=. //0
-** Invalid missing code
-count if nohosp___88==1|nohosp___999==1|nohosp___9999==1 //0
-** Invalid (relation=other; other relation=one of the relation options)
-count if nohosp___98==1 //0
+count if swalldate!=. & hospd!=. & swalldate>hospd & inhosp!=1 //0
+** Invalid (before EventDate)
+count if swalldate!=. & edate!=. & swalldate<edate //9 - checked MedData but cannot confirm if swalldate is incorrect for stroke records 1996, 2076, 2862, 3025, 3047, 3087, 3699 or heart records 2613 + 2900
+
+
 
 
 ** Corrections from above checks
-destring flag158 ,replace
-destring flag1083 ,replace
-destring flag161 ,replace
-destring flag1086 ,replace
+** Below are code=99 in CVDdb according to history button
+replace sign1=99 if record_id=="3247"
+replace sign4=99 if record_id=="3247"
+replace etime="99" if record_id=="3247"
 
-replace flag158=ward___3 if record_id=="1729"|record_id=="3741"
-replace flag161=ward___98 if record_id=="1729"|record_id=="3741"
-replace flag162=oward if record_id=="1729"|record_id=="3741"
-replace ward___3=1 if record_id=="1729"|record_id=="3741" //see above
-replace ward___98=0 if record_id=="1729"|record_id=="3741" //see above
-replace oward="" if record_id=="1729"|record_id=="3741" //see above
-replace flag1083=ward___3 if record_id=="1729"|record_id=="3741"
-replace flag1086=ward___98 if record_id=="1729"|record_id=="3741"
-replace flag1087=oward if record_id=="1729"|record_id=="3741"
 
 ** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
-replace flagdate=sd_currentdate if record_id=="1729"|record_id=="3741"
-
+replace flagdate=sd_currentdate if record_id=="3247"
+STOP
 
 /*
 ** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile (so added the code for that to this dofile and all the others preceding it with corrections).
