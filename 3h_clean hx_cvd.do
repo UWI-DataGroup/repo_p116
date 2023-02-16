@@ -1,11 +1,11 @@
 ** HEADER -----------------------------------------------------
 **  DO-FILE METADATA
-    //  algorithm name          3g_clean event_cvd.do
+    //  algorithm name          3h_clean hx_cvd.do
     //  project:                BNR-CVD
     //  analysts:               Jacqueline CAMPBELL
-    //  date first created      09-FEB-2023
+    //  date first created      16-FEB-2023
     // 	date last modified      16-FEB-2023
-    //  algorithm task          Cleaning variables in the REDCap CVDdb Event form
+    //  algorithm task          Cleaning variables in the REDCap CVDdb History form
     //  status                  Completed
     //  objective               (1) To have a cleaned 2021 cvd incidence dataset ready for analysis
 	//							(2) To have a list with errors and corrections for DAs to correct data directly into CVDdb
@@ -33,14 +33,14 @@
 
     ** Close any open log file and open a new log file
     capture log close
-    log using "`logpath'\3g_clean event_cvd.smcl", replace
+    log using "`logpath'\3h_clean hx_cvd.smcl", replace
 ** HEADER -----------------------------------------------------
 
 ** Load cleaned demo form 2021 dataset
-use "`datapath'\version03\2-working\BNRCVDCORE_CleanedData_ptm", clear
+use "`datapath'\version03\2-working\BNRCVDCORE_CleanedData_eve", clear
 
-count //1145
-
+count //1144
+STOP
 ** Cleaning each variable as they appear in REDCap BNRCVD_CORE db
 
 ****************************************
@@ -1864,6 +1864,8 @@ label var sd_eventdt "DateTime of Event"
 drop if record_id=="3121" //1 deleted
 
 drop flagdate sd_currentdate fu1date edatemon edatemondash edateetime daetae ambcalldt onsetevetoae onsetambtoae fu1done
+
+//FOR TESTS FORM - add check for if assess=No and assess1 or assess2 etc = Yes
 
 ** Create cleaned dataset
 save "`datapath'\version03\2-working\BNRCVDCORE_CleanedData_eve" ,replace
