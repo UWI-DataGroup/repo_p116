@@ -1,11 +1,11 @@
 ** HEADER -----------------------------------------------------
 **  DO-FILE METADATA
-    //  algorithm name          3h_clean hx_cvd.do
+    //  algorithm name          3i_clean tests_cvd.do
     //  project:                BNR-CVD
     //  analysts:               Jacqueline CAMPBELL
-    //  date first created      16-FEB-2023
+    //  date first created      20-FEB-2023
     // 	date last modified      20-FEB-2023
-    //  algorithm task          Cleaning variables in the REDCap CVDdb History form
+    //  algorithm task          Cleaning variables in the REDCap CVDdb Tests form
     //  status                  Completed
     //  objective               (1) To have a cleaned 2021 cvd incidence dataset ready for analysis
 	//							(2) To have a list with errors and corrections for DAs to correct data directly into CVDdb
@@ -33,14 +33,14 @@
 
     ** Close any open log file and open a new log file
     capture log close
-    log using "`logpath'\3h_clean hx_cvd.smcl", replace
+    log using "`logpath'\3i_clean tests_cvd.smcl", replace
 ** HEADER -----------------------------------------------------
 
 ** Load cleaned demo form 2021 dataset
-use "`datapath'\version03\2-working\BNRCVDCORE_CleanedData_eve", clear
+use "`datapath'\version03\2-working\BNRCVDCORE_CleanedData_hx", clear
 
 count //1144
-
+STOP
 ** Cleaning each variable as they appear in REDCap BNRCVD_CORE db
 
 *************************
@@ -366,6 +366,9 @@ capture export_excel record_id sd_etype flag1218 flag1228 if ///
 using "`datapath'\version03\3-output\CVDCleaning2021_HX1_`listdate'.xlsx", sheet("CORRECTIONS") firstrow(varlabels)
 restore
 */
+
+
+//FOR TESTS FORM - add check for if assess=No and assess1 or assess2 etc = Yes
 
 ** Create cleaned dataset
 save "`datapath'\version03\2-working\BNRCVDCORE_CleanedData_hx" ,replace

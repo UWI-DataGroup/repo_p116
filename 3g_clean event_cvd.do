@@ -1352,6 +1352,22 @@ replace etime="20:00" if record_id=="1974" //see above - time seen in MedData no
 replace flag1194=etime if record_id=="1974"
 replace osymd=d(15jan2021) if record_id=="1974" //used unk day code for this partial date
 
+replace flag178=ssym3 if record_id=="3300"
+replace ssym3=1 if record_id=="3300" //see above
+replace flag1103=ssym3 if record_id=="3300"
+
+replace flag202=ssym3d if record_id=="3300"
+replace ssym3d=osymd if record_id=="3300" //see above
+replace flag1127=ssym3d if record_id=="3300"
+
+replace flag187=osym if record_id=="3300"
+replace osym=99 if record_id=="3300" //see above
+replace flag1112=osym if record_id=="3300"
+
+replace osym1="" if record_id=="3300"
+replace osymd=. if record_id=="3300"
+//not flagging for these DA to change in CVDdb as the db will automatically erase these values when the above other corrections are performed.
+
 
 ** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
 replace flagdate=sd_currentdate if record_id=="1974"
@@ -1553,11 +1569,11 @@ count if dxtype==. & event_complete!=0 & event_complete!=. //0
 ** Invalid missing code
 count if dxtype==88|dxtype==999|dxtype==9999 //0
 ** possibly Invalid for stroke (dx made=clinical; dx type NOT=unclassified; dx tests were done)
-count if sd_etype==1 & dxtype==1 & stype!=4 & dct>1 & dmri>1 & dcerangio>1 & dcarangio>1 & dcarus>1 & odie>1 & odie!=4 //3 - 1890, 2982, 2800 CODs have finaldx as pt died within few mins of being in A&E and no PM done so leave as is; ask NS to review all of these.
+count if sd_etype==1 & dxtype==1 & stype!=4 & dct>1 & dmri>1 & dcerangio>1 & dcarangio>1 & dcarus>1 & odie>1 & odie!=4 //3 - 1890, 2982, 2800 CODs have finaldx as pt died within few mins of being in A&E and no PM done so leave as is; ask NS to review all of these - all corrected below after review with NS.
 ** possibly Invalid for stroke (dx made=clinical; dx tests were done)
 count if sd_etype==1 & dxtype==1 & stype!=4 & (dct==1|dmri==1|dcerangio==1|dcarangio==1|dcarus==1|odie<4) //2 - none of the dx tests showed evidence of infarct/bleed.
 ** possibly Invalid for stroke (dx=unclassified; not for review)
-count if sd_etype==1 & stype==4 & review<2 //1 - record 4243 ask NS to review
+count if sd_etype==1 & stype==4 & review<2 //1 - record 4243 ask NS to review; leave as is (unclassified) after review with NS.
 ** possibly Invalid for heart (dx made=clinical; dx tests were done)
 count if sd_etype==2 & dxtype==1 & (decg==1|decho==1|dctcorang==1|dstress==1|odie<4|ckmbdone==1|astdone==1|tropdone==1) //3 - none of the dx tests showed evidence of MI
 ***********************
@@ -1568,7 +1584,7 @@ count if dstroke==. & sd_etype==1 & event_complete!=0 & event_complete!=. //0
 ** Invalid missing code
 count if dstroke==88|dstroke==999|dstroke==9999 //0
 ** possibly Invalid (stroke=definite; finaldx/CODs=CVA vs Todd's paresis or CVA vs TIA)
-count if dstroke==1 & (regexm(finaldx,"Todd")|regexm(finaldx,"TIA")|regexm(cfcods,"Todd")|regexm(cfcods,"TIA")) //7 - 5 reviewed=eligible; 2 not reviewed but 1 is correct; record 2815 for NS to review.
+count if dstroke==1 & (regexm(finaldx,"Todd")|regexm(finaldx,"TIA")|regexm(cfcods,"Todd")|regexm(cfcods,"TIA")) //7 - 5 reviewed=eligible; 2 not reviewed but 1 is correct; record 2815 for NS to review; leave as is after review with NS.
 ** possibly Invalid (stroke=possible; not flagged for review)
 count if dstroke==2 & review!=2 & review!=4 //2 - record 2800 already for NS to review; other record corrected below
 ** possibly Invalid (finaldx/CODs=intracranial bleed; not flagged for review)
@@ -1596,10 +1612,40 @@ count if reviewd!=. & reviewd>sd_currentdate //0
 ** Corrections from above checks
 destring flag260 ,replace
 destring flag1185 ,replace
+destring flag329 ,replace
+destring flag1254 ,replace
+destring flag342 ,replace
+destring flag1267 ,replace
+destring flag343 ,replace
+destring flag1268 ,replace
+destring flag348 ,replace
+destring flag1273 ,replace
+format flag343 flag1268 %dM_d,_CY
 
-replace flag260=dstroke if record_id=="3741"
-replace dstroke=1 if record_id=="3741"
-replace flag1185=dstroke if record_id=="3741"
+replace flag260=dstroke if record_id=="3741"|record_id=="2800"
+replace dstroke=1 if record_id=="3741"|record_id=="2800"
+replace flag1185=dstroke if record_id=="3741"|record_id=="2800"
+
+replace flag259=dxtype if record_id=="1890"|record_id=="2982"
+replace dxtype=2 if record_id=="1890"|record_id=="2982"
+replace flag1184=dxtype if record_id=="1890"|record_id=="2982"
+
+replace flag329=dct if record_id=="1890"|record_id=="2982"
+replace dct=1 if record_id=="1890"|record_id=="2982"
+replace flag1254=dct if record_id=="1890"|record_id=="2982"
+
+replace flag342=ct if record_id=="1890"|record_id=="2982"
+replace ct=1 if record_id=="1890"|record_id=="2982"
+replace flag1267=ct if record_id=="1890"|record_id=="2982"
+
+replace flag343=doct if record_id=="1890"|record_id=="2982"
+replace doct=d(21jan2021) if record_id=="1890"
+replace doct=d(26jul2021) if record_id=="2982"
+replace flag1268=doct if record_id=="1890"|record_id=="2982"
+
+replace flag348=ctfeat if record_id=="1890"|record_id=="2982"
+replace ctfeat=99 if record_id=="1890"|record_id=="2982"
+replace flag1273=ctfeat if record_id=="1890"|record_id=="2982"
 
 ** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
 replace flagdate=sd_currentdate if record_id=="3741"
@@ -1740,7 +1786,7 @@ count if cardiachosp==. & sd_etype==2 & event_complete!=0 & event_complete!=. //
 ** Invalid missing code
 count if cardiachosp==88|cardiachosp==999|cardiachosp==9999 //0
 ** possibly Invalid (edate before adm date; cardiac during hosp=Yes)
-count if cardiachosp==1 & sd_etype==2 & edate!=. & cfadmdate!=. & dae!=. & doh!=. & (edate<cfadmdate|edate<dae|edate<doh) //8 - all correct except one query for NS record 2902.
+count if cardiachosp==1 & sd_etype==2 & edate!=. & cfadmdate!=. & dae!=. & doh!=. & (edate<cfadmdate|edate<dae|edate<doh) //8 - all correct except one query for NS record 2902 - corrected below after review with NS.
 ** Missing
 count if cardiac==1 & resus==. & sd_etype==2 & event_complete!=0 & event_complete!=. //0
 ** Invalid missing code
@@ -1754,6 +1800,13 @@ count if sudd==2 & (slc==1|vstatus==1) //0
 ** Invalid (survive resus=Yes; slc/vstatus=Deceased)
 count if sudd!=2 & sudd!=. & sudd!=99 & (slc==2|vstatus==2) //0
 
+
+** Corrections from above
+replace flag258=htype if record_id=="2902"
+replace htype=1 if record_id=="2902" //see above
+replace flag1183=htype if record_id=="2902"
+
+replace comments="JC 20feb2023: after reviewing case with NS today, the symptom of decreased responsiveness on 03-Jan-2021 is unlikely the date of the AMI and it's more likely 05-Jan-2021 but will remain as cannot confirm event date in MedData or any other external source at this point in data handling." if record_id=="2902"
 
 
 /*
@@ -1779,6 +1832,32 @@ capture export_excel record_id sd_etype flag970 flag976 flag999 flag1054 flag105
 using "`datapath'\version03\3-output\CVDCleaning2021_EVE2_`listdate'.xlsx", sheet("CORRECTIONS") firstrow(varlabels)
 restore
 */
+
+/*
+** JC 20feb2023: after query review meeting with NS the below corrections were flagged
+
+** Export corrections before dropping ineligible cases since errors maybe in these records (I only exported the flags with errors/corrections from above)
+** Prepare this dataset for export to excel
+** NOTE: once this list is generated then the code can be disabled to avoid generating multiple lists that will take up storage space on SharePoint
+preserve
+sort record_id
+
+** Format the date flags so they are exported as dates not numbers
+format flagdate flag202 flag1127 flag343 flag1268 %dM_d,_CY
+
+** Create excel errors list before deleting incorrect records
+** Use below code to automate file names using current date
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+capture export_excel record_id sd_etype flag178 flag187 flag202 flag258 flag259 flag260 flag329 flag342 flag343 flag348 if ///
+					 record_id=="3300"|record_id=="1890"|record_id=="2982"|record_id=="2800"|record_id=="2902" ///
+using "`datapath'\version03\3-output\CVDCleaning2021_EVE3_`listdate'.xlsx", sheet("ERRORS") firstrow(varlabels)
+capture export_excel record_id sd_etype flag1103 flag1112 flag1127 flag1183 flag1184 flag1185 flag1254 flag1267 flag1268 flag1273 if ///
+					 record_id=="3300"|record_id=="1890"|record_id=="2982"|record_id=="2800"|record_id=="2902" ///
+using "`datapath'\version03\3-output\CVDCleaning2021_EVE3_`listdate'.xlsx", sheet("CORRECTIONS") firstrow(varlabels)
+restore
+*/
+
+
 
 ** Populate date (& time: hospt) variables for atscene, frmscene and sameadm in prep for analysis
 replace hospd=dae if sameadm==1 & hospd==. //86 changes
