@@ -274,7 +274,7 @@ count if ovrf==88|ovrf==999|ovrf==9999 //0
 ** Oth RF 1 **
 **************
 count if ovrf==1 & ovrf1=="" //0
-** Invalid (other sym options=ND/None but other sym text NOT=blank)
+** Invalid (other rf options=ND/None but other rf text NOT=blank)
 count if (ovrf==5|ovrf==99|ovrf==99999) & ovrf1!="" //0
 ** possibly Invalid (other rf=one of the rf options)
 count if ovrf1!="" //107 - reviewed and correct
@@ -284,7 +284,7 @@ count if sd_etype==2 & (regexm(ovrf1,"smoke")|regexm(ovrf1,"cholesterol")|regexm
 ** Oth RF 2 **
 **************
 count if ovrf==2 & ovrf2=="" //0
-** Invalid (other sym options=ND/None but other sym text NOT=blank)
+** Invalid (other rf options=ND/None but other rf text NOT=blank)
 count if (ovrf==5|ovrf==99|ovrf==99999) & ovrf2!="" //0
 ** possibly Invalid (other rf=one of the rf options)
 count if ovrf2!="" //12 - reviewed and correct
@@ -294,7 +294,7 @@ count if sd_etype==2 & (regexm(ovrf2,"smoke")|regexm(ovrf2,"cholesterol")|regexm
 ** Oth RF 3 **
 **************
 count if ovrf==3 & ovrf3=="" //0
-** Invalid (other sym options=ND/None but other sym text NOT=blank)
+** Invalid (other rf options=ND/None but other rf text NOT=blank)
 count if (ovrf==5|ovrf==99|ovrf==99999) & ovrf3!="" //0
 ** possibly Invalid (other rf=one of the rf options)
 count if ovrf3!="" //2 - reviewed and correct
@@ -304,7 +304,7 @@ count if sd_etype==2 & (regexm(ovrf3,"smoke")|regexm(ovrf3,"cholesterol")|regexm
 ** Oth RF 4 **
 **************
 count if ovrf==4 & ovrf4=="" //0
-** Invalid (other sym options=ND/None but other sym text NOT=blank)
+** Invalid (other rf options=ND/None but other rf text NOT=blank)
 count if (ovrf==5|ovrf==99|ovrf==99999) & ovrf4!="" //0
 ** possibly Invalid (other rf=one of the rf options)
 count if ovrf4!="" //0 - reviewed and correct
