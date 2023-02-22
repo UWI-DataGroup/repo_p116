@@ -109,6 +109,8 @@ count if non_numeric_fmctime //0
 count if fmctime=="999"|fmctime=="9999" //0
 ** Invalid (time=88 and am/pm is missing)
 count if fmctime=="88" & fmcampm==. //0
+** Invalid missing code
+count if fmcampm==88|fmcampm==99|fmcampm==999|fmcampm==9999 //0
 
 **********************
 ** Name of Hospital **
@@ -188,6 +190,10 @@ count if non_numeric_tae //0
 count if tae=="999"|tae=="9999" //0
 ** Invalid (time=88 and am/pm is missing)
 count if tae=="88" & taeampm==. //0
+** Invalid (NOT=date ambulance at hospital)
+count if dae!=. & hospd!=. & dae!=hospd //added after this dofile was completed but cases corrected in 3i_clean tests_cvd dofile.
+** Invalid missing code
+count if taeampm==88|taeampm==99|taeampm==999|taeampm==9999 //0
 
 *************************
 ** A&E Dis Date & Time **
@@ -222,6 +228,8 @@ count if non_numeric_taedis //0
 count if taedis=="999"|taedis=="9999" //0
 ** Invalid (time=88 and am/pm is missing)
 count if taedis=="88" & taedisampm==. //0
+** Invalid missing code
+count if taedisampm==88|taedisampm==99|taedisampm==999|taedisampm==9999 //0
 
 
 ** Corrections from above checks
@@ -308,6 +316,8 @@ count if non_numeric_toh //0
 count if toh=="999"|toh=="9999" //0
 ** Invalid (time=88 and am/pm is missing)
 count if toh=="88" & tohampm==. //0
+** Invalid missing code
+count if tohampm==88|tohampm==99|tohampm==999|tohampm==9999 //0
 
 
 ** Corrections from above checks
@@ -401,6 +411,8 @@ count if ambcallt!="" & ambcallt!="99" & atscnt!="" & ambcallt>atscnt //2 - 1 is
 count if ambcallt!="" & ambcallt!="99" & frmscnt!="" & ambcallt>frmscnt //4 - all correct
 ** Invalid (notified time after time at hospital)
 count if ambcallt!="" & ambcallt!="99" & hospt!="" & ambcallt>hospt //7 - all correct
+** Invalid missing code
+count if ambcalltampm==88|ambcalltampm==99|ambcalltampm==999|ambcalltampm==9999 //0
 
 
 ** Corrections from above checks
@@ -496,6 +508,8 @@ count if atscnt!="" & atscnt!="99" & ambcallt!="" & ambcallt!="99" & atscnt<ambc
 count if atscnt!="" & atscnt!="99" & frmscnt!="" & frmscnt!="99" & atscnt>frmscnt //3 - all correct
 ** Invalid (atscene time after time at hospital)
 count if atscnt!="" & atscnt!="99" & hospt!="" & hospt!="99" & atscnt>hospt //6 - all correct
+** Invalid missing code
+count if atscntampm==88|atscntampm==99|atscntampm==999|atscntampm==9999 //0
 
 ****************************
 ** From Scene Date & Time **
@@ -554,6 +568,8 @@ count if frmscnt!="" & frmscnt!="99" & ambcallt!="" & ambcallt!="99" & frmscnt<a
 count if frmscnt!="" & frmscnt!="99" & atscnt!="" & atscnt!="99" & frmscnt<atscnt //3 - all correct
 ** Invalid (atscene time after time at hospital)
 count if frmscnt!="" & frmscnt!="99" & hospt!="" & hospt!="99" & frmscnt>hospt //3 - all correct
+** Invalid missing code
+count if frmscntampm==88|frmscntampm==99|frmscntampm==999|frmscntampm==9999 //0
 
 *****************************
 ** At Hospital Date & Time **
@@ -612,6 +628,8 @@ count if hospt!="" & hospt!="99" & ambcallt!="" & ambcallt!="99" & hospt<ambcall
 count if hospt!="" & hospt!="99" & atscnt!="" & atscnt!="99" & hospt<atscnt //6 - all correct
 ** Invalid (athospital time before time at scene)
 count if hospt!="" & hospt!="99" & hospt!="" & hospt!="99" & hospt<frmscnt //3 - all correct
+** Invalid missing code
+count if hosptampm==88|hosptampm==99|hosptampm==999|hosptampm==9999 //0
 
 
 ** Corrections from above checks

@@ -701,6 +701,8 @@ count if hsym1t!="" & hsym1t!="99" & frmscnt!="" & frmscnt!="99" & hsym1t>frmscn
 count if hsym1t!="" & hsym1t!="99" & hospt!="" & hospt!="99" & hsym1t>hospt //12 - same records as above
 ** Invalid (symptom time after event time)
 count if hsym1t!="" & hsym1t!="99" & etime!="" & etime!="99" & hsym1t>etime //1 - record 3361 (query for NS)
+** Invalid missing code
+count if hsym1tampm==88|hsym1tampm==99|hsym1tampm==999|hsym1tampm==9999 //0
 
 
 
@@ -1479,7 +1481,7 @@ count if swalldate!=. & doh!=. & swalldate>doh //2 - stroke record 3136's oth sy
 count if swalldate!=. & swalldate>sd_currentdate //0
 ** Invalid (date partial missing codes for all)
 count if sign4==1 & swalldate==. & swalldday==99 & swalldmonth==99 & swalldyear==9999 //0
-** possibly Invalid (oth sym date not partial but partial field not blank)
+** possibly Invalid (swallow screen date not partial but partial field not blank)
 count if swalldate==. & swalldday!=. & swalldmonth!=. & swalldyear!=. //0
 replace swalldday=. if swalldate==. & swalldday!=. & swalldmonth!=. & swalldyear!=. //0 changes
 replace swalldmonth=. if swalldate==. & swalldmonth!=. & swalldyear!=. //0 changes
@@ -1703,6 +1705,9 @@ count if etime!="" & etime!="99" & etime!="88" & atscnt!="" & atscnt!="99" & eda
 count if etime!="" & etime!="99" & etime!="88" & frmscnt!="" & frmscnt!="99" & edate==frmscnd & etime>frmscnt //2 - same records as above
 ** Invalid (event time after time at hospital)
 count if etime!="" & etime!="99" & etime!="88" & hospt!="" & hospt!="99" & edate==hospd & etime>hospt //1 - same record as above
+** Invalid missing code
+count if etimeampm==88|etimeampm==99|etimeampm==999|etimeampm==9999 //0
+
 ** Create event date YEAR variable
 drop edateyr
 gen edateyr=year(edate)
@@ -1781,6 +1786,8 @@ count if cardiac==. & sd_etype==2 & event_complete!=0 & event_complete!=. //0
 count if cardiac==88|cardiac==999|cardiac==9999 //0
 ** possibly Invalid (edate on/after adm date; cardiac prior to hosp=Yes)
 count if cardiac==1 & sd_etype==2 & edate!=. & cfadmdate!=. & dae!=. & doh!=. & (edate==cfadmdate|edate==dae|edate==doh) & (edate>cfadmdate|edate>dae|edate>doh) //0
+** Invalid (cardiac NOT=Yes; resus=Yes)
+count if cardiac!=1 & sd_etype==2 & resus==1 //0
 ** Missing
 count if cardiachosp==. & sd_etype==2 & event_complete!=0 & event_complete!=. //0
 ** Invalid missing code
@@ -1799,6 +1806,8 @@ count if sudd==88|sudd==999|sudd==9999 //0
 count if sudd==2 & (slc==1|vstatus==1) //0
 ** Invalid (survive resus=Yes; slc/vstatus=Deceased)
 count if sudd!=2 & sudd!=. & sudd!=99 & (slc==2|vstatus==2) //0
+** Invalid (resus NOT=Yes; sudd=Yes)
+count if resus!=1 & sd_etype==2 & sudd==1 //0
 
 
 ** Corrections from above

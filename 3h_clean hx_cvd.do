@@ -130,6 +130,13 @@ count if sd_etype==1 & pstrokeyr>2008 & dbchecked==2 //48 - DAs don't perform cu
 count if famstroke==. & history_complete!=0 & history_complete!=. //0
 ** Invalid missing code
 count if famstroke==88|famstroke==999|famstroke==9999 //0
+** JC 22feb2023: below 3 checks added post completion of this dofile and corrections list so corrected in dofile 3i_clean tests_cvd.do)
+** Invalid (famstroke=No/ND; famstroke options=Yes)
+count if (famstroke==2|famstroke==99) & (mumstroke==1|dadstroke==1|sibstroke==1) //0
+** Invalid (famstroke=Yes; famstroke options NOT=Yes)
+count if famstroke==1 & mumstroke!=1 & dadstroke!=1 & sibstroke!=1 //5 - corrected in 3i_clean tests_cvd.do
+** Invalid (famstroke=Yes/No; famstroke options all=ND)
+count if famstroke!=99 & mumstroke==99 & dadstroke==99 & sibstroke==99 //5 - same records as above
 ********************
 ** Family Hx AMI? **
 ********************
@@ -137,6 +144,12 @@ count if famstroke==88|famstroke==999|famstroke==9999 //0
 count if famami==. & history_complete!=0 & history_complete!=. //0
 ** Invalid missing code
 count if famami==88|famami==999|famami==9999 //0
+** Invalid (famstroke=No/ND; famstroke options=Yes)
+count if (famami==2|famami==99) & (mumami==1|dadami==1|sibami==1) //0
+** Invalid (famstroke=Yes; famstroke options NOT=Yes)
+count if famami==1 & mumami!=1 & dadami!=1 & sibami!=1 //3 - corrected in 3i_clean tests_cvd.do
+** Invalid (famstroke=Yes/No; famstroke options all=ND)
+count if famami!=99 & mumami==99 & dadami==99 & sibami==99 //3 - same records as above
 ********************
 ** Mother Stroke? **
 ********************
@@ -190,6 +203,12 @@ count if sibami==88|sibami==999|sibami==9999 //0
 count if rfany==. & history_complete!=0 & history_complete!=. //0
 ** Invalid missing code
 count if rfany==88|rfany==999|rfany==9999 //0
+** Invalid (rfany=No/ND; rfany options=Yes)
+count if (rfany==2|rfany==99) & (smoker==1|hcl==1|af==1|tia==1|ccf==1|htn==1|diab==1|hld==1|alco==1|drugs==1) //3 - corrected in 3i_clean tests_cvd.do
+** Invalid (rfany=Yes; rfany options NOT=Yes)
+count if rfany==1 & smoker!=1 & hcl!=1 & af!=1 & (tia!=1 & sd_etype==1) & ccf!=1 & htn!=1 & diab!=1 & hld!=1 & alco!=1 & drugs!=1 //25 - corrected in 3i_clean tests_cvd.do
+** Invalid (rfany=Yes/No; rfany options all=ND)
+count if rfany!=99 & smoker==99 & hcl==99 & af==99 & tia==99 & ccf==99 & htn==99 & diab==99 & hld==99 & alco==99 & drugs==99 //5 - already flagged above
 ******************
 ** Tobacco use? **
 ******************
