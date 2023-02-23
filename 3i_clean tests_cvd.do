@@ -4,7 +4,7 @@
     //  project:                BNR-CVD
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      20-FEB-2023
-    // 	date last modified      22-FEB-2023
+    // 	date last modified      23-FEB-2023
     //  algorithm task          Cleaning variables in the REDCap CVDdb Tests form
     //  status                  Completed
     //  objective               (1) To have a cleaned 2021 cvd incidence dataset ready for analysis
@@ -263,7 +263,7 @@ count if dieany==88|dieany==999|dieany==9999 //0
 ** Invalid (dieany=No/ND; dieany options=Yes)
 count if (dieany==2|dieany==99) & (dct==1|decg==1|dmri==1|dcerangio==1|dcarangio==1|dcarus==1|decho==1|dctcorang==1|dstress==1) //3 - corrected below
 ** Invalid (dieany=Yes; dieany options NOT=Yes)
-count if dieany==1 & dct!=1 & decg!=1 & dmri!=1 & dcerangio!=1 & dcarangio!=1 & dcarus!=1 & decho!=1 & dctcorang!=1 & dstress!=1 //1 - corrected below
+count if dieany==1 & dct!=1 & decg!=1 & dmri!=1 & dcerangio!=1 & dcarangio!=1 & dcarus!=1 & decho!=1 & dctcorang!=1 & dstress!=1 & ovrf>4 //1 - corrected below
 ** Invalid (dieany=Yes/No; dieany options all=ND)
 count if dieany!=99 & dct==99 & decg==99 & dmri==99 & dcerangio==99 & dcarangio==99 & dcarus==99 & decho==99 & dctcorang==99 & dstress==99 //0
 ** Invalid (dieany=No/ND; how dx made=confirmed/unconfirmed by dx techniques)
@@ -754,7 +754,7 @@ replace flag1192=edate if record_id=="2865"
 ** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
 replace flagdate=sd_currentdate if record_id=="2865"
 
-STOP
+
 **************
 ** ECG Info **
 **************
@@ -860,7 +860,7 @@ count if ischecg==88|ischecg==999|ischecg==9999 //0
 ** Invalid (ischecg=No/ND; ischecg options=Yes)
 count if (ischecg==2|ischecg==99) & (ecgantero==1|ecgrv==1|ecgant==1|ecglat==1|ecgpost==1|ecginf==1|ecgsep==1|ecgnd==1) //0
 ** Invalid (ischecg=Yes; ischecg options NOT=Yes)
-count if ischecg==1 & ecgantero!=1 & ecgrv!=1 & ecgant!=1 & ecglat!=1 & ecgpost!=1 & ecginf!=1 & ecgsep!=1 & ecgnd!=1 //0
+count if ischecg==1 & ecgantero!=1 & ecgrv!=1 & ecgant!=1 & ecglat!=1 & ecgpost!=1 & ecginf!=1 & ecgsep!=1 & ecgnd!=1 & oecg>4 //0
 ** Invalid (ischecg=Yes/No; ischecg options all=ND)
 count if ischecg!=99 & ecgantero==99 & ecgrv==99 & ecgant==99 & ecglat==99 & ecgpost==99 & ecginf==99 & ecgsep==99 & ecgnd==99 //0
 ** Invalid (ischecg=ND; ischecg options NOT blank)
@@ -887,11 +887,11 @@ count if ecginf==88|ecginf==999|ecginf==9999 //0
 count if ecgsep==88|ecgsep==999|ecgsep==9999 //0
 count if ecgnd==88|ecgnd==999|ecgnd==9999 //0
 
-**********************
-**   Other regions  **
-**********************
+*******************
+** Other regions **
+*******************
 ** Missing
-count if  ischecg!=. & ischecg!=99 & oecg==. //0
+count if ischecg!=. & ischecg!=99 & oecg==. //0
 ** Invalid missing code
 count if oecg==88|oecg==999|oecg==9999 //0
 ** Missing (other exam options=1 but other exam text blank)
@@ -906,36 +906,36 @@ tab oecg4 ,m
 ** Oth ECG 1 **
 ***************
 count if oecg==1 & oecg1=="" //0
-** Invalid (other exam options=ND/None but other exam text NOT=blank)
+** Invalid (other ECGECG options=ND/None but other ECG text NOT=blank)
 count if (oecg==5|oecg==99|oecg==99999) & oecg1!="" //0
-** possibly Invalid (other exam=one of the exam options)
+** possibly Invalid (other ECG=one of the ECG options)
 count if oecg1!="" //280 - reviewed and correct
 count if regexm(oecg1,"antero")|regexm(oecg1,"lateral")|regexm(oecg1,"ventricle")|regexm(oecg1,"anterior")|regexm(oecg1,"posterior")|regexm(oecg1,"inferior")|regexm(oecg1,"septal")|regexm(oecg1,"determined") //0
 ***************
 ** Oth ECG 2 **
 ***************
 count if oecg==2 & oecg2=="" //0
-** Invalid (other exam options=ND/None but other exam text NOT=blank)
+** Invalid (other ECG options=ND/None but other ECG text NOT=blank)
 count if (oecg==5|oecg==99|oecg==99999) & oecg2!="" //0
-** possibly Invalid (other exam=one of the exam options)
+** possibly Invalid (other ECG=one of the ECG options)
 count if oecg2!="" //280 - reviewed and correct
 count if regexm(oecg2,"antero")|regexm(oecg2,"lateral")|regexm(oecg2,"ventricle")|regexm(oecg2,"anterior")|regexm(oecg2,"posterior")|regexm(oecg2,"inferior")|regexm(oecg2,"septal")|regexm(oecg2,"determined") //0
 ***************
 ** Oth ECG 3 **
 ***************
 count if oecg==3 & oecg3=="" //0
-** Invalid (other exam options=ND/None but other exam text NOT=blank)
+** Invalid (other ECG options=ND/None but other ECG text NOT=blank)
 count if (oecg==5|oecg==99|oecg==99999) & oecg3!="" //0
-** possibly Invalid (other exam=one of the exam options)
+** possibly Invalid (other ECG=one of the ECG options)
 count if oecg3!="" //280 - reviewed and correct
 count if regexm(oecg3,"antero")|regexm(oecg3,"lateral")|regexm(oecg3,"ventricle")|regexm(oecg3,"anterior")|regexm(oecg3,"posterior")|regexm(oecg3,"inferior")|regexm(oecg3,"septal")|regexm(oecg3,"determined") //0
 ***************
 ** Oth ECG 3 **
 ***************
 count if oecg==4 & oecg4=="" //0
-** Invalid (other exam options=ND/None but other exam text NOT=blank)
+** Invalid (other ECG options=ND/None but other ECG text NOT=blank)
 count if (oecg==5|oecg==99|oecg==99999) & oecg4!="" //0
-** possibly Invalid (other exam=one of the exam options)
+** possibly Invalid (other ECG=one of the ECG options)
 count if oecg4!="" //280 - reviewed and correct
 count if regexm(oecg4,"antero")|regexm(oecg4,"lateral")|regexm(oecg4,"ventricle")|regexm(oecg4,"anterior")|regexm(oecg4,"posterior")|regexm(oecg4,"inferior")|regexm(oecg4,"septal")|regexm(oecg4,"determined") //0
 */
@@ -948,30 +948,32 @@ count if ecgfeat==. & ecg==1 & tests_complete!=0 & tests_complete!=. //0
 ** Invalid missing code
 count if ecgfeat==88|ecgfeat==999|ecgfeat==9999 //0
 ** Invalid (features=Yes/No; options=ND)
-count if ecgfeat!=. & ecgfeat<3 & ecglbbb==99 & ecgaf==99 & ecgste==99 & ecgstd==99 & ecgpqw==99 & ecgtwv==99 & ecgnor==99 & ecgnorsin==99 & ecgomi==99 & ecgnstt==99 & ecglvh==99 //3 - corrected below
+count if ecgfeat!=. & ecgfeat<3 & ecglbbb==99 & ecgaf==99 & ecgste==99 & ecgstd==99 & ecgpqw==99 & ecgtwv==99 & ecgnor==99 & ecgnorsin==99 & ecgomi==99 & ecgnstt==99 & ecglvh==99 & oecgfeat>4 //0
 ** Invalid (features=Yes; options=No/ND)
-count if ecgfeat==1 & (ecglbbb==2|ecglbbb==99) & (ecgaf==2|ecgaf==99) & (ecgste==2|ecgste==99) & (ecgstd==2|ecgstd==99) & (ecgpqw==2|ecgpqw==99) & (ecgtwv==2|ecgtwv==99) & (ecgnor==2|ecgnor==99) & (ecgnorsin==2|ecgnorsin==99) & (ecgomi==2|ecgomi==99) & (ecgnstt==2|ecgnstt==99) & (ecglvh==2|ecglvh==99) //3 - same records as above
+count if ecgfeat==1 & (ecglbbb==2|ecglbbb==99) & (ecgaf==2|ecgaf==99) & (ecgste==2|ecgste==99) & (ecgstd==2|ecgstd==99) & (ecgpqw==2|ecgpqw==99) & (ecgtwv==2|ecgtwv==99) & (ecgnor==2|ecgnor==99) & (ecgnorsin==2|ecgnorsin==99) & (ecgomi==2|ecgomi==99) & (ecgnstt==2|ecgnstt==99) & (ecglvh==2|ecglvh==99) & oecgfeat>4 //0
+** Invalid (features=Yes; features options NOT=Yes)
+count if ecgfeat==1 & ecglbbb!=1 & ecgaf!=1 & ecgste!=1 & ecgstd!=1 & ecgpqw!=1 & ecgtwv!=1 & ecgnor!=1 & ecgnorsin!=1 & ecgomi!=1 & ecgnstt!=1 & ecglvh!=1 & oecgfeat>4 //0
 ** Invalid (features=No; options=Yes)
 count if ecgfeat==2 & (ecglbbb==1|ecgaf==1|ecgste==1|ecgstd==1|ecgpqw==1|ecgtwv==1|ecgnor==1|ecgnorsin==1|ecgomi==1|ecgnstt==1|ecglvh==1) //0
 ** possibly Invalid (features=Yes; dxtype NOT=confirmed by dx techniques)
 count if ecgfeat==1 & dxtype!=2 & dxtype!=3 //7 - correct as confirmed by medical autopsy
-***********
-** LBBB? **
-***********
+**********
+** LBBB **
+**********
 ** Missing
 count if ecglbbb==. & ecgfeat==1 & tests_complete!=0 & tests_complete!=. //0
 ** Invalid missing code
 count if ecglbbb==88|ecglbbb==999|ecglbbb==9999 //0
-*****************
-** Atrial Fib? **
-*****************
+****************
+** Atrial Fib **
+****************
 ** Missing
 count if ecgaf==. & ecgfeat==1 & tests_complete!=0 & tests_complete!=. //0
 ** Invalid missing code
 count if ecgaf==88|ecgaf==999|ecgaf==9999 //0
-*******************
-** ST Elevation? **
-*******************
+******************
+** ST Elevation **
+******************
 ** Missing
 count if ecgste==. & ecgfeat==1 & tests_complete!=0 & tests_complete!=. //0
 ** Invalid missing code
@@ -980,27 +982,119 @@ count if ecgste==88|ecgste==999|ecgste==9999 //0
 count if ecgste==1 & htype!=1 //21 - for NS to review
 ** possibly Invalid (STE=No; heart type=STEMI)
 count if ecgste==2 & htype==1 //0
+*******************
+** ST Depression **
+*******************
+** Missing
+count if ecgstd==. & ecgfeat==1 & tests_complete!=0 & tests_complete!=. //0
+** Invalid missing code
+count if ecgstd==88|ecgstd==999|ecgstd==9999 //0
+** possibly Invalid (STD=Yes; STE not=Yes; heart type NOT=NSTEMI)
+count if ecgstd==1 & ecgste!=1 & htype!=2 //5 - for NS to review
+** possibly Invalid (STD=No; heart type=NSTEMI)
+count if ecgstd==2 & htype==2 //9 - some have t-wave, pq-wave etc. not sure we can have such a specific check for NSTEMIs
+******************
+** Path Q waves **
+******************
+** Missing
+count if ecgpqw==. & ecgfeat==1 & tests_complete!=0 & tests_complete!=. //0
+** Invalid missing code
+count if ecgpqw==88|ecgpqw==999|ecgpqw==9999 //0
+**********************
+** T wave inversion **
+**********************
+** Missing
+count if ecgtwv==. & ecgfeat==1 & tests_complete!=0 & tests_complete!=. //0
+** Invalid missing code
+count if ecgtwv==88|ecgtwv==999|ecgtwv==9999 //0
+****************
+** Normal ECG **
+****************
+** Missing
+count if ecgnor==. & ecgfeat==1 & tests_complete!=0 & tests_complete!=. //0
+** Invalid missing code
+count if ecgnor==88|ecgnor==999|ecgnor==9999 //0
+****************
+** Nor. sinus **
+****************
+** Missing
+count if ecgnorsin==. & ecgfeat==1 & tests_complete!=0 & tests_complete!=. //0
+** Invalid missing code
+count if ecgnorsin==88|ecgnorsin==999|ecgnorsin==9999 //0
+************
+** Old MI **
+************
+** Missing
+count if ecgomi==. & ecgfeat==1 & tests_complete!=0 & tests_complete!=. //0
+** Invalid missing code
+count if ecgomi==88|ecgomi==999|ecgomi==9999 //0
+***********************
+** N-S STT-T changes **
+***********************
+** Missing
+count if ecgnstt==. & ecgfeat==1 & tests_complete!=0 & tests_complete!=. //0
+** Invalid missing code
+count if ecgnstt==88|ecgnstt==999|ecgnstt==9999 //0
+*********
+** LVH **
+*********
+** Missing
+count if ecglvh==. & ecgfeat==1 & tests_complete!=0 & tests_complete!=. //0
+** Invalid missing code
+count if ecglvh==88|ecglvh==999|ecglvh==9999 //0
 
+********************
+** Other features **
+********************
+** Missing
+count if ecgfeat==1 & oecgfeat==. //0
+** Invalid missing code
+count if oecgfeat==88|oecgfeat==999|oecgfeat==9999 //0
+** Missing (other ECG options=1 but other ECG text blank)
+***************
+** Oth ECG 1 **
+***************
+count if oecgfeat==1 & oecgfeat1=="" //0
+** Invalid (other ECG options=ND/None but other ECG text NOT=blank)
+count if (oecgfeat==5|oecgfeat==99|oecgfeat==99999) & oecgfeat1!="" //0
+** possibly Invalid (other ECG=one of the ECG options)
+count if oecgfeat1!="" //46 - reviewed and correct
+count if regexm(oecgfeat1,"lbbb")|regexm(oecgfeat1,"bundle")|regexm(oecgfeat1,"fibrill*")|regexm(oecgfeat1,"elevation")|regexm(oecgfeat1,"depression")|regexm(oecgfeat1,"waves")|regexm(oecgfeat1,"inversion")|regexm(oecgfeat1,"normal")|regexm(oecgfeat1,"old")|regexm(oecgfeat1,"specific")|regexm(oecgfeat1,"lvh")|regexm(oecgfeat1,"hypertrophy") //1 - record 1940 it's correct
+***************
+** Oth ECG 2 **
+***************
+count if oecgfeat==2 & oecgfeat2=="" //0
+** Invalid (other ECG options=ND/None but other ECG text NOT=blank)
+count if (oecgfeat==5|oecgfeat==99|oecgfeat==99999) & oecgfeat2!="" //0
+** possibly Invalid (other ECG=one of the ECG options)
+count if oecgfeat2!="" //15 - reviewed and correct
+count if regexm(oecgfeat2,"lbbb")|regexm(oecgfeat2,"bundle")|regexm(oecgfeat2,"fibrill*")|regexm(oecgfeat2,"elevation")|regexm(oecgfeat2,"depression")|regexm(oecgfeat2,"waves")|regexm(oecgfeat2,"inversion")|regexm(oecgfeat2,"normal")|regexm(oecgfeat2,"old")|regexm(oecgfeat2,"specific")|regexm(oecgfeat2,"lvh")|regexm(oecgfeat2,"hypertrophy") //1 - record 3124 it's correct
+***************
+** Oth ECG 3 **
+***************
+count if oecgfeat==3 & oecgfeat3=="" //0
+** Invalid (other ECG options=ND/None but other ECG text NOT=blank)
+count if (oecgfeat==5|oecgfeat==99|oecgfeat==99999) & oecgfeat3!="" //0
+** possibly Invalid (other ECG=one of the ECG options)
+count if oecgfeat3!="" //6 - reviewed and correct
+count if regexm(oecgfeat3,"lbbb")|regexm(oecgfeat3,"bundle")|regexm(oecgfeat3,"fibrill*")|regexm(oecgfeat3,"elevation")|regexm(oecgfeat3,"depression")|regexm(oecgfeat3,"waves")|regexm(oecgfeat3,"inversion")|regexm(oecgfeat3,"normal")|regexm(oecgfeat3,"old")|regexm(oecgfeat3,"specific")|regexm(oecgfeat3,"lvh")|regexm(oecgfeat3,"hypertrophy") //1 - record 4175 it's correct
+***************
+** Oth ECG 4 **
+***************
+count if oecgfeat==4 & oecgfeat4=="" //0
+** Invalid (other ECG options=ND/None but other ECG text NOT=blank)
+count if (oecgfeat==5|oecgfeat==99|oecgfeat==99999) & oecgfeat4!="" //0
+** possibly Invalid (other ECG=one of the ECG options)
+count if oecgfeat4!="" //1 - reviewed and correct
+count if regexm(oecgfeat4,"lbbb")|regexm(oecgfeat4,"bundle")|regexm(oecgfeat4,"fibrill*")|regexm(oecgfeat4,"elevation")|regexm(oecgfeat4,"depression")|regexm(oecgfeat4,"waves")|regexm(oecgfeat4,"inversion")|regexm(oecgfeat4,"normal")|regexm(oecgfeat4,"old")|regexm(oecgfeat4,"specific")|regexm(oecgfeat4,"lvh")|regexm(oecgfeat4,"hypertrophy") //0
+ 
+          
  
  
-  ecgstd ecgpqw ecgtwv ecgnor ecgnorsin ecgomi ecgnstt ecglvh
- 
- 
-
-1, STEMI
-2, NSTEMI
-3, AMI (definite)
-4, Sudden cardiac death
-5, AMI (possible)
-
-
-
 ** Corrections from above checks
 destring flag367 ,replace
 destring flag1292 ,replace
 format flag367 flag1292 %dM_d,_CY
-destring flag388 ,replace
-destring flag1313 ,replace
 
 
 replace flag367=ecgd if record_id=="2555"|record_id=="3318"
@@ -1008,30 +1102,161 @@ replace ecgd=dae if record_id=="2555" //see above
 replace ecgd=doh if record_id=="3318" //see above
 replace flag1292=ecgd if record_id=="2555"|record_id=="3318"
 
-replace flag388=ecgfeat if record_id=="1830"|record_id=="2069"|record_id=="2440"
-replace ecgfeat=99 if record_id=="1830"|record_id=="2069"|record_id=="2440" //see above
-replace flag1313=ecgfeat if record_id=="1830"|record_id=="2069"|record_id=="2440"
-
-replace ecglbbb=. if record_id=="1830"|record_id=="2069"|record_id=="2440"
-replace ecgaf=. if record_id=="1830"|record_id=="2069"|record_id=="2440"
-replace ecgste=. if record_id=="1830"|record_id=="2069"|record_id=="2440"
-replace ecgstd=. if record_id=="1830"|record_id=="2069"|record_id=="2440"
-replace ecgpqw=. if record_id=="1830"|record_id=="2069"|record_id=="2440"
-replace ecgtwv=. if record_id=="1830"|record_id=="2069"|record_id=="2440"
-replace ecgnor=. if record_id=="1830"|record_id=="2069"|record_id=="2440"
-replace ecgnorsin=. if record_id=="1830"|record_id=="2069"|record_id=="2440"
-replace ecgomi=. if record_id=="1830"|record_id=="2069"|record_id=="2440"
-replace ecgnstt=. if record_id=="1830"|record_id=="2069"|record_id=="2440"
-replace ecglvh=. if record_id=="1830"|record_id=="2069"|record_id=="2440"         
-//DA won't need to correct CVDdb for this correction since it would be done when ecgfeat is corrected in CVDdb
+** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
+replace flagdate=sd_currentdate if record_id=="2555"|record_id=="3318"
 
 
+**********************
+** Therapeutic Info **
+**********************
+************************
+** Any interventions? **
+************************
+** Missing
+count if tiany==. & tests_complete!=0 & tests_complete!=. //2 - corrected below
+** Invalid missing code
+count if tiany==88|tiany==999|tiany==9999 //0
+** Invalid (tiany=No/ND; tiany options=Yes)
+count if (tiany==2|tiany==99) & (tppv==1|tnippv==1|tdefib==1|tcpr==1|tmech==1|tctcorang==1|tpacetemp==1|tcath==1|tdhemi==1|tvdrain==1) //0
+** Invalid (tiany=Yes; tiany options NOT=Yes)
+count if tiany==1 & tppv!=1 & tnippv!=1 & tdefib!=1 & tcpr!=1 & tmech!=1 & tctcorang!=1 & tpacetemp!=1 & tcath!=1 & tdhemi!=1 & tvdrain!=1 & oti>3 //0
+** Invalid (tiany=Yes/No; tiany options all=ND)
+count if tiany!=99 & tppv==99 & tnippv==99 & tdefib==99 & tcpr==99 & tmech==99 & tctcorang==99 & tpacetemp==99 & tcath==99 & tdhemi==99 & tvdrain==99 //0
+********************
+** Invasive vent. **
+********************
+** Missing
+count if tppv==. & tiany!=. & tiany!=99 & sd_etype==2 & tests_complete!=0 & tests_complete!=. //0
+** Invalid missing code
+count if tppv==88|tppv==999|tppv==9999 //0
+************************
+** Non-invasive vent. **
+************************
+** Missing
+count if tnippv==. & tiany!=. & tiany!=99 & sd_etype==2 & tests_complete!=0 & tests_complete!=. //0
+** Invalid missing code
+count if tnippv==88|tnippv==999|tnippv==9999 //0
+****************
+** Defibrill. **
+****************
+** Missing
+count if tdefib==. & tiany!=. & tiany!=99 & sd_etype==2 & tests_complete!=0 & tests_complete!=. //0
+** Invalid missing code
+count if tdefib==88|tdefib==999|tdefib==9999 //0
+** Invalid (resus on event form=Yes; defibrill=No/ND)
+count if resus==1 & tdefib!=1 //5 - records 2205 + 4174 have CPR selected as the intervention; 3 corrected below in CPR
+*********
+** CPR **
+*********
+** Missing
+count if tcpr==. & tiany!=. & tiany!=99 & sd_etype==2 & tests_complete!=0 & tests_complete!=. //0
+** Invalid missing code
+count if tcpr==88|tcpr==999|tcpr==9999 //0
+** Invalid (resus on event form=Yes; CPR=No/ND)
+count if resus==1 & tcpr!=1 //3 - same records already flagged above; record 2920 was confimred but not fully abs so leave as is; 2 corrected below
+************************
+** Mech. Cir. support **
+************************
+** Missing
+count if tmech==. & tiany!=. & tiany!=99 & sd_etype==2 & tests_complete!=0 & tests_complete!=. //0
+** Invalid missing code
+count if tmech==88|tmech==999|tmech==9999 //0
+*************************
+** CT/Cor. Angioplasty **
+*************************
+** Missing
+count if tctcorang==. & tiany!=. & tiany!=99 & sd_etype==2 & tests_complete!=0 & tests_complete!=. //0
+** Invalid missing code
+count if tctcorang==88|tctcorang==999|tctcorang==9999 //0
+*********************
+** Temp. pacemaker **
+*********************
+** Missing
+count if tpacetemp==. & tiany!=. & tiany!=99 & sd_etype==2 & tests_complete!=0 & tests_complete!=. //0
+** Invalid missing code
+count if tpacetemp==88|tpacetemp==999|tpacetemp==9999 //0
+*******************
+** Cardiac Cath. **
+*******************
+** Missing
+count if tcath==. & tiany!=. & tiany!=99 & sd_etype==2 & tests_complete!=0 & tests_complete!=. //0
+** Invalid missing code
+count if tcath==88|tcath==999|tcath==9999 //0
+***********************
+** Decomp. hemicran. **
+***********************
+** Missing
+count if tdhemi==. & tiany!=. & tiany!=99 & sd_etype==1 & tests_complete!=0 & tests_complete!=. //0
+** Invalid missing code
+count if tdhemi==88|tdhemi==999|tdhemi==9999 //0
+*****************
+** Vent. drain **
+*****************
+** Missing
+count if tvdrain==. & tiany!=. & tiany!=99 & sd_etype==1 & tests_complete!=0 & tests_complete!=. //0
+** Invalid missing code
+count if tvdrain==88|tvdrain==999|tvdrain==9999 //0
+
+*************************
+** Other interventions **
+** 	(Heart + Stroke)   **
+*************************
+** Missing
+count if  tiany!=. & tiany!=99 & tiany!=99999 & oti==. //0
+** Invalid missing code
+count if oti==88|oti==999|oti==9999 //0
+** Missing (other int. options=1 but other int. text blank)
+****************
+** Oth Int. 1 **
+****************
+count if oti==1 & oti1=="" //0
+** Invalid (other int. options=ND/None but other int. text NOT=blank)
+count if (oti==4|oti==99|oti==99999) & oti1!="" //0
+** possibly Invalid (other int.=one of the int. options)
+count if oti1!="" //4 - reviewed and correct
+count if sd_etype==2 & (regexm(oti1,"ventilation")|regexm(oti1,"ppv")|regexm(oti1,"cpap")|regexm(oti1,"defibrill*")|regexm(oti1,"cardioversion")|regexm(oti1,"resus*")|regexm(oti1,"pump")|regexm(oti1,"counterpulsation")|regexm(oti1,"support")|regexm(oti1,"angioplasty")|regexm(oti1,"pacemaker")|regexm(oti1,"cath*")) //0
+count if sd_etype==1 & (regexm(oti1,"craniectomy")|regexm(oti1,"drain")) //0
+****************
+** Oth Int. 2 **
+****************
+count if oti==2 & oti2=="" //0
+** Invalid (other int. options=ND/None but other int. text NOT=blank)
+count if (oti==4|oti==99|oti==99999) & oti2!="" //0
+** possibly Invalid (other int.=one of the int. options)
+count if oti2!="" //1 - reviewed and correct
+count if sd_etype==2 & (regexm(oti2,"ventilation")|regexm(oti2,"ppv")|regexm(oti2,"cpap")|regexm(oti2,"defibrill*")|regexm(oti2,"cardioversion")|regexm(oti2,"resus*")|regexm(oti2,"pump")|regexm(oti2,"counterpulsation")|regexm(oti2,"support")|regexm(oti2,"angioplasty")|regexm(oti2,"pacemaker")|regexm(oti2,"cath*")) //0
+count if sd_etype==1 & (regexm(oti2,"craniectomy")|regexm(oti2,"drain")) //0
+****************
+** Oth Int. 3 **
+****************
+count if oti==3 & oti3=="" //0
+** Invalid (other int. options=ND/None but other int. text NOT=blank)
+count if (oti==4|oti==99|oti==99999) & oti3!="" //0
+** possibly Invalid (other int.=one of the int. options)
+count if oti3!="" //0
+count if sd_etype==2 & (regexm(oti3,"ventilation")|regexm(oti3,"ppv")|regexm(oti3,"cpap")|regexm(oti3,"defibrill*")|regexm(oti3,"cardioversion")|regexm(oti3,"resus*")|regexm(oti3,"pump")|regexm(oti3,"counterpulsation")|regexm(oti3,"support")|regexm(oti3,"angioplasty")|regexm(oti3,"pacemaker")|regexm(oti3,"cath*")) //0
+count if sd_etype==1 & (regexm(oti3,"craniectomy")|regexm(oti3,"drain")) //0
+
+
+
+
+** Corrections from above checks
+destring flag409 ,replace
+destring flag1334 ,replace
+
+
+** Since the missing code 99999 is only to be used in the cleaning and analysis steps of data handling the DAs do not need to update the CVDdb
+replace tiany=99999 if record_id=="2309"|record_id=="2353"
+
+
+replace flag409=tcpr if record_id=="2550"|record_id=="3647"
+replace tcpr=1 if record_id=="2550"|record_id=="3647" //see above
+replace flag1334=tcpr if record_id=="2550"|record_id=="3647"
 
 
 ** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
-replace flagdate=sd_currentdate if record_id=="2555"|record_id=="3318"|record_id=="1830"|record_id=="2069"|record_id=="2440"
+replace flagdate=sd_currentdate if record_id=="2550"|record_id=="3647"
 
-STOP
 
 
 ****************************
@@ -1066,19 +1291,19 @@ count if famami!=99 & mumami==99 & dadami==99 & sibami==99 //3 - same records as
 ** Invalid (rfany=No/ND; rfany options=Yes)
 count if (rfany==2|rfany==99) & (smoker==1|hcl==1|af==1|tia==1|ccf==1|htn==1|diab==1|hld==1|alco==1|drugs==1) //3 - corrected below
 ** Invalid (rfany=Yes; rfany options NOT=Yes)
-count if rfany==1 & smoker!=1 & hcl!=1 & af!=1 & (tia!=1 & sd_etype==1) & ccf!=1 & htn!=1 & diab!=1 & hld!=1 & alco!=1 & drugs!=1 //25 - corrected below
+count if rfany==1 & smoker!=1 & hcl!=1 & af!=1 & (tia!=1 & sd_etype==1) & ccf!=1 & htn!=1 & diab!=1 & hld!=1 & alco!=1 & drugs!=1 & ovrf>4 //11 - corrected below
 ** Invalid (rfany=Yes/No; rfany options all=ND)
-count if rfany!=99 & smoker==99 & hcl==99 & af==99 & tia==99 & ccf==99 & htn==99 & diab==99 & hld==99 & alco==99 & drugs==99 //5 - already flagged above
+count if rfany!=99 & smoker==99 & hcl==99 & af==99 & tia==99 & ccf==99 & htn==99 & diab==99 & hld==99 & alco==99 & drugs==99 //5 - 4 correct; 1 already flagged above
 
 
 
 ** Corrections from above checks
-destring flag882 ,replace
+destring flag285 ,replace
 destring flag1210 ,replace
-destring flag883 ,replace
+destring flag286 ,replace
 destring flag1211 ,replace
 
-replace flag882=famstroke if record_id=="2016"|record_id=="2183"|record_id=="2965"|record_id=="3168"|record_id=="3316"
+replace flag285=famstroke if record_id=="2016"|record_id=="2183"|record_id=="2965"|record_id=="3168"|record_id=="3316"
 replace famstroke=99 if record_id=="2016"|record_id=="2183"|record_id=="2965"|record_id=="3168"|record_id=="3316" //see above
 replace flag1210=famstroke if record_id=="2016"|record_id=="2183"|record_id=="2965"|record_id=="3168"|record_id=="3316"
 
@@ -1087,7 +1312,7 @@ replace dadstroke=. if record_id=="2016"|record_id=="2183"|record_id=="2965"|rec
 replace sibstroke=. if record_id=="2016"|record_id=="2183"|record_id=="2965"|record_id=="3168"|record_id=="3316" 
 //DA won't need to correct CVDdb for this correction since it would be done when famstroke is corrected in CVDdb
 
-replace flag883=famami if record_id=="2016"|record_id=="2965"|record_id=="3316"
+replace flag286=famami if record_id=="2016"|record_id=="2965"|record_id=="3316"
 replace famami=99 if record_id=="2016"|record_id=="2965"|record_id=="3316" //see above
 replace flag1211=famami if record_id=="2016"|record_id=="2965"|record_id=="3316"
 
@@ -1096,189 +1321,19 @@ replace dadami=. if record_id=="2016"|record_id=="2965"|record_id=="3316"
 replace sibami=. if record_id=="2016"|record_id=="2965"|record_id=="3316"
 //DA won't need to correct CVDdb for this correction since it would be done when famami is corrected in CVDdb
 
-replace flag293=rfany if record_id=="2908"|record_id=="3013"|record_id=="3124"|record_id=="1925"|record_id=="2111"|record_id=="2148"|record_id=="2244"|record_id=="2254"|record_id=="2306"|record_id=="2309"|record_id=="2368"|record_id=="2445"|record_id=="2449"|record_id=="2544"|record_id=="2686"|record_id=="2759"|record_id=="2763"|record_id=="2826"|record_id=="2989"|record_id=="3086"|record_id=="3169"|record_id=="3389"|record_id=="4176"|record_id=="2257"|record_id=="2847"|record_id=="3024"|record_id=="3741"|record_id=="4223"
+replace flag293=rfany if record_id=="2908"|record_id=="3013"|record_id=="3124"|record_id=="1925"|record_id=="2244"|record_id=="2306"|record_id=="2309"|record_id=="2368"|record_id=="2449"|record_id=="2763"|record_id=="3086"|record_id=="3169"|record_id=="3389"|record_id=="4223"
 replace rfany=1 if record_id=="2908"|record_id=="3013"|record_id=="3124" //see above
-replace rfany=2 if record_id=="1925"|record_id=="2111"|record_id=="2148"|record_id=="2244"|record_id=="2254"|record_id=="2306"|record_id=="2309"|record_id=="2368"|record_id=="2445"|record_id=="2449"|record_id=="2544"|record_id=="2686"|record_id=="2759"|record_id=="2763"|record_id=="2826"|record_id=="2989"|record_id=="3086"|record_id=="3169"|record_id=="3389"|record_id=="4176" //see above
-replace rfany=99 if record_id=="2257"|record_id=="2847"|record_id=="3024"|record_id=="3741"|record_id=="4223" //see above
-replace flag1218=rfany if record_id=="2908"|record_id=="3013"|record_id=="3124"|record_id=="1925"|record_id=="2111"|record_id=="2148"|record_id=="2244"|record_id=="2254"|record_id=="2306"|record_id=="2309"|record_id=="2368"|record_id=="2445"|record_id=="2449"|record_id=="2544"|record_id=="2686"|record_id=="2759"|record_id=="2763"|record_id=="2826"|record_id=="2989"|record_id=="3086"|record_id=="3169"|record_id=="3389"|record_id=="4176"|record_id=="2257"|record_id=="2847"|record_id=="3024"|record_id=="3741"|record_id=="4223"
+replace rfany=2 if record_id=="1925"|record_id=="2244"|record_id=="2306"|record_id=="2309"|record_id=="2368"|record_id=="2449"|record_id=="2763"|record_id=="3086"|record_id=="3169"|record_id=="3389" //see above
+replace rfany=99 if record_id=="4223" //see above
+replace flag1218=rfany if record_id=="2908"|record_id=="3013"|record_id=="3124"|record_id=="1925"|record_id=="2244"|record_id=="2306"|record_id=="2309"|record_id=="2368"|record_id=="2449"|record_id=="2763"|record_id=="3086"|record_id=="3169"|record_id=="3389"|record_id=="4223"
 
 
 
 ** JC 09feb2023: Create flag date variable so that records already flagged and exported to a previous excel will not recur as they still exist in the dataset
-//drop sd_currentdate
-gen currentd=c(current_date)
-gen double sd_currentdate=date(currentd, "DMY", 2017)
-drop currentd
-format sd_currentdate %dD_m_CY
-
-gen flagdate=sd_currentdate if record_id=="2016"|record_id=="2183"|record_id=="2965"|record_id=="3168"|record_id=="3316"|record_id=="2908"|record_id=="3013"|record_id=="3124"|record_id=="1925"|record_id=="2111"|record_id=="2148"|record_id=="2244"|record_id=="2254"|record_id=="2306"|record_id=="2309"|record_id=="2368"|record_id=="2445"|record_id=="2449"|record_id=="2544"|record_id=="2686"|record_id=="2759"|record_id=="2763"|record_id=="2826"|record_id=="2989"|record_id=="3086"|record_id=="3169"|record_id=="3389"|record_id=="4176"|record_id=="2257"|record_id=="2847"|record_id=="3024"|record_id=="3741"|record_id=="4223"
-
-
-STOP
-******************
-** Risk Factors **
-******************
-***********************
-** Any risk factors? **
-***********************
-** Missing
-count if rfany==. & history_complete!=0 & history_complete!=. //0
-** Invalid missing code
-count if rfany==88|rfany==999|rfany==9999 //0
-******************
-** Tobacco use? **
-******************
-** Missing
-count if rfany!=. & rfany!=99 & smoker==. //0
-** Invalid missing code
-count if smoker==88|smoker==999|smoker==9999 //0
-******************
-** Cholesterol? **
-******************
-** Missing
-count if rfany!=. & rfany!=99 & hcl==. //1 - stroke record 1887 has blank/unanswered values in CVDdb so corrected below.
-** Invalid missing code
-count if hcl==88|hcl==999|hcl==9999 //0
-*****************
-** Atrial Fib? **
-*****************
-** Missing
-count if rfany!=. & rfany!=99 & af==. //1 - stroke record 1887 has blank/unanswered values in CVDdb so corrected below.
-** Invalid missing code
-count if af==88|af==999|af==9999 //0
-**********
-** TIA? **
-**********
-** Missing
-count if rfany!=. & rfany!=99 & sd_etype==1 & tia==. //1 - stroke record 1887 has blank/unanswered values in CVDdb so corrected below.
-** Invalid missing code
-count if tia==88|tia==999|tia==9999 //0
-**********
-** CCF? **
-**********
-** Missing
-count if rfany!=. & rfany!=99 & ccf==. //0
-** Invalid missing code
-count if ccf==88|ccf==999|ccf==9999 //0
-**********
-** HTN? **
-**********
-** Missing
-count if rfany!=. & rfany!=99 & htn==. //0
-** Invalid missing code
-count if htn==88|htn==999|htn==9999 //0
-*********
-** DM? **
-*********
-** Missing
-count if rfany!=. & rfany!=99 & diab==. //0
-** Invalid missing code
-count if diab==88|diab==999|diab==9999 //0
-**********************
-** Hyperlipidaemia? **
-**********************
-** Missing
-count if rfany!=. & rfany!=99 & hld==. //1 - stroke record 1887 has blank/unanswered values in CVDdb so corrected below.
-** Invalid missing code
-count if hld==88|hld==999|hld==9999 //0
-**************
-** Alcohol? **
-**************
-** Missing
-count if rfany!=. & rfany!=99 & alco==. //0
-** Invalid missing code
-count if alco==88|alco==999|alco==9999 //0
-************
-** Drugs? **
-************
-** Missing
-count if rfany!=. & rfany!=99 & drugs==. //1 - stroke record 1887 has blank/unanswered values in CVDdb so corrected below.
-** Invalid missing code
-count if drugs==88|drugs==999|drugs==9999 //0
-
-**********************
-**     Other RFs    **
-** (Heart + Stroke) **
-**********************
-** Missing
-count if  rfany!=. & rfany!=99 & ovrf==. //0
-** Invalid missing code
-count if ovrf==88|ovrf==999|ovrf==9999 //0
-** Missing (other rf options=1 but other rf text blank)
-**************
-** Oth RF 1 **
-**************
-count if ovrf==1 & ovrf1=="" //0
-** Invalid (other sym options=ND/None but other sym text NOT=blank)
-count if (ovrf==5|ovrf==99|ovrf==99999) & ovrf1!="" //0
-** possibly Invalid (other rf=one of the rf options)
-count if ovrf1!="" //107 - reviewed and correct
-count if sd_etype==1 & (regexm(ovrf1,"smoke")|regexm(ovrf1,"cholesterol")|regexm(ovrf1,"fibrill*")|regexm(ovrf1,"tia")|regexm(ovrf1,"transient")|regexm(ovrf1,"ccf")|regexm(ovrf1,"failure")|regexm(ovrf1,"htn")|regexm(ovrf1,"hypertension")|regexm(ovrf1,"dm")|regexm(ovrf1,"diab*")|regexm(ovrf1,"hyperlipid*")|regexm(ovrf1,"hld")|regexm(ovrf1,"alcohol")|regexm(ovrf1,"drug")|regexm(ovrf1,"cocaine")|regexm(ovrf1,"marijuana")) //2 - 1 correct leave as is; stroke record 3438 corrected below as drug use mentioned in ovrf1
-count if sd_etype==2 & (regexm(ovrf1,"smoke")|regexm(ovrf1,"cholesterol")|regexm(ovrf1,"fibrill*")|regexm(ovrf1,"transient")|regexm(ovrf1,"ccf")|regexm(ovrf1,"failure")|regexm(ovrf1,"htn")|regexm(ovrf1,"hypertension")|regexm(ovrf1,"dm")|regexm(ovrf1,"diab*")|regexm(ovrf1,"hyperlipid*")|regexm(ovrf1,"hld")|regexm(ovrf1,"alcohol")|regexm(ovrf1,"drug")|regexm(ovrf1,"cocaine")|regexm(ovrf1,"marijuana")) //0
-**************
-** Oth RF 2 **
-**************
-count if ovrf==2 & ovrf2=="" //0
-** Invalid (other sym options=ND/None but other sym text NOT=blank)
-count if (ovrf==5|ovrf==99|ovrf==99999) & ovrf2!="" //0
-** possibly Invalid (other rf=one of the rf options)
-count if ovrf2!="" //12 - reviewed and correct
-count if sd_etype==1 & (regexm(ovrf2,"smoke")|regexm(ovrf2,"cholesterol")|regexm(ovrf2,"fibrill*")|regexm(ovrf2,"tia")|regexm(ovrf2,"transient")|regexm(ovrf2,"ccf")|regexm(ovrf2,"failure")|regexm(ovrf2,"htn")|regexm(ovrf2,"hypertension")|regexm(ovrf2,"dm")|regexm(ovrf2,"diab*")|regexm(ovrf2,"hyperlipid*")|regexm(ovrf2,"hld")|regexm(ovrf2,"alcohol")|regexm(ovrf2,"drug")|regexm(ovrf2,"cocaine")|regexm(ovrf2,"marijuana")) //3 - all correct leave as is
-count if sd_etype==2 & (regexm(ovrf2,"smoke")|regexm(ovrf2,"cholesterol")|regexm(ovrf2,"fibrill*")|regexm(ovrf2,"transient")|regexm(ovrf2,"ccf")|regexm(ovrf2,"failure")|regexm(ovrf2,"htn")|regexm(ovrf2,"hypertension")|regexm(ovrf2,"dm")|regexm(ovrf2,"diab*")|regexm(ovrf2,"hyperlipid*")|regexm(ovrf2,"hld")|regexm(ovrf2,"alcohol")|regexm(ovrf2,"drug")|regexm(ovrf2,"cocaine")|regexm(ovrf2,"marijuana")) //0
-**************
-** Oth RF 3 **
-**************
-count if ovrf==3 & ovrf3=="" //0
-** Invalid (other sym options=ND/None but other sym text NOT=blank)
-count if (ovrf==5|ovrf==99|ovrf==99999) & ovrf3!="" //0
-** possibly Invalid (other rf=one of the rf options)
-count if ovrf3!="" //2 - reviewed and correct
-count if sd_etype==1 & (regexm(ovrf3,"smoke")|regexm(ovrf3,"cholesterol")|regexm(ovrf3,"fibrill*")|regexm(ovrf3,"tia")|regexm(ovrf3,"transient")|regexm(ovrf3,"ccf")|regexm(ovrf3,"failure")|regexm(ovrf3,"htn")|regexm(ovrf3,"hypertension")|regexm(ovrf3,"dm")|regexm(ovrf3,"diab*")|regexm(ovrf3,"hyperlipid*")|regexm(ovrf3,"hld")|regexm(ovrf3,"alcohol")|regexm(ovrf3,"drug")|regexm(ovrf3,"cocaine")|regexm(ovrf3,"marijuana")) //0
-count if sd_etype==2 & (regexm(ovrf3,"smoke")|regexm(ovrf3,"cholesterol")|regexm(ovrf3,"fibrill*")|regexm(ovrf3,"transient")|regexm(ovrf3,"ccf")|regexm(ovrf3,"failure")|regexm(ovrf3,"htn")|regexm(ovrf3,"hypertension")|regexm(ovrf3,"dm")|regexm(ovrf3,"diab*")|regexm(ovrf3,"hyperlipid*")|regexm(ovrf3,"hld")|regexm(ovrf3,"alcohol")|regexm(ovrf3,"drug")|regexm(ovrf3,"cocaine")|regexm(ovrf3,"marijuana")) //0
-**************
-** Oth RF 4 **
-**************
-count if ovrf==4 & ovrf4=="" //0
-** Invalid (other sym options=ND/None but other sym text NOT=blank)
-count if (ovrf==5|ovrf==99|ovrf==99999) & ovrf4!="" //0
-** possibly Invalid (other rf=one of the rf options)
-count if ovrf4!="" //0 - reviewed and correct
-count if sd_etype==1 & (regexm(ovrf4,"smoke")|regexm(ovrf4,"cholesterol")|regexm(ovrf4,"fibrill*")|regexm(ovrf4,"tia")|regexm(ovrf4,"transient")|regexm(ovrf4,"ccf")|regexm(ovrf4,"failure")|regexm(ovrf4,"htn")|regexm(ovrf4,"hypertension")|regexm(ovrf4,"dm")|regexm(ovrf4,"diab*")|regexm(ovrf4,"hyperlipid*")|regexm(ovrf4,"hld")|regexm(ovrf4,"alcohol")|regexm(ovrf4,"drug")|regexm(ovrf4,"cocaine")|regexm(ovrf4,"marijuana")) //0
-count if sd_etype==2 & (regexm(ovrf4,"smoke")|regexm(ovrf4,"cholesterol")|regexm(ovrf4,"fibrill*")|regexm(ovrf4,"transient")|regexm(ovrf4,"ccf")|regexm(ovrf4,"failure")|regexm(ovrf4,"htn")|regexm(ovrf4,"hypertension")|regexm(ovrf4,"dm")|regexm(ovrf4,"diab*")|regexm(ovrf4,"hyperlipid*")|regexm(ovrf4,"hld")|regexm(ovrf4,"alcohol")|regexm(ovrf4,"drug")|regexm(ovrf4,"cocaine")|regexm(ovrf4,"marijuana")) //0
+replace flagdate=sd_currentdate if record_id=="2016"|record_id=="2183"|record_id=="2965"|record_id=="3168"|record_id=="3316"|record_id=="2908"|record_id=="3013"|record_id=="3124"|record_id=="1925"|record_id=="2244"|record_id=="2306"|record_id=="2309"|record_id=="2368"|record_id=="2449"|record_id=="2763"|record_id=="3086"|record_id=="3169"|record_id=="3389"|record_id=="4223"
 
 
 
-
-** Corrections from above checks
-destring flag293 ,replace
-destring flag1218 ,replace
-destring flag303 ,replace
-destring flag1228 ,replace
-
-** Since the missing code 99999 is only to be used in the cleaning and analysis steps of data handling the DAs do not need to update the CVDdb
-replace hcl=99999 if record_id=="1887" //see above
-replace af=99999 if record_id=="1887" //see above
-replace tia=99999 if record_id=="1887" //see above
-replace hld=99999 if record_id=="1887" //see above
-replace drugs=99999 if record_id=="1887" //see above
-
-replace flag293=rfany if record_id=="3438"
-replace rfany=1 if record_id=="3438" //see above
-replace flag1218=rfany if record_id=="3438"
-
-replace flag303=drugs if record_id=="3438"
-replace drugs=1 if record_id=="3438" //see above
-replace flag1228=drugs if record_id=="3438"
-
-
-** JC 09feb2023: Create flag date variable so that records already flagged and exported to a previous excel will not recur as they still exist in the dataset
-//drop sd_currentdate
-gen currentd=c(current_date)
-gen double sd_currentdate=date(currentd, "DMY", 2017)
-drop currentd
-format sd_currentdate %dD_m_CY
-
-gen flagdate=sd_currentdate if record_id=="1887"|record_id=="3438"
 
 /*
 ** Export corrections before dropping ineligible cases since errors maybe in these records (I only exported the flags with errors/corrections from above)
@@ -1288,87 +1343,88 @@ preserve
 sort record_id
 
 ** Format the date flags so they are exported as dates not numbers
-//format flagdate flag45 flag970  %dM_d,_CY
+format flagdate flag117 flag1042 flag150 flag1075 flag267 flag1192 flag343 flag1268 flag367 flag1292 %dM_d,_CY
 
 ** Create excel errors list before deleting incorrect records
 ** Use below code to automate file names using current date
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-capture export_excel record_id sd_etype flag293 flag303 if ///
-		(flag293!=. | flag303!=.) & flagdate!=. ///
-using "`datapath'\version03\3-output\CVDCleaning2021_HX1_`listdate'.xlsx", sheet("ERRORS") firstrow(varlabels)
-capture export_excel record_id sd_etype flag1218 flag1228 if ///
-		 (flag1218!=. | flag1228!=.) & flagdate!=. ///
-using "`datapath'\version03\3-output\CVDCleaning2021_HX1_`listdate'.xlsx", sheet("CORRECTIONS") firstrow(varlabels)
+capture export_excel record_id sd_etype flag117 flag150 flag154 flag257 flag259 flag267 flag285 flag286 flag293 flag317 flag328 flag343 flag348 flag367 flag409 if ///
+		(flag117!=. | flag150!=. | flag154!="" | flag257!=. | flag259!=. | flag267!=. |  flag285!=. |  flag286!=. | flag293!=. |  flag317!=. |  flag328!=. |  flag343!=. |  flag348!=. |  flag367!=. |  flag409!=.) & flagdate!=. ///
+using "`datapath'\version03\3-output\CVDCleaning2021_TESTS1_`listdate'.xlsx", sheet("ERRORS") firstrow(varlabels)
+capture export_excel record_id sd_etype flag1042 flag1075 flag1079 flag1182 flag1184 flag1192 flag1210 flag1211 flag1218 flag1242 flag1253 flag1268 flag1273 flag1292 flag1334 if ///
+		 (flag1042!=. | flag1075!=. | flag1079!="" | flag1182!=. | flag1184!=. | flag1192!=. |  flag1210!=. |  flag1211!=. | flag1218!=. |  flag1242!=. |  flag1253!=. |  flag1268!=. |  flag1273!=. |  flag1292!=. |  flag1334!=.) & flagdate!=. ///
+using "`datapath'\version03\3-output\CVDCleaning2021_TESTS1_`listdate'.xlsx", sheet("CORRECTIONS") firstrow(varlabels)
 restore
 */
 
 
 
-
 ** Create datetime variables in prep for analysis (prepend with 'sd_') - only for variables wherein both date and time are not missing
 ** FMC
-drop sd_fmcdatetime
+drop sd_fmcdatetime fmcdate_text fmcdatetime2
 gen fmcdate_text = string(fmcdate, "%td")
 gen fmcdatetime2 = fmcdate_text+" "+fmctime if fmcdate!=. & fmctime!="" & fmctime!="88" & fmctime!="99"
 gen double sd_fmcdatetime = clock(fmcdatetime2,"DMYhm") if fmcdatetime2!=""
 format sd_fmcdatetime %tc
 label var sd_fmcdatetime "DateTime of FIRST MEDICAL CONTACT"
 ** A&E admission
-drop sd_daetae
+drop sd_daetae dae_text daetae2
 gen dae_text = string(dae, "%td")
 gen daetae2 = dae_text+" "+tae if dae!=. & tae!="" & tae!="88" & tae!="99"
 gen double sd_daetae = clock(daetae2,"DMYhm") if daetae2!=""
 format sd_daetae %tc
 label var sd_daetae "DateTime Admitted to A&E"
 ** A&E discharge
-drop sd_daetaedis
+drop sd_daetaedis daedis_text daetaedis2
 gen daedis_text = string(daedis, "%td")
 gen daetaedis2 = daedis_text+" "+taedis if daedis!=. & taedis!="" & taedis!="88" & taedis!="99"
 gen double sd_daetaedis = clock(daetaedis2,"DMYhm") if daetaedis2!=""
 format sd_daetaedis %tc
 label var sd_daetaedis "DateTime Discharged from A&E"
 ** Admission (Ward)
-drop sd_dohtoh
+drop sd_dohtoh doh_text dohtoh2
 gen doh_text = string(doh, "%td")
 gen dohtoh2 = doh_text+" "+toh if doh!=. & toh!="" & toh!="88" & toh!="99"
 gen double sd_dohtoh = clock(dohtoh2,"DMYhm") if dohtoh2!=""
 format sd_dohtoh %tc
 label var sd_dohtoh "DateTime Admitted to Ward"
 ** Notified (Ambulance)
-drop sd_ambcalldt
+drop sd_ambcalldt ambcalld_text ambcalldt2
 gen ambcalld_text = string(ambcalld, "%td")
 gen ambcalldt2 = ambcalld_text+" "+ambcallt if ambcalld!=. & ambcallt!="" & ambcallt!="88" & ambcallt!="99"
 gen double sd_ambcalldt = clock(ambcalldt2,"DMYhm") if ambcalldt2!=""
 format sd_ambcalldt %tc
 label var sd_ambcalldt "DateTime Ambulance NOTIFIED"
 ** At Scene (Ambulance)
-drop sd_atscndt
+drop sd_atscndt atscnd_text atscndt2
 gen atscnd_text = string(atscnd, "%td")
 gen atscndt2 = atscnd_text+" "+atscnt if atscnd!=. & atscnt!="" & atscnt!="88" & atscnt!="99"
 gen double sd_atscndt = clock(atscndt2,"DMYhm") if atscndt2!=""
 format sd_atscndt %tc
 label var sd_atscndt "DateTime Ambulance AT SCENE"
 ** From Scene (Ambulance)
-drop sd_frmscndt
+drop sd_frmscndt frmscnd_text frmscndt2
 gen frmscnd_text = string(frmscnd, "%td")
 gen frmscndt2 = frmscnd_text+" "+frmscnt if frmscnd!=. & frmscnt!="" & frmscnt!="88" & frmscnt!="99"
 gen double sd_frmscndt = clock(frmscndt2,"DMYhm") if frmscndt2!=""
 format sd_frmscndt %tc
 label var sd_frmscndt "DateTime Ambulance FROM SCENE"
 ** At Hospital (Ambulance)
-drop sd_hospdt
+drop sd_hospdt hospd_text hospdt2
 gen hospd_text = string(hospd, "%td")
 gen hospdt2 = hospd_text+" "+hospt if hospd!=. & hospt!="" & hospt!="88" & hospt!="99"
 gen double sd_hospdt = clock(hospdt2,"DMYhm") if hospdt2!=""
 format sd_hospdt %tc
 label var sd_hospdt "DateTime Ambulance AT HOSPITAL"
 ** Chest Pain
+drop hsym1d_text hsym1dt2 sd_hsym1dt
 gen hsym1d_text = string(hsym1d, "%td")
 gen hsym1dt2 = hsym1d_text+" "+hsym1t if hsym1d!=. & hsym1t!="" & hsym1t!="88" & hsym1t!="99"
 gen double sd_hsym1dt = clock(hsym1dt2,"DMYhm") if hsym1dt2!=""
 format sd_hsym1dt %tc
 label var sd_hsym1dt "DateTime of Chest Pain"
 ** Event
+drop edate_text eventdt2 sd_eventdt
 gen edate_text = string(edate, "%td")
 gen eventdt2 = edate_text+" "+etime if edate!=. & etime!="" & etime!="88" & etime!="99"
 gen double sd_eventdt = clock(eventdt2,"DMYhm") if eventdt2!=""
