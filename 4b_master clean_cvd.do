@@ -59,7 +59,7 @@ do "`dopath'\3c_prep mort"
 
 ** dofile 3d
 do "`dopath'\3d_death match_cvd"
-/*
+
 ** dofile 3e
 do "`dopath'\3e_clean demo_cvd"
 
@@ -77,7 +77,7 @@ do "`dopath'\3i_clean tests_cvd"
 
 ** dofile 3j
 do "`dopath'\3j_clean comp_cvd"
-
+/*
 ** dofile 3k
 do "`dopath'\3k_clean rx_cvd"
 

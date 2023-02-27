@@ -329,6 +329,7 @@ count if firstnf==33 & cfdoa>d(29sep2020) //0
 count if cfsource___1==0 & cfsource___2==0 & cfsource___3==0 & cfsource___4==0 & cfsource___5==0 & cfsource___6==0 & cfsource___7==0 & cfsource___8==0 & cfsource___9==0 & cfsource___10==0 & cfsource___11==0 & cfsource___12==0 & cfsource___13==0 & cfsource___14==0 & cfsource___15==0 & cfsource___16==0 & cfsource___17==0 & cfsource___18==0 & cfsource___19==0 & cfsource___20==0 & cfsource___21==0 & cfsource___22==0 & cfsource___23==0 & cfsource___24==0 & cfsource___25==0 & cfsource___26==0 & cfsource___27==0 & cfsource___28==0 & cfsource___29==0 & cfsource___30==0 & cfsource___31==0 & cfsource___32==0 & cfsource___33==0
 //1 - blank heart record but there's a valid stroke record with same id
 drop if record_id=="1945" & sd_etype==2 //1 deleted
+** JC 27feb2023: post-completion of this dofile I returned to dofile 1_format_cvd.do and deleted this blank record from there instead of here
 
 **********************
 ** Retrieval Source **
