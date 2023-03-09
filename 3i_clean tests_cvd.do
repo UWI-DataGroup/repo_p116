@@ -487,6 +487,7 @@ drop stime2
 **************************
 ** CT/MRI Features Info **
 **************************
+** JC 09mar2023: See NS' feedback in CVD DM Re-engineer OneNote bk - this cleaning process should be: CT features clarify stype=ICH not Ischaemic; If stype and CT differ then go with CT; If CT is unclear then need to look at symptoms and finaldx i.e. look at the complete picture but it's always best for DAs to flag for review.
 *******************
 ** Any features? **
 *******************
@@ -677,7 +678,7 @@ count if tropd!=. & frmscnd!=. & tropd<frmscnd & inhosp!=1 //1 - same record alr
 ** Invalid (before AtHospitalDate)
 count if tropd!=. & hospd!=. & tropd<hospd & inhosp!=1 //1 - same record already flagged above
 ** Invalid (before EventDate)
-count if tropd!=. & edate!=. & tropd<edate //1 - record 2865 for NS to review
+count if tropd!=. & edate!=. & tropd<edate //1 - record 2865 for NS to review: leave as is as noted by NS in OneNote bk
 ** Missing time
 count if tropt=="" & tropdone==1 //0
 ** Invalid (time format)
@@ -698,7 +699,7 @@ count if tropt!="" & tropt!="99" & frmscnt!="" & frmscnt!="99" & tropt<frmscnt /
 ** Invalid (trop time before time at hospital)
 count if tropt!="" & tropt!="99" & hospt!="" & hospt!="99" & tropt<hospt //2 - same records as above
 ** Invalid (trop time before event time)
-count if tropt!="" & tropt!="99" & etime!="" & etime!="99" & tropt<etime //1 - record 3316 for NS to review
+count if tropt!="" & tropt!="99" & etime!="" & etime!="99" & tropt<etime //1 - record 3316 for NS to review: leave as is as noted by NS in OneNote bk
 ** Invalid missing code
 count if troptampm==88|troptampm==99|troptampm==999|troptampm==9999 //0
 
@@ -737,7 +738,8 @@ count if trop2res==. & trop2res!=99 & tropres!=. & tropres>1 & tests_complete!=0
 ** Invalid missing code
 count if trop2res==88|trop2res==999|trop2res==9999 //0
 ** possibly Invalid (trop 2 res lower than trop 1 res)
-count if trop1res!=. & trop1res!=99 & trop2res!=. & trop2res!=99 & trop2res<trop1res //31 - ask NS to review
+count if trop1res!=. & trop1res!=99 & trop2res!=. & trop2res!=99 & trop2res<trop1res //31 - ask NS to review: in OneNote bk, NS noted - In acute stages it's expected it would go up but then if timing of 2nd test is long trop can drop by time they're checked a 2nd time so leave as is.
+
 
 
 
@@ -979,7 +981,7 @@ count if ecgste==. & ecgfeat==1 & tests_complete!=0 & tests_complete!=. //0
 ** Invalid missing code
 count if ecgste==88|ecgste==999|ecgste==9999 //0
 ** possibly Invalid (STE=Yes; heart type NOT=STEMI)
-count if ecgste==1 & htype!=1 //21 - for NS to review
+count if ecgste==1 & htype!=1 //21 - for NS to review: in OneNote bk NS noted that consultant may indicate the ST-elevation on ECG is not significant enough to dx as STEMI so the finaldx ends up=NSTEMI so change the ones wherein htype=AMI(definite) to STEMI but leave the NSTEMIs as is and note in reviewer comments this anomaly (see 3n_clean final_cvd.do for reviewer comments)
 ** possibly Invalid (STE=No; heart type=STEMI)
 count if ecgste==2 & htype==1 //0
 *******************
@@ -990,9 +992,9 @@ count if ecgstd==. & ecgfeat==1 & tests_complete!=0 & tests_complete!=. //0
 ** Invalid missing code
 count if ecgstd==88|ecgstd==999|ecgstd==9999 //0
 ** possibly Invalid (STD=Yes; STE not=Yes; heart type NOT=NSTEMI)
-count if ecgstd==1 & ecgste!=1 & htype!=2 //5 - for NS to review
+count if ecgstd==1 & ecgste!=1 & htype!=2 //5 - for NS to review 1848, 2245, 2439, 2477 + 2540: change all except 2477 to NSTEMI (see OneNote bk + 3n_clean final_cvd.do) - the principle is if ST-elevation not present then change heart type from AMI(definite) to NSTEMI unless pt has had an autopsy and no ECG.
 ** possibly Invalid (STD=No; heart type=NSTEMI)
-count if ecgstd==2 & htype==2 //9 - some have t-wave, pq-wave etc. not sure we can have such a specific check for NSTEMIs
+count if ecgstd==2 & htype==2 //9 - some have t-wave, pq-wave etc. not sure we can have such a specific check for NSTEMIs; according to review with NS: No cannot use a specific cleaning check for NSTEMIs like this one as dx of NSTEMI relies on several factors besides ST-depression.
 ******************
 ** Path Q waves **
 ******************
@@ -1099,7 +1101,7 @@ format flag367 flag1292 %dM_d,_CY
 
 replace flag367=ecgd if record_id=="2555"|record_id=="3318"
 replace ecgd=dae if record_id=="2555" //see above
-replace ecgd=doh if record_id=="3318" //see above
+replace ecgd=dae if record_id=="3318" //see above
 replace flag1292=ecgd if record_id=="2555"|record_id=="3318"
 
 ** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile

@@ -73,7 +73,7 @@ count if reperfd!=. & year(reperfd)!=2021 //1 - correct as event 31dec2021 but a
 ** Invalid (before DOB)
 count if dob!=. & reperfd!=. & reperfd<dob //0
 ** possibly Invalid (before CFAdmDate)
-count if reperfd!=. & cfadmdate!=. & reperfd<cfadmdate & inhosp!=1 & fmcdate==. //1 - heart record 2052 for review by NS
+count if reperfd!=. & cfadmdate!=. & reperfd<cfadmdate & inhosp!=1 & fmcdate==. //1 - heart record 2052 for review by NS: Leave as is as cannot be confirmed and most likely reperf date is incorrect but cannot verify.
 ** possibly Invalid (after DLC/DOD)
 count if dlc!=. & reperfd!=. & reperfd>dlc //0
 count if cfdod!=. & reperfd!=. & reperfd>cfdod //0
@@ -324,6 +324,13 @@ replace flag1488=antih___88 if record_id=="4223"
 replace flagdate=sd_currentdate if record_id=="2283"|record_id=="4223"
 
 
+******************
+** Aspirin Dose **
+******************
+** Missing date
+count if aspdose==. & asp___1==1 //0
+** Invalid missing code
+count if aspdose==88|aspdose==99|aspdose==9999 //0
 ******************
 ** Aspirin Date **
 ******************
@@ -632,7 +639,7 @@ count if heplmwt!="" & heplmwt!="99" & frmscnt!="" & frmscnt!="99" & heplmwt<frm
 ** possibly Invalid (heplmw time before time at hospital)
 count if heplmwt!="" & heplmwt!="99" & hospt!="" & hospt!="99" & heplmwt<hospt //26 - all correct
 ** Invalid (heplmw time before event time)
-count if heplmwt!="" & heplmwt!="99" & etime!="" & etime!="99" & heplmwt<etime //53 - all are correct except heart record 2045 for NS to review
+count if heplmwt!="" & heplmwt!="99" & etime!="" & etime!="99" & heplmwt<etime //53 - all are correct except heart record 2045 for NS to review - reviewed and corrected below
 ** Invalid missing code
 count if heplmwtampm==88|heplmwtampm==99|heplmwtampm==999|heplmwtampm==9999 //0
 
@@ -694,7 +701,7 @@ count if plat!="" & plat!="99" & ambcallt!="" & ambcallt!="99" & plat<ambcallt /
 ** possibly Invalid (pla time before time at scene)
 count if plat!="" & plat!="99" & atscnt!="" & atscnt!="99" & plat<atscnt //28 - all correct except heart record 3030 corrected below; heart record 3402 ecg, trop done at CMC prior to QEH and meds given then too
 ** possibly Invalid (pla time before time from scene)
-count if plat!="" & plat!="99" & frmscnt!="" & frmscnt!="99" & plat<frmscnt //28 - all correct; heart record 2071 for NS to review; heart record 2897 took prior to QEH adm; heart record 3030 corrected below
+count if plat!="" & plat!="99" & frmscnt!="" & frmscnt!="99" & plat<frmscnt //28 - all correct; heart record 2071 for NS to review (leave as is since GPs can and do give antiplatelets to pts prior to QEH); heart record 2897 took prior to QEH adm; heart record 3030 corrected below
 ** possibly Invalid (pla time before time at hospital)
 count if plat!="" & plat!="99" & hospt!="" & hospt!="99" & plat<hospt //22 - all correct except ones already flagged above
 ** Invalid (pla time before event time)
