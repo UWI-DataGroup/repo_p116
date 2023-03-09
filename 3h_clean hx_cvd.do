@@ -144,11 +144,11 @@ count if famstroke!=99 & mumstroke==99 & dadstroke==99 & sibstroke==99 //5 - sam
 count if famami==. & history_complete!=0 & history_complete!=. //0
 ** Invalid missing code
 count if famami==88|famami==999|famami==9999 //0
-** Invalid (famstroke=No/ND; famstroke options=Yes)
+** Invalid (famami=No/ND; famami options=Yes)
 count if (famami==2|famami==99) & (mumami==1|dadami==1|sibami==1) //0
-** Invalid (famstroke=Yes; famstroke options NOT=Yes)
+** Invalid (famami=Yes; famami options NOT=Yes)
 count if famami==1 & mumami!=1 & dadami!=1 & sibami!=1 //3 - corrected in 3i_clean tests_cvd.do
-** Invalid (famstroke=Yes/No; famstroke options all=ND)
+** Invalid (famami=Yes/No; famami options all=ND)
 count if famami!=99 & mumami==99 & dadami==99 & sibami==99 //3 - same records as above
 ********************
 ** Mother Stroke? **

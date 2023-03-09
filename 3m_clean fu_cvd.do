@@ -4,7 +4,7 @@
     //  project:                BNR-CVD
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      07-MAR-2023
-    // 	date last modified      07-MAR-2023
+    // 	date last modified      08-MAR-2023
     //  algorithm task          Cleaning variables in the REDCap CVDdb 28-day F/U form
     //  status                  Completed
     //  objective               (1) To have a cleaned 2021 cvd incidence dataset ready for analysis
@@ -100,7 +100,6 @@ count if fu1doa2!=. & hospd!=. & fu1doa2<hospd //0
 ** Invalid (before EventDate)
 count if fu1doa2!=. & edate!=. & fu1doa2<edate //0
 
-drop fu1doa2
 
 ****************************
 ** Interview on f/u date? **
@@ -152,32 +151,51 @@ count if fu1how==. & fu1sicf==1 //1 - stroke record 2819 unanswered by DA so cor
 ** Invalid missing code
 count if fu1how==88|fu1how==99|fu1how==999|fu1how==9999 //0
 
-STOP
-
+****************************
+** Vital Status at day 28 **
+****************************
+** Missing
+count if f1vstatus==. & fu1day!=. //0
+** Invalid missing code
+count if f1vstatus==88|f1vstatus==999|f1vstatus==9999 //0
+** possibly Invalid (vstatus on CF form=deceased; f1vstatus at FU NOT=deceased; pt died before FU done)
+count if slc==2 & f1vstatus!=. & f1vstatus!=2 & cfdod<fu1doa2 //12 - stroke record 1729 for NS to review; heart and stroke records 1899 + 1971 leave as is since they were alive at day 28; others corrected below - those that were alive at day 28 but were documented as deceased on FU form was changed to alive on FU form + those that were deceased before day 28 were changed from No-other reason to No-pt deceased and changed from 99 to deceased on FU form
+gen double fu1date=edate+28
+format fu1date %dM_d,_CY
+//list sd_etype record_id slc f1vstatus edate fu1date cfdod fu1doa2 edatefu1doadiff if slc==2 & f1vstatus!=. & f1vstatus!=2 & cfdod<fu1doa2
+//order sd_etype record_id slc f1vstatus edate fu1date cfdod fu1doa2 fu1day fu1oday fu1sicf fu1con fu1how f1vstatus fu1sit fu1osit fu1readm fu1los furesident ethnicity oethnic education mainwork
+** possibly Invalid (f1vstatus at FU=deceased; pt was alive at day 28; FU done late)
+count if f1vstatus==2 & cfdod>fu1date //37 - heart records 2704 + 2840 + stroke record 3294 changed from verbal consent=Yes to verbal consent=No-pt incapable; all records corrected below - fu1day changed from No-pt deceased to No-other reason, other reason added, verbal consent=No-pt incapable, f1vstatus changed from deceased to alive
+//list sd_etype record_id slc f1vstatus edate fu1date cfdod fu1doa2 edatefu1doadiff if f1vstatus==2 & cfdod>fu1date
+//list sd_etype record_id slc f1vstatus edate fu1date cfdod fu1doa2 edatefu1doadiff if f1vstatus==2 & cfdod>fu1date & edoa>fu1date: this list shows which were late due to late abs vs late call - need this for correcting fu1oday variable
+** Invalid (slc on CF=alive; f1vstatus on FU=deceased)
+count if slc==1 & f1vstatus==2 //0
+** Invalid (vstatus at discharge=deceased; f1vstatus on FU=alive)
+count if vstatus==2 & f1vstatus!=. & f1vstatus!=2 //0
 
 
 
 
 
 ** Corrections from above checks
-destring flag857 ,replace
-destring flag1782 ,replace
 destring flag860 ,replace
 destring flag1785 ,replace
-format  %dM_d,_CY
+destring flag858 ,replace
+destring flag1783 ,replace
 
 
 ** Since the missing code 99999 is only to be used in the cleaning and analysis steps of data handling the DAs do not need to update the CVDdb
-replace fu1how=99999 if record_id==""
+//replace fu1how=99999 if record_id==""
 
 
 replace flag860=fu1how if record_id=="2819"
 replace fu1how=2 if record_id=="2819" //see above
 replace flag1785=fu1how if record_id=="2819"
 
-replace flag856=fu1day if record_id=="3024"|record_id=="3128"
+replace flag856=fu1day if record_id=="3024"|record_id=="3128"|record_id=="2722"|record_id=="2892"|record_id=="3704"|record_id=="4115"|record_id=="4196"
 replace fu1day=2 if record_id=="3024"|record_id=="3128" //see above
-replace flag1781=fu1day if record_id=="3024"|record_id=="3128"
+replace fu1day=3 if record_id=="2722"|record_id=="2892"|record_id=="3704"|record_id=="4115"|record_id=="4196" //see above
+replace flag1781=fu1day if record_id=="3024"|record_id=="3128"|record_id=="2722"|record_id=="2892"|record_id=="3704"|record_id=="4115"|record_id=="4196"
 
 replace flag857=fu1oday if record_id=="3024"|record_id=="3128"
 replace fu1oday="Error found during annual report cleaning - interview done after f/u date" if record_id=="3024"|record_id=="3128" //see above
@@ -189,22 +207,34 @@ replace f1rankin3=. if record_id=="3024"|record_id=="3128" //CVDdb will prompt D
 replace f1rankin4=. if record_id=="3024"|record_id=="3128" //CVDdb will prompt DA to erase this value when they make above corrections
 replace f1rankin5=. if record_id=="3024"|record_id=="3128" //CVDdb will prompt DA to erase this value when they make above corrections
 replace f1rankin6=. if record_id=="3024"|record_id=="3128" //CVDdb will prompt DA to erase this value when they make above corrections
+replace fu1oday="" if record_id=="2722"|record_id=="2892"|record_id=="3704"|record_id=="4115"|record_id=="4196" //CVDdb will prompt DA to erase this value when they make above corrections
+replace fu1sicf=. if record_id=="2722"|record_id=="2892"|record_id=="3704"|record_id=="4115"|record_id=="4196" //CVDdb will prompt DA to erase this value when they make above corrections
+replace fu1con=. if record_id=="2704"|record_id=="2840"|record_id=="3294" //CVDdb will prompt DA to erase this value when they make above corrections
+replace fu1how=. if record_id=="2704"|record_id=="2840"|record_id=="3294" //CVDdb will prompt DA to erase this value when they make above corrections
 
-replace flag861=f1vstatus if record_id==""|record_id==""
-replace f1vstatus=2 if record_id==""|record_id=="" //see above
-replace flag1786=f1vstatus if record_id==""|record_id==""
 
+replace flag861=f1vstatus if record_id=="1956"|record_id=="2720"|record_id=="2722"|record_id=="2834"|record_id=="2892"|record_id=="2938"|record_id=="3704"|record_id=="4115"|record_id=="4196"
+replace f1vstatus=2 if record_id=="2722"|record_id=="2892"|record_id=="3704"|record_id=="4115"|record_id=="4196" //see above
+replace f1vstatus=1 if record_id=="1956"|record_id=="2720"|record_id=="2834"|record_id=="2938" //see above
+replace flag1786=f1vstatus if record_id=="1956"|record_id=="2720"|record_id=="2722"|record_id=="2834"|record_id=="2892"|record_id=="2938"|record_id=="3704"|record_id=="4115"|record_id=="4196"
 
-replace fu1doa=clock("February 23, 2023 09:50:27", "MDY hms") if record_id==""
-replace fu1da=18 if record_id==""
-replace fu1type=1 if record_id==""
-replace fu1day=3 if record_id==""
-replace f1vstatus=2 if record_id==""
-//this record was updated in CVDdb post-cleaning export so no need to flag for correction in CVDdb
+replace flag856=fu1day if record_id=="1833"|record_id=="1856"|record_id=="1873"|record_id=="1905"|record_id=="1946"|record_id=="2084"|record_id=="2153"|record_id=="2212"|record_id=="2275"|record_id=="2290"|record_id=="2302"|record_id=="2322"|record_id=="2646"|record_id=="2745"|record_id=="2883"|record_id=="2989"|record_id=="3087"|record_id=="3305"|record_id=="3318"|record_id=="3347"|record_id=="3362"|record_id=="3389"|record_id=="3418"|record_id=="3438"|record_id=="3457"|record_id=="3460"|record_id=="3461"|record_id=="3634"|record_id=="3754"|record_id=="3847"|record_id=="3916"|record_id=="3971"|record_id=="4104"|record_id=="4395"
+replace fu1day=2 if record_id=="1833"|record_id=="1856"|record_id=="1873"|record_id=="1905"|record_id=="1946"|record_id=="2084"|record_id=="2153"|record_id=="2212"|record_id=="2275"|record_id=="2290"|record_id=="2302"|record_id=="2322"|record_id=="2646"|record_id=="2745"|record_id=="2883"|record_id=="2989"|record_id=="3087"|record_id=="3305"|record_id=="3318"|record_id=="3347"|record_id=="3362"|record_id=="3389"|record_id=="3418"|record_id=="3438"|record_id=="3457"|record_id=="3460"|record_id=="3461"|record_id=="3634"|record_id=="3754"|record_id=="3847"|record_id=="3916"|record_id=="3971"|record_id=="4104"|record_id=="4395" //see above
+replace flag1781=fu1day if record_id=="1833"|record_id=="1856"|record_id=="1873"|record_id=="1905"|record_id=="1946"|record_id=="2084"|record_id=="2153"|record_id=="2212"|record_id=="2275"|record_id=="2290"|record_id=="2302"|record_id=="2322"|record_id=="2646"|record_id=="2745"|record_id=="2883"|record_id=="2989"|record_id=="3087"|record_id=="3305"|record_id=="3318"|record_id=="3347"|record_id=="3362"|record_id=="3389"|record_id=="3418"|record_id=="3438"|record_id=="3457"|record_id=="3460"|record_id=="3461"|record_id=="3634"|record_id=="3754"|record_id=="3847"|record_id=="3916"|record_id=="3971"|record_id=="4104"|record_id=="4395"
 
-replace flag700=disd if record_id==""|record_id==""|record_id==""
-replace disd=dlc if record_id==""|record_id==""|record_id=="" //see above
-replace flag1625=disd if record_id==""|record_id==""|record_id==""
+replace flag857=fu1oday if record_id=="2704"|record_id=="2840"|record_id=="3294"|record_id=="1833"|record_id=="1856"|record_id=="1873"|record_id=="1905"|record_id=="1946"|record_id=="2084"|record_id=="2153"|record_id=="2212"|record_id=="2275"|record_id=="2290"|record_id=="2302"|record_id=="2322"|record_id=="2646"|record_id=="2745"|record_id=="2883"|record_id=="2989"|record_id=="3087"|record_id=="3305"|record_id=="3318"|record_id=="3347"|record_id=="3362"|record_id=="3389"|record_id=="3418"|record_id=="3438"|record_id=="3457"|record_id=="3460"|record_id=="3461"|record_id=="3634"|record_id=="3754"|record_id=="3847"|record_id=="3916"|record_id=="3971"|record_id=="4104"|record_id=="4395"
+replace fu1oday="Late call; pt died after day 28 but before FU call" if record_id=="2302"|record_id=="2704"|record_id=="3087" //see above
+replace fu1oday="Late abstraction; pt died after day 28 but before FU call" if record_id=="2840"|record_id=="3294"|record_id=="1833"|record_id=="1856"|record_id=="1873"|record_id=="1905"|record_id=="1946"|record_id=="2084"|record_id=="2153"|record_id=="2212"|record_id=="2275"|record_id=="2290"|record_id=="2322"|record_id=="2646"|record_id=="2745"|record_id=="2883"|record_id=="2989"|record_id=="3305"|record_id=="3318"|record_id=="3347"|record_id=="3362"|record_id=="3389"|record_id=="3418"|record_id=="3438"|record_id=="3457"|record_id=="3460"|record_id=="3461"|record_id=="3634"|record_id=="3754"|record_id=="3847"|record_id=="3916"|record_id=="3971"|record_id=="4104"|record_id=="4395" //see above
+replace flag1782=fu1oday if record_id=="2704"|record_id=="2840"|record_id=="3294"|record_id=="1833"|record_id=="1856"|record_id=="1873"|record_id=="1905"|record_id=="1946"|record_id=="2084"|record_id=="2153"|record_id=="2212"|record_id=="2275"|record_id=="2290"|record_id=="2302"|record_id=="2322"|record_id=="2646"|record_id=="2745"|record_id=="2883"|record_id=="2989"|record_id=="3087"|record_id=="3305"|record_id=="3318"|record_id=="3347"|record_id=="3362"|record_id=="3389"|record_id=="3418"|record_id=="3438"|record_id=="3457"|record_id=="3460"|record_id=="3461"|record_id=="3634"|record_id=="3754"|record_id=="3847"|record_id=="3916"|record_id=="3971"|record_id=="4104"|record_id=="4395"
+
+replace flag858=fu1sicf if record_id=="2704"|record_id=="2840"|record_id=="3294"|record_id=="1833"|record_id=="1856"|record_id=="1873"|record_id=="1905"|record_id=="1946"|record_id=="2084"|record_id=="2153"|record_id=="2212"|record_id=="2275"|record_id=="2290"|record_id=="2302"|record_id=="2322"|record_id=="2646"|record_id=="2745"|record_id=="2883"|record_id=="2989"|record_id=="3087"|record_id=="3305"|record_id=="3318"|record_id=="3347"|record_id=="3362"|record_id=="3389"|record_id=="3418"|record_id=="3438"|record_id=="3457"|record_id=="3460"|record_id=="3461"|record_id=="3634"|record_id=="3754"|record_id=="3847"|record_id=="3916"|record_id=="3971"|record_id=="4104"|record_id=="4395"
+replace fu1sicf=3 if record_id=="2704"|record_id=="2840"|record_id=="3294"|record_id=="1833"|record_id=="1856"|record_id=="1873"|record_id=="1905"|record_id=="1946"|record_id=="2084"|record_id=="2153"|record_id=="2212"|record_id=="2275"|record_id=="2290"|record_id=="2302"|record_id=="2322"|record_id=="2646"|record_id=="2745"|record_id=="2883"|record_id=="2989"|record_id=="3087"|record_id=="3305"|record_id=="3318"|record_id=="3347"|record_id=="3362"|record_id=="3389"|record_id=="3418"|record_id=="3438"|record_id=="3457"|record_id=="3460"|record_id=="3461"|record_id=="3634"|record_id=="3754"|record_id=="3847"|record_id=="3916"|record_id=="3971"|record_id=="4104"|record_id=="4395" //see above
+replace flag1783=fu1sicf if record_id=="2704"|record_id=="2840"|record_id=="3294"|record_id=="1833"|record_id=="1856"|record_id=="1873"|record_id=="1905"|record_id=="1946"|record_id=="2084"|record_id=="2153"|record_id=="2212"|record_id=="2275"|record_id=="2290"|record_id=="2302"|record_id=="2322"|record_id=="2646"|record_id=="2745"|record_id=="2883"|record_id=="2989"|record_id=="3087"|record_id=="3305"|record_id=="3318"|record_id=="3347"|record_id=="3362"|record_id=="3389"|record_id=="3418"|record_id=="3438"|record_id=="3457"|record_id=="3460"|record_id=="3461"|record_id=="3634"|record_id=="3754"|record_id=="3847"|record_id=="3916"|record_id=="3971"|record_id=="4104"|record_id=="4395"
+
+replace flag861=f1vstatus if record_id=="2704"|record_id=="2840"|record_id=="3294"|record_id=="1833"|record_id=="1856"|record_id=="1873"|record_id=="1905"|record_id=="1946"|record_id=="2084"|record_id=="2153"|record_id=="2212"|record_id=="2275"|record_id=="2290"|record_id=="2302"|record_id=="2322"|record_id=="2646"|record_id=="2745"|record_id=="2883"|record_id=="2989"|record_id=="3087"|record_id=="3305"|record_id=="3318"|record_id=="3347"|record_id=="3362"|record_id=="3389"|record_id=="3418"|record_id=="3438"|record_id=="3457"|record_id=="3460"|record_id=="3461"|record_id=="3634"|record_id=="3754"|record_id=="3847"|record_id=="3916"|record_id=="3971"|record_id=="4104"|record_id=="4395"
+replace f1vstatus=1 if record_id=="2704"|record_id=="2840"|record_id=="3294"|record_id=="1833"|record_id=="1856"|record_id=="1873"|record_id=="1905"|record_id=="1946"|record_id=="2084"|record_id=="2153"|record_id=="2212"|record_id=="2275"|record_id=="2290"|record_id=="2302"|record_id=="2322"|record_id=="2646"|record_id=="2745"|record_id=="2883"|record_id=="2989"|record_id=="3087"|record_id=="3305"|record_id=="3318"|record_id=="3347"|record_id=="3362"|record_id=="3389"|record_id=="3418"|record_id=="3438"|record_id=="3457"|record_id=="3460"|record_id=="3461"|record_id=="3634"|record_id=="3754"|record_id=="3847"|record_id=="3916"|record_id=="3971"|record_id=="4104"|record_id=="4395" //see above
+replace flag1786=f1vstatus if record_id=="2704"|record_id=="2840"|record_id=="3294"|record_id=="1833"|record_id=="1856"|record_id=="1873"|record_id=="1905"|record_id=="1946"|record_id=="2084"|record_id=="2153"|record_id=="2212"|record_id=="2275"|record_id=="2290"|record_id=="2302"|record_id=="2322"|record_id=="2646"|record_id=="2745"|record_id=="2883"|record_id=="2989"|record_id=="3087"|record_id=="3305"|record_id=="3318"|record_id=="3347"|record_id=="3362"|record_id=="3389"|record_id=="3418"|record_id=="3438"|record_id=="3457"|record_id=="3460"|record_id=="3461"|record_id=="3634"|record_id=="3754"|record_id=="3847"|record_id=="3916"|record_id=="3971"|record_id=="4104"|record_id=="4395"
+
 
 ** JC 09feb2023: Create flag date variable so that records already flagged and exported to a previous excel will not recur as they still exist in the dataset
 drop sd_currentdate
@@ -213,9 +243,342 @@ gen double sd_currentdate=date(currentd, "DMY", 2017)
 drop currentd
 format sd_currentdate %dD_m_CY
 
-replace flagdate=sd_currentdate if record_id=="3024"|record_id=="3128"
+replace flagdate=sd_currentdate if record_id=="2819"|record_id=="3024"|record_id=="3128"|record_id=="1956"|record_id=="2720"|record_id=="2722"|record_id=="2834"|record_id=="2892"|record_id=="2938"|record_id=="3704"|record_id=="4115"|record_id=="4196"|record_id=="2704"|record_id=="2840"|record_id=="3294"|record_id=="1833"|record_id=="1856"|record_id=="1873"|record_id=="1905"|record_id=="1946"|record_id=="2084"|record_id=="2153"|record_id=="2212"|record_id=="2275"|record_id=="2290"|record_id=="2302"|record_id=="2322"|record_id=="2646"|record_id=="2745"|record_id=="2883"|record_id=="2989"|record_id=="3087"|record_id=="3305"|record_id=="3318"|record_id=="3347"|record_id=="3362"|record_id=="3389"|record_id=="3418"|record_id=="3438"|record_id=="3457"|record_id=="3460"|record_id=="3461"|record_id=="3634"|record_id=="3754"|record_id=="3847"|record_id=="3916"|record_id=="3971"|record_id=="4104"|record_id=="4395"
 
 
+********************************
+** Living situation at day 28 **
+********************************
+** Missing
+count if fu1sit==. & fu1sicf==1 //2 - stroke record 2300 pt died before day 28 so corrected below
+** Invalid missing code
+count if fu1sit==88|fu1sit==999|fu1sit==9999 //0
+** possibly Invalid (other reason=options for living situation)
+count if fu1osit!="" //3 - reviewed and will leave as is although would've chosen relative's home and own home for heart records 2808 + 3361, respectively
+** Invalid (Living situation=Other; Other reason is blank)
+count if fu1sit==98 & (fu1osit==""|fu1osit=="99") //0
+
+********************************
+** Re-admitted within 28 days **
+********************************
+** Missing
+count if fu1readm==. & f1vstatus==1 & fu1sicf==1 //0
+** Invalid missing code
+count if fu1readm==9999 //0
+** Missing
+count if fu1readm==1 & fu1los==. //0
+** Invalid (Days greater than 998)
+count if fu1los>998 & fu1los!=. & fu1los!=999 //0
+
+***************
+** Ethnicity **
+***************
+** Missing
+count if ethnicity==. & f1vstatus==1 & fu1sicf==1 //0
+** Invalid missing code
+count if ethnicity==88|ethnicity==999|ethnicity==9999 //0
+** JC 08mar2023: Other ethnicity not entered for any of the cases so this variable is byte instead of string in Stata
+tostring oethnic ,replace
+replace oethnic="" if oethnic=="." //1145 changes
+** possibly Invalid (other reason=options for ethnicity)
+count if oethnic!="" //0
+** Invalid (Ethnicity=Other; Other reason is blank)
+count if ethnicity==98 & (oethnic==""|oethnic=="99") //0
+
+***************
+** Education **
+***************
+** Missing
+count if education==. & f1vstatus==1 & fu1sicf==1 //0
+** Invalid missing code
+count if education==88|education==999|education==9999 //0
+
+*****************
+** Work Status **
+*****************
+** Missing (mainwork)
+count if mainwork==. & f1vstatus==1 & fu1sicf==1 //0
+** Invalid missing code
+count if mainwork==88|mainwork==999|mainwork==9999 //0
+** Missing (current work)
+count if employ=="" & mainwork!=. & mainwork<5 //0
+** Invalid missing code
+count if employ=="88"|employ=="99"|employ=="999"|employ=="9999" //0
+** Missing (previous work)
+count if prevemploy=="" & (mainwork==7|mainwork==8) //0
+** Invalid missing code
+count if prevemploy=="88"|prevemploy=="99"|prevemploy=="999"|prevemploy=="9999" //2 - leave as is since cannot correct at this stage
+
+********************************
+** Living situation prestroke **
+********************************
+** Missing
+count if pstrsit==. & sd_etype==1 & f1vstatus==1 & fu1sicf==1 //0
+** Invalid missing code
+count if pstrsit==88|pstrsit==999|pstrsit==9999 //0
+** possibly Invalid (other reason=options for living situation)
+count if pstrosit!="" //1 - reviewed and it is correct
+** Invalid (Living situation=Other; Other reason is blank)
+count if pstrsit==98 & (pstrosit==""|pstrosit=="99") //0
+
+
+
+
+** Corrections from above checks
+replace flag856=fu1day if record_id=="2300"|record_id=="3331"
+replace fu1day=3 if record_id=="2300"|record_id=="3331" //see above
+replace flag1781=fu1day if record_id=="2300"|record_id=="3331"
+
+replace fu1sicf=. if record_id=="2300"|record_id=="3331" //CVDdb will prompt DA to erase this value when they make above corrections
+replace fu1con=. if record_id=="2300"|record_id=="3331" //CVDdb will prompt DA to erase this value when they make above corrections
+replace fu1how=. if record_id=="2300"|record_id=="3331" //CVDdb will prompt DA to erase this value when they make above corrections
+
+
+** JC 09feb2023: Create flag date variable so that records already flagged and exported to a previous excel will not recur as they still exist in the dataset
+replace flagdate=sd_currentdate if record_id=="2300"|record_id=="3331"
+
+
+***********************
+** Pre-stroke Rankin **
+***********************
+** Missing (cannot/refuse to answer rankin)
+count if rankin==. & sd_etype==1 & f1vstatus==1 & fu1sicf==1 & rankin1==. //0
+** Invalid missing code
+count if rankin==88|rankin==99|rankin==999|rankin==9999 //0
+** Missing (1) - same as above
+count if rankin==. & sd_etype==1 & f1vstatus==1 & fu1sicf==1 & rankin1==. //0
+** Invalid missing code
+count if rankin1==88|rankin1==99|rankin1==999|rankin1==9999 //0
+** Missing (2)
+count if rankin2==. & rankin1==1 //0
+** Invalid missing code
+count if rankin2==88|rankin2==99|rankin2==999|rankin2==9999 //0
+** possibly Invalid (rankin1=No; rankin2 NOT blank)
+count if rankin1==2 & rankin2!=. //0
+** Missing (3)
+count if rankin3==. & rankin2==2 //0
+** Invalid missing code
+count if rankin3==88|rankin3==99|rankin3==999|rankin3==9999 //0
+** possibly Invalid (rankin2=Yes; rankin3 NOT blank)
+count if rankin2==1 & rankin3!=. //0
+** Missing (4)
+count if rankin4==. & rankin3==2 //0
+** Invalid missing code
+count if rankin4==88|rankin4==99|rankin4==999|rankin4==9999 //0
+** possibly Invalid (rankin3=Yes; rankin4 NOT blank)
+count if rankin3==1 & rankin4!=. //0
+** Missing (5)
+count if rankin5==. & rankin4==2 //0
+** Invalid missing code
+count if rankin5==88|rankin5==99|rankin5==999|rankin5==9999 //0
+** possibly Invalid (rankin4=Yes; rankin5 NOT blank)
+count if rankin4==1 & rankin5!=. //0
+** Missing (6)
+count if rankin6==. & rankin5==2 //0
+** Invalid missing code
+count if rankin6==88|rankin6==99|rankin6==999|rankin6==9999 //0
+** possibly Invalid (rankin5=Yes; rankin6 NOT blank)
+count if rankin5==1 & rankin6!=. //0
+
+********************
+** Family History **
+********************
+***********************
+** Family Hx Stroke? **
+***********************
+** Missing
+count if famhxs==. & f1vstatus==1 & fu1sicf==1 //0
+** Invalid missing code
+count if famhxs==88|famhxs==999|famhxs==9999 //0
+** Invalid (famhxs=No/ND; famhxs options=Yes)
+count if (famhxs==2|famhxs==99) & (mahxs==1|dahxs==1|sibhxs==1) //0
+** Invalid (famhxs=Yes; famhxs options NOT=Yes)
+count if famhxs==1 & mahxs!=1 & dahxs!=1 & sibhxs!=1 //0
+** Invalid (famhxs=Yes/No; famhxs options all=ND)
+count if famhxs!=99 & mahxs==99 & dahxs==99 & sibhxs==99 //0
+********************
+** Family Hx AMI? **
+********************
+** Missing
+count if famhxa==. & f1vstatus==1 & fu1sicf==1 //0
+** Invalid missing code
+count if famhxa==88|famhxa==999|famhxa==9999 //0
+** Invalid (famhxa=No/ND; famhxa options=Yes)
+count if (famhxa==2|famhxa==99) & (mahxa==1|dahxa==1|sibhxa==1) //0
+** Invalid (famhxa=Yes; famhxa options NOT=Yes)
+count if famhxa==1 & mahxa!=1 & dahxa!=1 & sibhxa!=1 //1 - heart record 2484 corrected below
+** Invalid (famhxa=Yes/No; famhxa options all=ND)
+count if famhxa!=99 & mahxa==99 & dahxa==99 & sibhxa==99 //0
+********************
+** Mother Stroke? **
+********************
+** Missing
+count if famhxs==1 & mahxs==. //0
+** Invalid missing code
+count if mahxs==88|mahxs==999|mahxs==9999 //0
+********************
+** Father Stroke? **
+********************
+** Missing
+count if famhxs==1 & dahxs==. //0
+** Invalid missing code
+count if dahxs==88|dahxs==999|dahxs==9999 //0
+*********************
+** Sibling Stroke? **
+*********************
+** Missing
+count if famhxs==1 & sibhxs==. //0
+** Invalid missing code
+count if sibhxs==88|sibhxs==999|sibhxs==9999 //0
+*****************
+** Mother AMI? **
+*****************
+** Missing
+count if famhxa==1 & mahxa==. //0
+** Invalid missing code
+count if mahxa==88|mahxa==999|mahxa==9999 //0
+*****************
+** Father AMI? **
+*****************
+** Missing
+count if famhxa==1 & dahxa==. //0
+** Invalid missing code
+count if dahxa==88|dahxa==999|dahxa==9999 //0
+******************
+** Sibling AMI? **
+******************
+** Missing
+count if famhxa==1 & sibhxa==. //0
+** Invalid missing code
+count if sibhxa==88|sibhxa==999|sibhxa==9999 //0
+
+
+**************************
+** Smoking History Info **
+**************************
+*********************
+** Did they smoke? **
+*********************
+** Missing
+count if smoke==. & f1vstatus==1 & fu1sicf==1 //0
+** Invalid missing code
+count if smoke==88|smoke==999|smoke==9999 //0
+
+*********************
+** Stop Smoke Date **
+*********************
+** Missing
+count if stopsmoke==. & smoke==3 //9 - entered as 99 in CVDdb but stroke records 2136, 2856, 2885, 3060 + heart record 2802 has partial dates in DA comments so corrected below
+** Invalid (before DOB)
+count if dob!=. & stopsmoke!=. & stopsmoke<dob //0
+** Invalid (after FU date)
+count if fu1doa2!=. & stopsmoke!=. & stopsmoke>fu1doa2 //1 - heart record 3308 corrected below
+** possibly Invalid (after DLC/DOD)
+count if dlc!=. & stopsmoke!=. & stopsmoke>dlc //1 - leave as is
+count if cfdod!=. & stopsmoke!=. & stopsmoke>cfdod //0
+** Invalid (future date)
+count if stopsmoke!=. & stopsmoke>sd_currentdate //0
+** Invalid (date partial missing codes for all)
+count if smoke==3 & stopsmoke==. & stopsmkday==99 & stopsmkmonth==99 & stopsmkyear==9999 //0
+** possibly Invalid (stop smoke date not partial but partial field not blank)
+count if stopsmoke==. & stopsmkday!=. & stopsmkmonth!=. & stopsmkyear!=. //1 - it's correct leave as is
+//replace stopsmkday=. if stopsmoke==. & stopsmkday!=. & stopsmkmonth!=. & stopsmkyear!=. //0 changes
+//replace stopsmkmonth=. if stopsmoke==. & stopsmkmonth!=. & stopsmkyear!=. //0 changes
+//replace stopsmkyear=. if stopsmoke==. & stopsmkyear!=. //0 changes
+count if stopsmoke==. & (stopsmkday!=. | stopsmkmonth!=. | stopsmkyear!=.) //1 - it's correct leave as is
+** Invalid missing code (notified date partial fields)
+count if stopsmkday==88|stopsmkday==999|stopsmkday==9999 //0
+count if stopsmkmonth==88|stopsmkmonth==999|stopsmkmonth==9999 //0
+count if stopsmkyear==88|stopsmkyear==99|stopsmkyear==999 //0
+
+
+
+
+
+** Corrections from above checks
+destring flag883 ,replace
+destring flag1808 ,replace
+destring flag891 ,replace
+destring flag1816 ,replace
+destring flag892 ,replace
+destring flag1817 ,replace
+destring flag893 ,replace
+destring flag1818 ,replace
+destring flag894 ,replace
+destring flag1819 ,replace
+destring flag895 ,replace
+destring flag1820 ,replace
+
+
+replace flag883=famhxa if record_id=="2484"
+replace famhxa=2 if record_id=="2484" //see above
+replace flag1808=famhxa if record_id=="2484"
+
+replace mahxa=. if record_id=="2484" //CVDdb will prompt DA to erase this value when they make above corrections
+replace dahxa=. if record_id=="2484" //CVDdb will prompt DA to erase this value when they make above corrections
+replace sibhxa=. if record_id=="2484" //CVDdb will prompt DA to erase this value when they make above corrections
+
+replace flag892=stopsmkday if record_id=="2136"|record_id=="2802"|record_id=="2856"
+replace stopsmkday=99 if record_id=="2136"|record_id=="2802"|record_id=="2856" //see above
+replace flag1817=stopsmkday if record_id=="2136"|record_id=="2802"|record_id=="2856"
+
+replace flag893=stopsmkmonth if record_id=="2136"|record_id=="2802"|record_id=="2856"
+replace stopsmkmonth=01 if record_id=="2136" //see above
+replace stopsmkmonth=99 if record_id=="2802"|record_id=="2856" //see above
+replace flag1818=stopsmkmonth if record_id=="2136"|record_id=="2802"|record_id=="2856"
+
+replace flag894=stopsmkyear if record_id=="2136"|record_id=="2802"|record_id=="2856"
+replace stopsmkyear=2021 if record_id=="2136" //see above
+replace stopsmkyear=1991 if record_id=="2802" //see above
+replace stopsmkyear=2018 if record_id=="2856" //see above
+replace flag1819=stopsmkyear if record_id=="2136"|record_id=="2802"|record_id=="2856"
+
+replace flag895=smokeage if record_id=="2136"
+replace smokeage=27 if record_id=="2136" //see above
+replace flag1820=smokeage if record_id=="2136"
+
+replace flag891=stopsmoke if record_id=="2885"|record_id=="3060"|record_id=="3308"
+replace stopsmoke=edate if record_id=="2885"|record_id=="3060" //see above
+replace stopsmoke=stopsmoke-365 if record_id=="3308" //see above
+replace flag1816=stopsmoke if record_id=="2885"|record_id=="3060"|record_id=="3308"
+
+** JC 09feb2023: Create flag date variable so that records already flagged and exported to a previous excel will not recur as they still exist in the dataset
+replace flagdate=sd_currentdate if record_id=="2484"|record_id=="2136"|record_id=="2802"|record_id=="2856"|record_id=="2885"|record_id=="3060"|record_id=="3308"
+
+STOP
+
+*************************
+** Age stopped smoking **
+*************************
+** Create variable for age stopped smoking as this variable is auto-calculated in CVDdb so need to check it's correct
+gen stopsmokeage3=(stopsmoke-dob)/365.25
+gen stopsmokeage2=int(stopsmokeage3)
+count if stopsmokeage!=. & stopsmokeage2!=. & stopsmokeage!=stopsmokeage2 //1
+//list record_id dob stopsmoke stopsmokeage stopsmokeage2 if stopsmokeage!=. & stopsmokeage2!=. & stopsmokeage!=stopsmokeage2
+count if dob!=. & stopsmoke!=. & stopsmokeage==. //4
+count if dob!=. & stopsmoke!=. & stopsmokeage2==. //0
+replace stopsmokeage=stopsmokeage2 //5 changes
+drop stopsmokeage2
+
+***********************
+** Age began smoking **
+***********************
+** Missing
+count if smokeage==. & smoke!=. & smoke<4 //0
+** Invalid missing code
+count if smokeage==9999 //0
+** Invalid (age began smoking<5)
+count if smokeage<5 //0
+** Invalid (age stopped smoking before age began smoking)
+count if stopsmokeage!=. & smokeage!=. & smokeage!=999 & stopsmokeage<smokeage //0
+** Invalid (age at event before age began smoking)
+count if age!=. & smokeage!=. & smokeage!=999 & age<smokeage //0
+
+
+
+
+
+STOP
 ********************************
 ** Discharge Medications Info **
 ********************************
@@ -1362,5 +1725,9 @@ gen double sd_dodtod = clock(dodtod2,"DMYhm") if dodtod2!=""
 format sd_dodtod %tc
 label var sd_dodtod "DateTime of Death"
 
+
+** Remove unnecessary variables
+drop fu1doa2 fu1date
+
 ** Create cleaned dataset
-save "`datapath'\version03\2-working\BNRCVDCORE_CleanedData_dis" ,replace
+save "`datapath'\version03\2-working\BNRCVDCORE_CleanedData_fu" ,replace
