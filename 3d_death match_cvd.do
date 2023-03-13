@@ -181,6 +181,7 @@ replace sd_natregno=elec_sd_natregno if _merge==3
 drop elec_* _merge
 erase "`datapath'\version03\2-working\missing_nrn.dta"
 
+
 ** Add corresponding incidence record_id to death record in prep for merging the matches
 replace record_id="3001" if dd_deathid==35943
 replace record_id="3055" if dd_deathid==36132
@@ -195,9 +196,9 @@ replace sd_casetype=2 if dd_deathid==35943|dd_deathid==36132|dd_deathid==35377|d
 replace match=1 if record_id=="3001"|record_id=="3055"|record_id=="2247"|record_id=="3773"|record_id=="2481"|record_id=="2637"
 
 preserve
-keep if match==1 & sd_casetype==2
+keep if match==1 & sd_casetype==2 & record!="3001" & record!="2247" & record!="2481"
 keep record_id dd_deathid dd_dob dd_natregno dd_pname dd_age dd_coddeath dd_fname dd_mname dd_lname dd_regnum dd_nrn dd_sex dd_dod dd_heart dd_stroke dd_cod1a dd_address dd_parish dd_pod dd_namematch dd_dddoa dd_ddda dd_odda dd_certtype dd_district dd_agetxt dd_nrnnd dd_mstatus dd_occu dd_durationnum dd_durationtxt dd_onsetnumcod1a dd_onsettxtcod1a dd_cod1b dd_onsetnumcod1b dd_onsettxtcod1b dd_cod1c dd_onsetnumcod1c dd_onsettxtcod1c dd_cod1d dd_onsetnumcod1d dd_onsettxtcod1d dd_cod2a dd_onsetnumcod2a dd_onsettxtcod2a dd_cod2b dd_onsetnumcod2b dd_onsettxtcod2b dd_deathparish dd_regdate dd_certifier dd_certifieraddr dd_cleaned dd_duprec dd_elecmatch dd_codheart dd_codstroke dd_dodyear dd_placeofdeath dd_redcap_event_name dd_recstatdc dd_event
-count //6
+count //6; 3
 save "`datapath'\version03\2-working\DOBs_death" ,replace
 restore
 
@@ -205,7 +206,7 @@ restore
 count //3645; 3642
 
 ** Remove death records in prep for merge
-drop if match==1 & sd_casetype==2 //6 deleted
+drop if match==1 & sd_casetype==2 & record!="3001" & record!="2247" & record!="2481" //6' 3 deleted
 drop if record_id=="" //2906 deleted
 
 
@@ -350,7 +351,7 @@ restore
 count //3882; 3884
 
 ** Remove death records in prep for merge
-drop if match==1 & sd_casetype==2 //14; 13 deleted
+drop if match==1 & sd_casetype==2 & record!="3001" & record!="2247" & record!="2481" //14; 13 deleted
 drop if record_id=="" //3135; 3138 deleted
 
 drop _merge

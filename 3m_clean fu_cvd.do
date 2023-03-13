@@ -4,7 +4,7 @@
     //  project:                BNR-CVD
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      07-MAR-2023
-    // 	date last modified      09-MAR-2023
+    // 	date last modified      13-MAR-2023
     //  algorithm task          Cleaning variables in the REDCap CVDdb 28-day F/U form
     //  status                  Completed
     //  objective               (1) To have a cleaned 2021 cvd incidence dataset ready for analysis
@@ -504,6 +504,7 @@ destring flag894 ,replace
 destring flag1819 ,replace
 destring flag895 ,replace
 destring flag1820 ,replace
+format flag891 flag1816 %dM_d,_CY
 
 
 replace flag883=famhxa if record_id=="2484"
@@ -583,7 +584,7 @@ count if cig==88|cig==999|cig==9999 //0
 ** Missing (quantity)
 count if cignum==. & cig==1 //0
 ** Invalid missing code (quantity)
-count if cignum==88|cignum==99|cignum==999|cignum==9999 //13 - for NS to review
+count if cignum==88|cignum==99|cignum==999|cignum==9999 //13 - for NS to review (reviewed - change those as 99 to 999)
 ** Invalid range (quantity)
 count if cig==1 & (cignum==0|cignum>350) //8 - same as above
 **************************
@@ -598,7 +599,7 @@ count if otobacco==88|otobacco==999|otobacco==9999 //0
 ** Missing (quantity)
 count if tobgram==. & (pipe==1|otobacco==1) //0
 ** Invalid missing code (quantity)
-count if tobgram==88|tobgram==99|tobgram==999|tobgram==9999 //2 - for NS to review
+count if tobgram==88|tobgram==99|tobgram==999|tobgram==9999 //2 - for NS to review (reviewed - leave as 99)
 ** Invalid range (quantity)
 count if (pipe==1|otobacco==1) & (tobgram==0|tobgram>60) //2 - same as above
 ************
@@ -626,7 +627,7 @@ count if marijuana==88|marijuana==999|marijuana==9999 //0
 ** Missing (quantity)
 count if spliffnum==. & (tobacmari==1|marijuana==1) //0
 ** Invalid missing code (quantity)
-count if spliffnum==88|spliffnum==99|spliffnum==999|spliffnum==9999 //12 - for NS to review
+count if spliffnum==88|spliffnum==99|spliffnum==999|spliffnum==9999 //12 - for NS to review (reviewed - leave as 99)
 ** Invalid range (quantity)
 count if (tobacmari==1|marijuana==1) & (spliffnum==0|spliffnum>75) //12 - same as above
 
@@ -674,6 +675,8 @@ count if stopalcyear==88|stopalcyear==99|stopalcyear==999 //0
 
 
 ** Corrections from above checks
+destring flag902 ,replace
+destring flag1827 ,replace
 destring flag907 ,replace
 destring flag1832 ,replace
 destring flag908 ,replace
@@ -684,6 +687,7 @@ destring flag910 ,replace
 destring flag1835 ,replace
 destring flag911 ,replace
 destring flag1836 ,replace
+format flag907 flag1832 %dM_d,_CY
 
 
 replace flag908=stopalcday if record_id=="2210"|record_id=="2856"
@@ -704,8 +708,12 @@ replace stopalc=edate if record_id=="2885" //see above
 replace stopalc=stopalc-365 if record_id=="" //see above
 replace flag1832=stopalc if record_id=="2885"
 
+replace flag902=cignum if record_id=="1929"|record_id=="2045"|record_id=="2333"|record_id=="2358"|record_id=="2617"
+replace cignum=999 if record_id=="1929"|record_id=="2045"|record_id=="2333"|record_id=="2358"|record_id=="2617" //see above
+replace flag1827=cignum if record_id=="1929"|record_id=="2045"|record_id=="2333"|record_id=="2358"|record_id=="2617"
+
 ** JC 09feb2023: Create flag date variable so that records already flagged and exported to a previous excel will not recur as they still exist in the dataset
-replace flagdate=sd_currentdate if record_id=="2210"|record_id=="2856"|record_id=="2885"
+replace flagdate=sd_currentdate if record_id=="2210"|record_id=="2856"|record_id=="2885"|record_id=="1929"|record_id=="2045"|record_id=="2333"|record_id=="2358"|record_id=="2617"
 
 
 *************************
@@ -748,9 +756,22 @@ count if beernumnd==88|beernumnd==999|beernumnd==9999 //0
 ** Missing (quantity)
 count if beernum==. & beernumnd==1 //0
 ** Invalid missing code (quantity)
-count if beernum==88|beernum==99|beernum==999|beernum==9999 //14 - for NS to review
+count if beernum==88|beernum==99|beernum==999|beernum==9999 //14 - for NS to review (reviewed - change those as 99 to 999)
 ** Invalid range (quantity)
 count if beernumnd==1 & (beernum==0|beernum>150) //11 - same as above
+*************
+** Spirits **
+*************
+** Missing
+count if spiritnumnd==. & (alcohol==1|alcohol==3) //0
+** Invalid missing code
+count if spiritnumnd==88|spiritnumnd==999|spiritnumnd==9999 //0
+** Missing (quantity)
+count if spiritnum==. & spiritnumnd==1 //0
+** Invalid missing code (quantity)
+count if spiritnum==88|spiritnum==99|spiritnum==999|spiritnum==9999 //27 - for NS to review (reviewed - change those as 99 to 999)
+** Invalid range (quantity)
+count if spiritnumnd==1 & (spiritnum==0|spiritnum>150) //21 - same as above
 **********
 ** Wine **
 **********
@@ -761,7 +782,7 @@ count if winenumnd==88|winenumnd==999|winenumnd==9999 //0
 ** Missing (quantity)
 count if winenum==. & winenumnd==1 //0
 ** Invalid missing code (quantity)
-count if winenum==88|winenum==99|winenum==999|winenum==9999 //8 - for NS to review
+count if winenum==88|winenum==99|winenum==999|winenum==9999 //8 - for NS to review (reviewed - change those as 99 to 999)
 ** Invalid range (quantity)
 count if winenumnd==1 & (winenum==0|winenum>150) //7 - same as above
 
@@ -817,6 +838,12 @@ count if f1rankin5==1 & f1rankin6!=. //0
 ** Corrections from above checks
 destring flag911 ,replace
 destring flag1836 ,replace
+destring flag915 ,replace
+destring flag1840 ,replace
+destring flag916 ,replace
+destring flag1841 ,replace
+destring flag917 ,replace
+destring flag1842 ,replace
 
 ** Since the missing code 99999 is only to be used in the cleaning and analysis steps of data handling the DAs do not need to update the CVDdb
 replace f1rankin1=99999 if record_id=="3027"
@@ -826,11 +853,22 @@ replace flag911=alcage if record_id=="2617"|record_id=="3654"
 replace alcage=999 if record_id=="2617"|record_id=="3654" //see above
 replace flag1836=alcage if record_id=="2617"|record_id=="3654"
 
+replace flag915=beernum if record_id=="1966"|record_id=="2833"|record_id=="2900"
+replace beernum=999 if record_id=="1966"|record_id=="2833"|record_id=="2900" //see above
+replace flag1840=beernum if record_id=="1966"|record_id=="2833"|record_id=="2900"
+
+replace flag916=spiritnum if record_id=="1966"|record_id=="2210"|record_id=="2856"|record_id=="2900"|record_id=="2905"|record_id=="2954"
+replace spiritnum=999 if record_id=="1966"|record_id=="2210"|record_id=="2856"|record_id=="2900"|record_id=="2905"|record_id=="2954" //see above
+replace flag1841=spiritnum if record_id=="1966"|record_id=="2210"|record_id=="2856"|record_id=="2900"|record_id=="2905"|record_id=="2954"
+
+replace flag917=winenum if record_id=="2954"
+replace winenum=999 if record_id=="2954" //see above
+replace flag1842=winenum if record_id=="2954"
+
 ** JC 09feb2023: Create flag date variable so that records already flagged and exported to a previous excel will not recur as they still exist in the dataset
-replace flagdate=sd_currentdate if record_id=="2617"|record_id=="3654"
+replace flagdate=sd_currentdate if record_id=="2617"|record_id=="3654"|record_id=="1966"|record_id=="2833"|record_id=="2900"|record_id=="2210"|record_id=="2856"|record_id=="2905"|record_id=="2954"
 
 
-STOP
 
 
 
@@ -842,16 +880,16 @@ preserve
 sort record_id
 
 ** Format the date flags so they are exported as dates not numbers
-format flag61 flag986 flag700 flag1625 %dM_d,_CY
+format flag891 flag1816 flag907 flag1832 %dM_d,_CY
 
 ** Create excel errors list before deleting incorrect records
 ** Use below code to automate file names using current date
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-capture export_excel record_id sd_etype flag61 flag700 flag712 flag855 flag856 flag861 if ///
-		(flag61!=. | flag700!=. | flag712!=. |  flag855!=. |  flag856!=. |  flag861!=.) & flagdate!=. ///
+capture export_excel record_id sd_etype flag856 flag857 flag858 flag860 flag861 flag883 flag891 flag892 flag893 flag894 flag895 flag902 flag907 flag908 flag909 flag910 flag911 flag915 flag916 flag917 if ///
+		(flag856!=. |  flag857!="" |  flag858!=. |  flag860!=. |  flag861!=. |  flag883!=. |  flag891!=. |  flag892!=. |  flag893!=. |  flag894!=. |  flag895!=. |  flag902!=. |  flag907!=. |  flag908!=. |  flag909!=. |  flag910!=. |  flag911!=. |  flag915!=. |  flag916!=. |  flag917!=.) & flagdate!=. ///
 using "`datapath'\version03\3-output\CVDCleaning2021_FU1_`listdate'.xlsx", sheet("ERRORS") firstrow(varlabels)
-capture export_excel record_id sd_etype flag986 flag1625 flag1637 flag1780 flag1781 flag1786 if ///
-		 (flag986!=. | flag1625!=. | flag1637!=. |  flag1780!=. |  flag1781!=. |  flag1786!=.) & flagdate!=. ///
+capture export_excel record_id sd_etype flag1781 flag1782 flag1783 flag1785 flag1786 flag1808 flag1816 flag1817 flag1818 flag1819 flag1820 flag1827 flag1832 flag1833 flag1834 flag1835 flag1836 flag1840 flag1841 flag1842 if ///
+		 (flag1781!=. |  flag1782!="" |  flag1783!=. |  flag1785!=. |  flag1786!=. |  flag1808!=. |  flag1816!=. |  flag1817!=. |  flag1818!=. |  flag1819!=. |  flag1820!=. |  flag1827!=. |  flag1832!=. |  flag1833!=. |  flag1834!=. |  flag1835!=. |  flag1836!=. |  flag1840!=. |  flag1841!=. |  flag1842!=.) & flagdate!=. ///
 using "`datapath'\version03\3-output\CVDCleaning2021_FU1_`listdate'.xlsx", sheet("CORRECTIONS") firstrow(varlabels)
 restore
 */

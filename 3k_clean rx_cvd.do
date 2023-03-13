@@ -705,7 +705,7 @@ count if plat!="" & plat!="99" & frmscnt!="" & frmscnt!="99" & plat<frmscnt //28
 ** possibly Invalid (pla time before time at hospital)
 count if plat!="" & plat!="99" & hospt!="" & hospt!="99" & plat<hospt //22 - all correct except ones already flagged above
 ** Invalid (pla time before event time)
-count if plat!="" & plat!="99" & etime!="" & etime!="99" & plat<etime //56 - all are correct except heart record 2702 corrected below; stroke record 3096 for NS to review
+count if plat!="" & plat!="99" & etime!="" & etime!="99" & plat<etime //56 - all are correct except heart record 2702 corrected below; stroke record 3096 for NS to review (reviewed and corrected in 3n_clean final_cvd.do)
 ** Invalid missing code
 count if platampm==88|platampm==99|platampm==999|platampm==9999 //0
 

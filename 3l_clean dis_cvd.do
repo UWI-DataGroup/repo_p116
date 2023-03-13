@@ -137,7 +137,7 @@ count if dist!="" & dist!="99" & frmscnt!="" & frmscnt!="99" & dist<frmscnt //92
 ** possibly Invalid (dis time before time at hospital)
 count if dist!="" & dist!="99" & hospt!="" & hospt!="99" & dist<hospt //81 - all are correct
 ** possibly Invalid (dis time before event time)
-count if dist!="" & dist!="99" & etime!="" & etime!="99" & dist<etime //151 - all correct except stroke record 3660 for NS to review
+count if dist!="" & dist!="99" & etime!="" & etime!="99" & dist<etime //151 - all correct except stroke record 3660 for NS to review (reviewed, leave as is)
 ** Invalid missing code
 count if distampm==88|distampm==99|distampm==999|distampm==9999 //0
 
