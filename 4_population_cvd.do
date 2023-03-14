@@ -1,6 +1,6 @@
 ** HEADER -----------------------------------------------------
 **  DO-FILE METADATA
-    //  algorithm name			5_population_cvd.do
+    //  algorithm name			4_population_cvd.do
     //  project:				BNR-CVD
     //  analysts:				Jacqueline CAMPBELL
     //  date first created      01-NOV-2022
@@ -36,7 +36,7 @@
 
     ** Close any open log file and open a new log file
     capture log close
-    log using "`logpath'\5_population_cvd.smcl", replace
+    log using "`logpath'\4_population_cvd.smcl", replace
 ** HEADER -----------------------------------------------------
 
 

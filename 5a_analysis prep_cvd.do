@@ -1,6 +1,6 @@
 ** HEADER -----------------------------------------------------
 **  DO-FILE METADATA
-    //  algorithm name          4a_analysis prep_cvd.do
+    //  algorithm name          5a_analysis prep_cvd.do
     //  project:                BNR-CVD
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      14-MAR-2023
@@ -41,7 +41,7 @@
 
     ** Close any open log file and open a new log file
     capture log close
-    log using "`logpath'\4a_analysis prep_cvd.smcl", replace
+    log using "`logpath'\5a_analysis prep_cvd.smcl", replace
 ** HEADER -----------------------------------------------------
 
 ** Load cleaned final form 2021 dataset

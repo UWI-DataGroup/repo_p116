@@ -116,7 +116,12 @@
 *	ANALYSIS
 *********************************************************************************************************************
 *	
-*	1. 4a_analysis prep_cvd.do
+*	1. 4_population_cvd.do
+*		* Creates population datasets for WHO and WPP to be used in calculating rates
+*		* Creates and exports to an excel workbook a list of errors and corrections for 
+*		  the CVD data abstractors to correct the data directly in the REDCap CVDdb
+*	
+*	2. 5a_analysis prep_cvd.do
 *		* Removes unnecessary variables (i.e. cleaning flags, etc.)
 *		* Renames variable labels in prep for use in data requests
 *		* Creates analysis variables
@@ -125,11 +130,6 @@
 *			- stroke analysis/data requests
 *		* Removes irrelevant variables (i.e. heart variables removed from stroke dataset and vice versa)
 *		* Re-assigns variable that identifies records with both heart and stroke events (sd_bothevent)
-*	
-*	2. 5_population_cvd.do
-*		* Creates population datasets for WHO and WPP to be used in calculating rates
-*		* Creates and exports to an excel workbook a list of errors and corrections for 
-*		  the CVD data abstractors to correct the data directly in the REDCap CVDdb
 *	
 *	3. 6_analysis 2016-2020_cvd.do
 *		* Creates datasets for outputting analysed results for 2016-2020 to MS Word and Excel
