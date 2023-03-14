@@ -88,18 +88,10 @@
 *		* Creates and exports to an excel workbook a list of errors and corrections for 
 *		  the CVD data abstractors to correct the data directly in the REDCap CVDdb
 *	
-*	17. 4a_final clean_cvd.do
+*	17. 3n_clean final_cvd.do
 *		* Checks and cleans analysis/report variables
-*		* Creates datasets for:
-*			- heart analysis
-*			- stroke analysis
 *		* Creates and exports to an excel workbook a list of errors and corrections for 
 *		  the CVD data abstractors to correct the data directly in the REDCap CVDdb
-*	
-*	18. 4b_master clean_cvd.do
-*		* Runs all the dofiles that precede it
-*		* Used in conjunction with profile dofile on Data Management PC (DMPC)
-*		  to automate running of cleaning dofiles
 *
 *********************************************************************************************************************
 
@@ -108,12 +100,23 @@
 *	ANALYSIS
 *********************************************************************************************************************
 *	
-*	1. 5_population_cvd.do
+*	1. 4a_prep analysis_cvd.do
+*		* Removes unnecessary variables (i.e. cleaning flags, etc.)
+*		* Creates analysis variables
+*		* Renames variable labels in prep for use in data requests
+*		* Creates analysis variables
+*		* Creates identifiable and deidentified datasets for:
+*			- heart analysis/data requests
+*			- stroke analysis/data requests
+*		* Removes irrelevant variables (i.e. heart variables removed from stroke dataset and vice versa)
+*		* Re-assigns variable that identifies records with both heart and stroke events (sd_bothevent)
+*	
+*	2. 5_population_cvd.do
 *		* Creates population datasets for WHO and WPP to be used in calculating rates
 *		* Creates and exports to an excel workbook a list of errors and corrections for 
 *		  the CVD data abstractors to correct the data directly in the REDCap CVDdb
 *	
-*	2. 6_analysis 2016-2020_cvd.do
+*	3. 6_analysis 2016-2020_cvd.do
 *		* Creates datasets for outputting analysed results for 2016-2020 to MS Word and Excel
 *   
 *********************************************************************************************************************

@@ -778,6 +778,7 @@ replace dstrunitd=disd if sunitdissame==1 & dstrunitd==. //138 changes
 
 ** Populate date (& time: hospt) variables for atscene, frmscene and sameadm in prep for analysis
 replace hospd=dae if sameadm==1 & hospd==. //86 changes
+replace hospt=tae if sameadm==1 & hospt=="" //88 changes
 replace atscnd=hospd if atscene==1 & atscnd==. //375 changes
 replace atscnd=ambcalld if atscene==2 & atscnd==dae //1 change
 replace frmscnd=atscnd if atscene==2 & frmscene==1 //3 changes
@@ -785,6 +786,8 @@ replace frmscnd=atscnd if frmscene==1 & frmscnd==. //376 changes
 count if atscene==1 & atscnd==. //0
 count if frmscene==1 & frmscnd==. //0
 count if sameadm==1 & hospd==. //0
+count if sameadm==1 & hospt=="" //0
+
 
 ** Create datetime variables in prep for analysis (prepend with 'sd_') - only for variables wherein both date and time are not missing
 ** FMC
@@ -1010,13 +1013,22 @@ label var sd_dodtod "DateTime of Death"
 ** 	   Final Cleaning of   **
 ** Annual Report Variables **
 *****************************
+***************
+** Case Type **
+***************
+count if sd_casetype==2 & record_id!="" //3 - error created when missing edate issue below was corrected
+replace sd_casetype=1 if sd_casetype==2 & record_id!="" //3 changes
+count if sd_casetype==1 & record_id=="" //0
+count if sd_casetype==2 & dd_deathid==. //0
+
 ****************
 ** Event Date **
 ****************
-count if edate==. //3
-
-STOP
-
+count if edate==. //3; 0 (merging issue found and corrected in 3d_death match_cvd.do with stroke records 2247 + 2481 and heart record 3001)
+count if sd_eventdt==. //742
+count if etime=="" //415
+count if sd_eventdt==. & sd_casetype==2 //415 - DCOs so etime would be blank
+count if sd_eventdt==. & sd_casetype==1 //327 - abstractions wherein exact etime was unknown
 
 *********
 ** Age **
@@ -1024,30 +1036,310 @@ STOP
 count if (age==.|age==999) & cfage_da!=. //18 - all have missing DOB + NRN
 replace age=cfage_da if (age==.|age==999) & cfage_da!=. //18 changes
 
-count if (age==.|age==999) & dob!=. //3
+count if (age==.|age==999) & dob!=. //3; 0 (same as above: missing edate issue)
+
+tab age ,m //13 missing age - all have event date = date of death so use age in death data
+//list sd_etype record_id dd_deathid dd_fname dd_mname dd_lname dd_age age dob natregno dd_dob dd_natregno edate dd_dod if age==.
+replace age=dd_age if age==. & dd_age!=. //13 changes
+
+tab age ,m //none unknown/blank
+
+*********
+** Sex **
+*********
+count if sex==.|sex==99 //0
+tab sex ,m //none unknown/blank
+
+****************************
+** Status at Last Contact **
+****************************
+count if slc==.|slc==99 //0
+tab slc ,m //none unknown/blank
+
+*******************************
+** Vital Status at Discharge **
+*******************************
+count if vstatus==.|vstatus==99 //460
+count if (vstatus==.|vstatus==99) & sd_casetype==1 //45 - confirmed but not fully abstracted at closing off so leave as is
+count if (vstatus==.|vstatus==99) & sd_casetype==2 //415 - DCOs so vstatus would be blank
+tab vstatus ,m //460 unknown/blank
+
+****************************
+** Vital Status at day 28 **
+****************************
+count if f1vstatus==.|f1vstatus==99 //530
+count if (f1vstatus==.|f1vstatus==99) & sd_casetype==1 //115 - 26 confirmed but not fully abstracted at closing off + 8 no f/u done (f/u form is blank) + 81 no contact was made so f1vstatus=ND(99) so leave as is
+count if (f1vstatus==.|f1vstatus==99) & sd_casetype==2 //415 - DCOs so vstatus would be blank
+tab f1vstatus ,m //530 unknown/blank
+
+replace fu1type=2 if record_id=="3247"|record_id=="3770"|record_id=="4101"|record_id=="4198"|record_id=="4223"|record_id=="4229"|record_id=="4371"|record_id=="4381" //8 changes
+
+replace comments="JC 13mar2023: no 28-day follow-up performed by CVD team during closing off process so f/u form in CVDdb is blank so I only updated fu1type=No to reflect this; Case status variable 'eligible' also left as is: 'Pending 28-day follow-up'." if record_id=="3247"|record_id=="3770"|record_id=="4101"|record_id=="4198"|record_id=="4223"|record_id=="4229"|record_id=="4371"|record_id=="4381" //8 changes
+
+*********************
+** Stroke Symptoms **
+*********************
+count if ssym1==. & sd_etype==1 & sd_casetype==1 //0
+count if ssym2==. & sd_etype==1 & sd_casetype==1 //0
+count if ssym3==. & sd_etype==1 & sd_casetype==1 //0
+count if ssym4==. & sd_etype==1 & sd_casetype==1 //0
+tab ssym1 if sd_etype==1 & sd_casetype==1 ,m //none blank
+tab ssym2 if sd_etype==1 & sd_casetype==1 ,m //none blank
+tab ssym3 if sd_etype==1 & sd_casetype==1 ,m //none blank
+tab ssym4 if sd_etype==1 & sd_casetype==1 ,m //none blank
+
+*********************
+** Heart Symptoms **
+*********************
+count if hsym1==. & sd_etype==2 & sd_casetype==1 //0
+count if hsym2==. & sd_etype==2 & sd_casetype==1 //0
+count if hsym3==. & sd_etype==2 & sd_casetype==1 //0
+count if hsym4==. & sd_etype==2 & sd_casetype==1 //0
+count if hsym5==. & sd_etype==2 & sd_casetype==1 //0
+count if hsym6==. & sd_etype==2 & sd_casetype==1 //0
+count if hsym7==. & sd_etype==2 & sd_casetype==1 //0
+tab hsym1 if sd_etype==2 & sd_casetype==1 ,m //none blank
+tab hsym2 if sd_etype==2 & sd_casetype==1 ,m //none blank
+tab hsym3 if sd_etype==2 & sd_casetype==1 ,m //none blank
+tab hsym4 if sd_etype==2 & sd_casetype==1 ,m //none blank
+tab hsym5 if sd_etype==2 & sd_casetype==1 ,m //none blank
+tab hsym6 if sd_etype==2 & sd_casetype==1 ,m //none blank
+tab hsym7 if sd_etype==2 & sd_casetype==1 ,m //none blank
+
+********************
+** Other Symptoms **
+********************
+count if osym==. & sd_casetype==1 //0
+count if osym1=="" & osym!=. & osym<7 //0
+count if osym2=="" & osym!=. & osym==2 //0
+count if osym3=="" & osym!=. & osym==3 //0
+count if osym4=="" & osym!=. & osym==4 //0
+count if osym5=="" & osym!=. & osym==5 //0
+count if osym6=="" & osym!=. & osym==6 //0
+tab osym if sd_casetype==1 ,m //none blank
+
+*****************************
+** Stroke only Risk Factor **
+*****************************
+count if tia==. & sd_etype==1 & sd_casetype==1 & rfany!=. & rfany!=99 //0
+tab tia if sd_etype==1 & sd_casetype==1 & rfany!=. & rfany!=99 ,m //none blank
+
+*********************************
+** Heart + Stroke Risk Factors **
+*********************************
+count if smoker==. & sd_casetype==1 & rfany!=. & rfany!=99 //0
+count if hcl==. & sd_casetype==1 & rfany!=. & rfany!=99 //0
+count if af==. & sd_casetype==1 & rfany!=. & rfany!=99 //0
+count if ccf==. & sd_casetype==1 & rfany!=. & rfany!=99 //0
+count if htn==. & sd_casetype==1 & rfany!=. & rfany!=99 //0
+count if diab==. & sd_casetype==1 & rfany!=. & rfany!=99 //0
+count if hld==. & sd_casetype==1 & rfany!=. & rfany!=99 //0
+count if alco==. & sd_casetype==1 & rfany!=. & rfany!=99 //0
+count if drugs==. & sd_casetype==1 & rfany!=. & rfany!=99 //0
+tab smoker if sd_casetype==1 & rfany!=. & rfany!=99 ,m //none blank
+tab hcl if sd_casetype==1 & rfany!=. & rfany!=99 ,m //none blank
+tab af if sd_casetype==1 & rfany!=. & rfany!=99 ,m //none blank
+tab ccf if sd_casetype==1 & rfany!=. & rfany!=99 ,m //none blank
+tab htn if sd_casetype==1 & rfany!=. & rfany!=99 ,m //none blank
+tab diab if sd_casetype==1 & rfany!=. & rfany!=99 ,m //none blank
+tab hld if sd_casetype==1 & rfany!=. & rfany!=99 ,m //none blank
+tab alco if sd_casetype==1 & rfany!=. & rfany!=99 ,m //none blank
+tab drugs if sd_casetype==1 & rfany!=. & rfany!=99 ,m //none blank
+
+************************
+** Other Risk Factors **
+************************
+count if ovrf==. & sd_casetype==1 & rfany!=. & rfany!=99 //0
+count if ovrf1=="" & ovrf!=. & ovrf<5 //0
+count if ovrf2=="" & ovrf!=. & ovrf==2 //0
+count if ovrf3=="" & ovrf!=. & ovrf==3 //0
+count if ovrf4=="" & ovrf!=. & ovrf==4 //0
+tab ovrf if sd_casetype==1 & rfany!=. & rfany!=99 ,m //none blank
+
+*****************
+** Reperfusion **
+*****************
+count if reperf==. & sd_casetype==1 //45 - confirmed but not fully abstracted at closing off so leave as is
+tab reperf if sd_casetype==1 ,m //45 blank
+
+count if repertype==. & reperf==1 //0
+tab repertype if reperf==1 ,m //0 unknown/blank
+
+count if reperfd==. & reperf==1 //0
+count if sd_reperfdt==. & reperf==1 //1
+count if (reperft==""|reperft=="88"|reperft=="99") & reperf==1 //1
+count if sd_reperfdt==. & sd_casetype==2 //415 - DCOs so etime would be blank
+count if sd_reperfdt==. & reperf==1 & sd_casetype==1 //1 - abstractions wherein exact time was unknown
+
+*************
+** Aspirin **
+*************
+count if (asp___1==.|asp___1==0) & sd_casetype==1 //316 - 45 confirmed but not fully abstracted at closing off + 271 unticked so leave as is
+tab asp___1 if sd_casetype==1 ,m //25 blank
+
+count if (asp___2==.|asp___2==0) & sd_casetype==1 //572 - 45 confirmed but not fully abstracted at closing off + 527 unticked so leave as is
+tab asp___2 if sd_casetype==1 ,m //25 blank
+
+count if (asp___1==.|asp___1==0) & (asp___2==.|asp___2==0) & sd_casetype==1 //268 - 45 confirmed but not fully abstracted at closing off + 223 both unticked so leave as is
+tab asp___1 asp___2 if sd_casetype==1 ,m //0 unknown/blank
+
+count if aspd==. & asp___1==1 //3 - ND/99 in CVDdb
+count if sd_aspdt==. & asp___1==1 //61
+count if (aspt==""|aspt=="88"|aspt=="99") & asp___1==1 //61
+count if sd_aspdt==. & sd_casetype==2 //415 - DCOs so etime would be blank
+count if sd_aspdt==. & asp___1==1 & sd_casetype==1 //61 - abstractions wherein exact time was unknown
+
+count if aspdis==.|aspdis==99 //812
+count if (aspdis==.|aspdis==99) & sd_casetype==1 //397 - 45 confirmed but not fully abstracted at closing off + 213 deceased at discharge + 139 alive but aspirin unselected so leave as is
+count if (aspdis==.|aspdis==99) & sd_casetype==2 //415 - DCOs so vstatus would be blank
+tab aspdis if sd_casetype==1 & vstatus!=2 ,m //184 unknown/blank
+
+*******************
+** Antiplatelets **
+*******************
+count if (pla___1==.|pla___1==0) & sd_casetype==1 //571 - 45 confirmed but not fully abstracted at closing off + 526 unticked so leave as is
+tab pla___1 if sd_casetype==1 ,m //25 blank
+
+count if (pla___2==.|pla___2==0) & sd_casetype==1 //696 - 45 confirmed but not fully abstracted at closing off + 651 unticked so leave as is
+tab pla___2 if sd_casetype==1 ,m //25 blank
+
+count if (pla___1==.|pla___1==0) & (pla___2==.|pla___2==0) & sd_casetype==1 //555 - 45 confirmed but not fully abstracted at closing off + 510 both unticked so leave as is
+tab pla___1 pla___2 if sd_casetype==1 ,m //0 unknown/blank
+
+count if plad==. & pla___1==1 //1 - ND/99 in CVDdb
+count if sd_pladt==. & pla___1==1 //18
+count if (plat==""|plat=="88"|plat=="99") & pla___1==1 //18
+count if sd_pladt==. & sd_casetype==2 //415 - DCOs so etime would be blank
+count if sd_pladt==. & pla___1==1 & sd_casetype==1 //18 - abstractions wherein exact time was unknown
+
+count if pladis==.|pladis==99 //1032
+count if (pladis==.|pladis==99) & sd_casetype==1 //617 - 45 confirmed but not fully abstracted at closing off + 213 deceased at discharge + 359 alive but antiplatelets unselected so leave as is
+count if (pladis==.|pladis==99) & sd_casetype==2 //415 - DCOs so vstatus would be blank
+tab pladis if sd_casetype==1 & vstatus!=2 ,m //404 unknown/blank
+
+*************
+** Statins **
+*************
+count if (stat___1==.|stat___1==0) & sd_casetype==1 //626 - 45 confirmed but not fully abstracted at closing off + 581 unticked so leave as is
+tab stat___1 if sd_casetype==1 ,m //25 blank
+
+count if (stat___2==.|stat___2==0) & sd_casetype==1 //569 - 45 confirmed but not fully abstracted at closing off + 524 unticked so leave as is
+tab stat___2 if sd_casetype==1 ,m //0 unknown/blank
+
+count if (stat___1==.|stat___1==0) & (stat___2==.|stat___2==0) & sd_casetype==1 //495 - 45 confirmed but not fully abstracted at closing off + 450 both unticked so leave as is
+tab stat___1 stat___2 if sd_casetype==1 ,m //0 unknown/blank
+
+count if statd==. & stat___1==1 //0
+count if sd_statdt==. & stat___1==1 //2
+count if (statt==""|statt=="88"|statt=="99") & stat___1==1 //2
+count if sd_statdt==. & sd_casetype==2 //415 - DCOs so etime would be blank
+count if sd_statdt==. & stat___1==1 & sd_casetype==1 //2 - abstractions wherein exact time was unknown
+
+count if statdis==.|statdis==99 //802
+count if (statdis==.|statdis==99) & sd_casetype==1 //387 - 45 confirmed but not fully abstracted at closing off + 213 deceased at discharge + 129 alive but statin unselected so leave as is
+count if (statdis==.|statdis==99) & sd_casetype==2 //415 - DCOs so vstatus would be blank
+tab statdis if sd_casetype==1 & vstatus!=2 ,m //174 unknown/blank
 
 
-** Create age by event variable
-drop age
-gen age2=(edate-dob)/365.25
-gen age=int(age2)
-label var age "Age at Event"
-drop age2
+***********
+** STEMI **
+***********
+count if ecgste==. & sd_etype==2 & htype==1 //2 - confirmed but not fully abstracted at closing off so leave as is
+tab ecgste if sd_etype==2 & sd_casetype==1 ,m //106 unknown/blank
+tab htype if sd_etype==2 & sd_casetype==1 ,m //none unknown/blank
 
-tab age ,m //16 missing age - cross check against electoral list
-list sd_etype record_id dd_deathid dd_fname dd_mname dd_lname dd_age 
+tab ecgste htype if sd_etype==2 & sd_casetype==1 ,m //106 unknown/blank - for analysis use htype when classifying STEMIs instead of the old method of using ecgste
+/*
+ST segment |    What type of acute MI was diagnosed?
+ elevation |     STEMI     NSTEMI  AMI (defi  Sudden ca |     Total
+-----------+--------------------------------------------+----------
+       Yes |        71          8          0          0 |        79 
+        No |         0         14          2          0 |        16 
+        99 |         3         49          7          2 |        61 
+         . |         2          7         29          7 |        45 
+-----------+--------------------------------------------+----------
+     Total |        76         78         38          9 |       201
+*/
 
+**************************
+** Ambulance From Scene **
+**************************
+count if frmscnd==. & arrival==1 //3 - ND in CVDdb as no ambulance sheet/form seen in pt notes
+count if sd_frmscndt==. & arrival==1 //5
+count if (frmscnt==""|frmscnt=="88"|frmscnt=="99") & arrival==1 //5
+count if sd_frmscndt==. & sd_casetype==2 //415 - DCOs so etime would be blank
+count if sd_frmscndt==. & arrival==1 & sd_casetype==1 //5 - abstractions wherein exact time was unknown
 
-STOP
+*******************
+** A&E Admission **
+*******************
+count if dae==. & aeadmit==1 //0
+count if sd_daetae==. & aeadmit==1 //38
+count if (tae==""|tae=="88"|tae=="99") & aeadmit==1 //38
+count if sd_daetae==. & sd_casetype==2 //415 - DCOs so etime would be blank
+count if sd_daetae==. & aeadmit==1 & sd_casetype==1 //38 - abstractions wherein exact time was unknown
 
+*******************
+** ECG Date/Time **
+*******************
+count if ecgd==. & ecg==1 //3 - ND in CVDdb
+count if sd_ecgdt==. & ecg==1 //17
+count if (ecgt==""|ecgt=="88"|ecgt=="99") & ecg==1 //17
+count if sd_ecgdt==. & sd_casetype==2 //415 - DCOs so etime would be blank
+count if sd_ecgdt==. & ecg==1 & sd_casetype==1 //17 - abstractions wherein exact time was unknown
 
+***************************
+** Diagnostic Exam: ECHO **
+***************************
+count if decho==. & sd_casetype==1 & dieany!=. & dieany!=99 //2 - stroke record 1889 tests form is blank/unanswered by DA; stroke record 2982 was corrected in 3i_clean tests_cvd.do + 3g_clean event_cvd.do
+replace decg=99 if record_id=="2982"
+replace dmri=99 if record_id=="2982"
+replace dcerangio=99 if record_id=="2982"
+replace dcarangio=99 if record_id=="2982"
+replace dcarus=99 if record_id=="2982"
+replace decho=99 if record_id=="2982"
+replace odie=99 if record_id=="2982"
 
+tab decho if sd_casetype==1 & dieany!=. & dieany!=99 ,m //450 unknown/blank
 
+*************
+** AM / PM **
+*************
+** Check time AMPM check e.g. those with FMC=AM but troponin done at FMC=PM
+count if fmcampm==1 & troptampm==2 //0
+count if fmcampm==2 & troptampm==1 //0
 
+count if taeampm==1 & troptampm==2 //0
+count if taeampm==2 & troptampm==1 //0
 
+count if taeampm==1 & ecgtampm==2 //0
+count if taeampm==2 & ecgtampm==1 //0
 
-** Remove unnecessary variables
-drop fu1doa2 fu1date
+count if fmcampm==1 & asptampm==2 //0
+count if fmcampm==2 & asptampm==1 //0
+
+count if taeampm==1 & asptampm==2 //0
+count if taeampm==2 & asptampm==1 //0
+
+************************************
+** Discharge + Ambulance DateTime **
+************************************
+count if sd_disdt!=. & sd_ambcalldt!=. & sd_disdt<sd_ambcalldt //0
+** Check atscene frmscene with their dates (visual check)
+//list sd_etype record_id ambcalld ambcallt atscnd atscnt frmscnd frmscnt hospd hospt dae tae if arrival==1
+//order sd_etype record_id ambcalld ambcallt atscnd atscnt frmscnd frmscnt sameadm hospd hospt dae tae
+
+****************
+** Event Type **
+****************
+count if sd_etype==. //0
+count if sd_etype==1 & htype!=. //0
+count if sd_etype==2 & stype!=. //0
+count if dd_heart==1 & dd_stroke==1 //17 - in analysis prep
+count if dd_heart==1 & dd_stroke==1 & sd_casetype==1 //8
+count if dd_heart==1 & dd_stroke==1 & sd_casetype==2 //9
+
+count //1145
 
 ** Create cleaned dataset
 save "`datapath'\version03\2-working\BNRCVDCORE_CleanedData_final" ,replace
