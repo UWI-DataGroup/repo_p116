@@ -36,7 +36,7 @@
     log using "`logpath'\3i_clean tests_cvd.smcl", replace
 ** HEADER -----------------------------------------------------
 
-** Load cleaned demo form 2021 dataset
+** Load cleaned history form 2021 dataset
 use "`datapath'\version03\2-working\BNRCVDCORE_CleanedData_hx", clear
 
 count //1144

@@ -2,8 +2,24 @@
 *	BNR-CVD 2021 ANNUAL REPORT DOFILE GUIDE (format for this dofile taken from Christina Howitt's p120)
 *********************************************************************************************************************
 
-* NOTE: to differentiate between data missing from patient notes (i.e. 99, 999 or 9999) VS 
-*	    data missing from database, code 99999 has been used to signify data missing in CVDdb
+* NOTE1: to differentiate between data missing from patient notes (i.e. 99, 999 or 9999) VS 
+*	     data missing from database, code 99999 has been used to signify data missing in CVDdb
+
+* NOTE2: variable names prefixed with 'sd_' mean these are Stata derived variables
+
+* NOTE3: variable names prefixed with 'dd_' mean these are Death Data derived variables
+
+* NOTE4: there are several vital status variables as each document vital status at different points during the event
+*		 slc = last known/contact vital status
+*		 vstatus = vital status at discharge from hospital
+*		 f1vstatus = vital status at day 28 post event
+
+* NOTE5: labels prefixed with 'Death Data:' mean these are Death Data derived variables
+
+* NOTE6: labels prefixed with 'Incidence Data:' mean these are Incidence Data/REDCap BNRCVD_CORE database variables
+*		 All incidence variable labels are NOT prefixed with 'Incidence Data:' due to large number of variables
+*		 All death data and Stata derived labels are prefixed so any labels that are missing a prefix are from the
+*		 incidence database
 *
 *********************************************************************************************************************
 *	CLEANING
@@ -100,9 +116,8 @@
 *	ANALYSIS
 *********************************************************************************************************************
 *	
-*	1. 4a_prep analysis_cvd.do
+*	1. 4a_analysis prep_cvd.do
 *		* Removes unnecessary variables (i.e. cleaning flags, etc.)
-*		* Creates analysis variables
 *		* Renames variable labels in prep for use in data requests
 *		* Creates analysis variables
 *		* Creates identifiable and deidentified datasets for:

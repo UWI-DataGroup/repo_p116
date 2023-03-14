@@ -1103,6 +1103,7 @@ label define age5_lab 	1 "0-4"	   2 "5-9"    3 "10-14"		///
 						13 "60-64" 14 "65-69" 15 "70-74"	///
 						16 "75-79" 17 "80-84" 18 "85 & over", modify
 label values age5 age5_lab
+label var age5 "5-year age bands"
 
 tab age5 sex ,m
 ** None missing age or sex
@@ -1113,6 +1114,7 @@ label define age_10_lab 	1 "0-14"   2 "15-24"  3 "25-34"	///
 							4 "35-44"  5 "45-54"  6 "55-64"	///
 							7 "65-74"  8 "75-84"  9 "85 & over" , modify
 label values age_10 age_10_lab
+label var age_10 "10-year age bands"
 sort sex age_10
 
 tab age_10 sex ,m

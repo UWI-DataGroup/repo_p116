@@ -36,7 +36,7 @@
     log using "`logpath'\3m_clean fu_cvd.smcl", replace
 ** HEADER -----------------------------------------------------
 
-** Load cleaned demo form 2021 dataset
+** Load cleaned discharge form 2021 dataset
 use "`datapath'\version03\2-working\BNRCVDCORE_CleanedData_dis", clear
 
 count //1145
