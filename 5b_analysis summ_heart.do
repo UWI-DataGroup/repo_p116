@@ -102,7 +102,7 @@ No abstraction (DCO) |        263       55.84      100.00
 
 ** Fully abstracted cases
 count if sd_absstatus==1 //192
-count if vstatus==2 //64
+count if vstatus==2 & sd_absstatus==1 //64
 dis (64/192) * 100 //33.333333
 
 ************************
@@ -146,12 +146,12 @@ table k, stat(q2 sd_los_ae) stat(min sd_los_ae) stat(max sd_los_ae)
 ** Now save the p50, min and max for Table 1.1
 sum sd_los_ae
 sum sd_los_ae ,detail
-gen medianlos=r(p50)
-gen range_lower=r(min)
-gen range_upper=r(max)
+gen medianlos_ae=r(p50)
+gen range_lower_ae=r(min)
+gen range_upper_ae=r(max)
 
-collapse medianlos range_lower range_upper
-order medianlos range_lower range_upper
+collapse medianlos_ae range_lower_ae range_upper_ae
+order medianlos_ae range_lower_ae range_upper_ae
 save "`datapath'\version03\2-working\los_ae_heart" ,replace
 restore
 
@@ -169,11 +169,11 @@ table k, stat(q2 sd_los_ward) stat(min sd_los_ward) stat(max sd_los_ward)
 ** Now save the p50, min and max for Table 1.1
 sum sd_los_ward
 sum sd_los_ward ,detail
-gen medianlos=r(p50)
-gen range_lower=r(min)
-gen range_upper=r(max)
+gen medianlos_ward=r(p50)
+gen range_lower_ward=r(min)
+gen range_upper_ward=r(max)
 
-collapse medianlos range_lower range_upper
-order medianlos range_lower range_upper
+collapse medianlos_ward range_lower_ward range_upper_ward
+order medianlos_ward range_lower_ward range_upper_ward
 save "`datapath'\version03\2-working\los_ward_heart" ,replace
 restore
