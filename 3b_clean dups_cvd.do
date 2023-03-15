@@ -137,7 +137,7 @@ replace sd_bothevent=2 if record_id=="3641"|record_id=="3290"|record_id=="2682"|
 									    if the subsequent stroke occurs on/before 28 days after first stroke then this is considered a stroke-in-evolution.
 */
 gen sd_multievent=.
-label var sd_multievent "SD-Record with Multiple Events of Stroke or AMI"
+label var sd_multievent "SD-Record with Multiple Events of Stroke or AMI in this dataset"
 label define sd_multievent_lab 1 "First Event" 2 "Second Event" 3 "Third Event", modify
 label values sd_multievent sd_multievent_lab
 replace sd_multievent=1 if record_id=="2514"|record_id=="2432"|record_id=="1899"|record_id=="2060"|record_id=="1722" ///
