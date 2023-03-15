@@ -21,6 +21,17 @@
 *		 All incidence variable labels are NOT prefixed with 'Incidence Data:' due to large number of variables
 *		 All death data and Stata derived labels are prefixed so any labels that are missing a prefix are from the
 *		 incidence database
+
+* NOTE7: both the cleaning and analysis dofiles are in sequential order so 
+*		 they should be executed in the order in which they appear
+
+* NOTE8: 2021: the y-axis for age-sex stratified incidence rate graphs are distributed by 1000 with a range of 0 to 4000 
+*		 2020: the y-axis for age-sex stratified incidence rate graphs are distributed by 500 with a range of 0 to 2000
+*		 This applies to the HEART graphs as the graphs looked skewed for 2021
+
+* NOTE9: 2021: the y-axis for age-sex stratified incidence rate graphs are distributed by 1500 with a range of 0 to 6000 
+*		 2020: the y-axis for age-sex stratified incidence rate graphs are distributed by 500 with a range of 0 to 2000
+*		 This applies to the STROKE graphs as the graphs looked skewed for 2021
 *
 *********************************************************************************************************************
 *	CLEANING
@@ -131,6 +142,30 @@
 *			- stroke analysis/data requests
 *		* Removes irrelevant variables (i.e. heart variables removed from stroke dataset and vice versa)
 *		* Re-assigns variable that identifies records with both heart and stroke events (sd_bothevent)
+*	
+*	3. 5b_analysis summ_heart.do
+*		* Displays results for Summary Statistics table for annual report
+*		* Creates datasets for 'length of stay' to output to MS Word
+*	
+*	4. 5c_analysis summ_stroke.do
+*		* Displays results for Summary Statistics table for annual report
+*		* Creates datasets for 'length of stay' to output to MS Word
+*	
+*	5. 5d_analysis IRs_heart.do
+*		* Displays results for Number of cases, crude + age standardised incidence rates tables for annual report
+*		* Creates datasets for outputing results to MS Word
+*	
+*	6. 5e_analysis IRs_stroke.do
+*		* Displays results for Number of cases, crude + age standardised incidence rates tables for annual report
+*		* Creates datasets for outputing results to MS Word
+*	
+*	7. 5f_analysis MRs_heart.do
+*		* Displays results for Number of deaths + age standardised mortality rates table for annual report
+*		* Creates datasets for outputing results to MS Word
+*	
+*	8. 5g_analysis MRs_stroke.do
+*		* Displays results for Number of deaths + age standardised mortality rates table for annual report
+*		* Creates datasets for outputing results to MS Word
 *	
 *	3. 6_analysis 2016-2020_cvd.do
 *		* Creates datasets for outputting analysed results for 2016-2020 to MS Word and Excel

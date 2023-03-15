@@ -579,8 +579,253 @@ label var sd_dodtod "Stata Derived: DateTime of Death on DISCHARGE form"
 **********
 ** YEAR **
 **********
-gen sd_eventyear=year(edate)
-label var sd_eventyear "Stata Derived: Year of Event"
+gen sd_eyear=year(edate)
+label var sd_eyear "Stata Derived: Year of Event"
+
+tab sd_eyear ,m
+
+*************************
+** HOSPITAL ADMISSIONS **
+*************************
+** Create a variable that describes those admitted to hospital as being admitted to ward and those as being seen in A&E
+** Previous years of data did not differentiate hospital admission as being to ward but was taken as seen in A&E
+gen sd_admstatus=1 if sd_casetype==1 & doh!=.
+replace sd_admstatus=2 if sd_casetype==1 & dae!=. & doh==.
+replace sd_admstatus=3 if sd_casetype==2
+
+label define sd_admstatus_lab 1 "Admitted to Hospital Ward" 2 "Seen only in A&E" 3 "Not admitted to hospital" ,modify
+label values sd_admstatus sd_admstatus_lab
+label var sd_admstatus "Stata Derived: Hospital Admission Status"
+
+tab sd_admstatus ,m //47 missing - these are ones that were not fully abstracted and 3 complete abstractions so returned to cleaning dofiles and corrected; now 44 missing are all ones taht were not fully abstracted (i.e. eligible==6)
+/*
+ Stata Derived: Admission |
+                   Status |      Freq.     Percent        Cum.
+--------------------------+-----------------------------------
+Admitted to Hospital Ward |        549       47.95       47.95
+         Seen only in A&E |        137       11.97       59.91
+ Not admitted to hospital |        415       36.24       96.16
+                        . |         44        3.84      100.00
+--------------------------+-----------------------------------
+                    Total |      1,145      100.00
+
+					
+ Stata Derived: Admission |
+                   Status |      Freq.     Percent        Cum.
+--------------------------+-----------------------------------
+Admitted to Hospital Ward |        510       44.54       44.54
+         Seen only in A&E |        173       15.11       59.65
+ Not admitted to hospital |        415       36.24       95.90
+                        . |         47        4.10      100.00
+--------------------------+-----------------------------------
+                    Total |      1,145      100.00
+*/
+
+** Update admission status for the 44 not fully abstracted by checking which wards/depts they were seen by via CF Source on the CF form
+count if sd_admstatus==. & (cfsource___1==1|cfsource___2==1|cfsource___3==1|cfsource___4==1|cfsource___5==1|cfsource___6==1|cfsource___7==1|cfsource___8==1|cfsource___9==1|cfsource___10==1|cfsource___11==1|cfsource___12==1|cfsource___13==1|cfsource___14==1|cfsource___15==1|cfsource___16==1|cfsource___17==1|cfsource___18==1|cfsource___19==1|cfsource___20==1|cfsource___21==1) //38
+replace sd_admstatus=1 if sd_admstatus==. & (cfsource___1==1|cfsource___2==1|cfsource___3==1|cfsource___4==1|cfsource___5==1|cfsource___6==1|cfsource___7==1|cfsource___8==1|cfsource___9==1|cfsource___10==1|cfsource___11==1|cfsource___12==1|cfsource___13==1|cfsource___14==1|cfsource___15==1|cfsource___16==1|cfsource___17==1|cfsource___18==1|cfsource___19==1|cfsource___20==1|cfsource___21==1) //38 changes
+
+count if sd_admstatus==. & cfsource___22==1 //4
+replace sd_admstatus=2 if sd_admstatus==. & cfsource___22==1 //4 changes
+
+** 2 records left
+replace sd_admstatus=1 if record_id=="5495" //seen in MedData as having been admitted to ward C5
+replace sd_admstatus=3 if record_id=="5496" //seen in community according to DA's comment in cfcods on CF form
+
+tab sd_admstatus ,m
+/*
+  Stata Derived: Hospital |
+         Admission Status |      Freq.     Percent        Cum.
+--------------------------+-----------------------------------
+Admitted to Hospital Ward |        588       51.35       51.35
+         Seen only in A&E |        141       12.31       63.67
+ Not admitted to hospital |        416       36.33      100.00
+--------------------------+-----------------------------------
+                    Total |      1,145      100.00
+*/
+
+
+************************
+** ABSTRACTION STATUS **
+************************
+** Create a variable that describes the records that have been fully abstracted, partially abstracted and not abstracted at all
+tab cstatus ,m
+/*
+     Incidence |
+ Data: CF Case |
+        Status |      Freq.     Percent        Cum.
+---------------+-----------------------------------
+      Eligible |        730       63.76       63.76
+             . |        415       36.24      100.00
+---------------+-----------------------------------
+         Total |      1,145      100.00
+*/
+
+tab eligible ,m
+/*
+   Incidence Data: Case Status-Eligible |      Freq.     Percent        Cum.
+----------------------------------------+-----------------------------------
+               Pending 28-day follow-up |         10        0.87        0.87
+Confirmed but NOT fully abstracted at c |         45        3.93        4.80
+                              Completed |        675       58.95       63.76
+                                      . |        415       36.24      100.00
+----------------------------------------+-----------------------------------
+                                  Total |      1,145      100.00
+*/
+
+gen sd_absstatus=1 if sd_casetype==1 & eligible!=6
+replace sd_absstatus=2 if sd_casetype==1 & eligible==6
+replace sd_absstatus=3 if sd_casetype==2
+
+label define sd_absstatus_lab 1 "Full abstraction" 2 "Partial abstraction" 3 "No abstraction (DCO)" ,modify
+label values sd_absstatus sd_absstatus_lab
+label var sd_absstatus "Stata Derived: Abstraction Status"
+
+tab sd_absstatus ,m //none missing
+/*
+      Stata Derived: |
+  Abstraction Status |      Freq.     Percent        Cum.
+---------------------+-----------------------------------
+    Full abstraction |        685       59.83       59.83
+ Partial abstraction |         45        3.93       63.76
+No abstraction (DCO) |        415       36.24      100.00
+---------------------+-----------------------------------
+               Total |      1,145      100.00
+*/
+
+
+********************
+** Length of Stay **
+********************
+** Create a variable that describes the length of stay in hospital
+gen sd_los_ae=disd-dae if dae!=. & disd!=.
+replace sd_los_ae=dod-dae if dae!=. & dod!=. //211 changes
+count if disd==. & daedis!=. & dod==. //1 heart record 2920 has blank forms
+replace sd_los_ae=daedis-dae if disd==. & daedis!=. & dod==. //1 change
+count if sd_casetype!=2 & sd_admstatus==2 & cfadmdate!=. & dlc!=. & dae==. & disd==. & dod==. & cfsource___22==1 //4 - cases not fully abstracted
+replace sd_los_ae=dlc-cfadmdate if sd_casetype!=2 & sd_admstatus==2 & cfadmdate!=. & dlc!=. & dae==. & disd==. & dod==. & cfsource___22==1 //4 changes
+
+gen sd_los_ward=disd-doh if doh!=. & disd!=.
+replace sd_los_ward=dod-doh if doh!=. & dod!=.
+count if sd_casetype!=2 & sd_admstatus==1 & cfadmdate!=. & dlc!=. & sd_los_ae==. & disd==. & doh==. & dod==. //39 - cases not fully abstracted; checked against MedData to check if (1) cfadmdate is ward admission date and (2) dlc is correct discharge date for that admission
+** Create Stata-derived cfadmdate and dlc so we can retain original values
+gen sd_cfadmdate=cfadmdate
+gen sd_dlc=dlc
+gen sd_doh=doh
+format sd_cfadmdate sd_dlc sd_doh %dM_d,_CY
+label var sd_cfadmdate "Stata Derived: Date of Admission (hospital)/Visit (community)"
+label var sd_dlc "Stata Derived: Date at Last Known Contact"
+label var sd_doh "Stata Derived: Admission Date (Ward)"
+
+replace sd_doh=sd_cfadmdate+1 if record_id=="1876"|record_id=="1964"|record_id=="1977"|record_id=="1985"|record_id=="2227"|record_id=="2376"|record_id=="2451"|record_id=="2791"|record_id=="2932"|record_id=="3001"|record_id=="3035"|record_id=="3173"|record_id=="3295"|record_id=="3331"|record_id=="3342"|record_id=="3663"|record_id=="4404"|record_id=="4361"
+replace sd_doh=sd_cfadmdate+2 if record_id=="1823"|record_id=="2163"|record_id=="2611"|record_id=="3026"|record_id=="3723"|record_id=="5497"
+replace sd_doh=sd_cfadmdate+3 if record_id=="2666"|record_id=="2883"|record_id=="3104"
+replace sd_doh=sd_cfadmdate+4 if record_id=="2323"|record_id=="4348"|record_id=="4112"
+replace sd_dlc=sd_dlc+1 if record_id=="2932"
+replace sd_dlc=sd_dlc+2 if record_id=="3035"
+replace sd_dlc=sd_dlc+3 if record_id=="3001"
+replace sd_dlc=sd_dlc+5 if record_id=="3331"
+replace sd_dlc=d(27nov2021) if record_id=="4348"
+replace sd_dlc=d(25dec2021) if record_id=="4112"
+
+replace sd_doh=sd_cfadmdate if record_id=="2155"|record_id=="2331"|record_id=="2830"|record_id=="3027"|record_id=="3551"|record_id=="3730"|record_id=="5495"|record_id=="4335"|record_id=="4336"
+
+replace sd_los_ward=sd_dlc-sd_doh if sd_los_ward==. & sd_doh!=. & sd_dlc!=. //39 changes
+
+label var sd_los_ae "Stata Derived: Length of stay A&E"
+label var sd_los_ward "Stata Derived: Length of stay Ward"
+
+tab sd_los_ae ,m //457 missing; 44 have 0 days
+tab sd_los_ward ,m //557 missing; 9 have 0 days
+
+** Since strokes can be an event-in-evolution, need to add the readmission days but first need to reassign the readmission dates to match with A&E vs Ward dates
+** Create Stata-derived readmitadm and readmitdis so we can retain original values
+gen sd_readmitadm_ward=readmitadm
+gen sd_readmitdis=readmitdis
+format sd_readmitadm sd_readmitdis %dM_d,_CY
+
+label var sd_readmitadm_ward "Stata Derived: Date of Re-Admission (Ward)"
+label var sd_readmitdis "Stata Derived: Date of Re-Admission Discharge"
+
+count if readmit==1 & sd_etype==1 //7
+replace sd_readmitadm_ward=readmitadm+1 if record_id=="3087"|record_id=="3654"
+replace sd_readmitadm_ward=readmitadm+2 if record_id=="1729"
+replace sd_readmitadm_ward=readmitadm+3 if record_id=="2309"|record_id=="2353"|record_id=="3247"
+
+replace sd_readmitdis=readmitdis+1 if record_id=="3247"
+
+//readmission for record 3136 not in MedData
+gen sd_readmitdays_ward=sd_readmitdis-sd_readmitadm_ward if readmit==1 & sd_etype==1
+label var sd_readmitdays_ward "Stata Derived: Number of days in hospital for this subsequent re-admission (Ward)"
+
+replace sd_readmitdays_ward=1 if sd_readmitdays_ward==0 //2 changes
+
+
+***********************
+** FIRST EVER STROKE **
+***********************
+** Create Stata-derived pstroke, pstrokeyr and dbchecked so we can retain original values
+gen sd_pstroke=pstroke
+gen sd_pstrokeyr=pstrokeyr
+gen sd_dbchecked=dbchecked
+label var sd_pstroke "Stata Derived: Any definite previous stroke?"
+label values sd_pstroke pstroke pstroke_
+label var sd_pstrokeyr "Stata Derived: Enter YEAR of most RECENT previous stroke"
+label var sd_dbchecked "Stata Derived: Checked database/datasets for previous stroke/heart events?"
+label values sd_dbchecked dbchecked dbchecked_
+
+replace sd_pstroke=1 if record_id=="3026"
+replace sd_pstrokeyr=2021 if record_id=="3026"
+replace sd_dbchecked=1 if record_id=="3026"
+
+** Create a variable that describes the records that are first ever strokes
+gen sd_fes=1 if sd_pstroke==2 & sd_etype==1
+count if sd_fes==1 & sd_multievent!=. & sd_multievent>1 //0
+//list sd_etype record_id sd_fes sd_multievent sd_pstroke pstroke if sd_fes==1 & sd_multievent!=. & sd_multievent>1
+
+tab sd_etype sd_pstroke ,m
+/*
+     Stata |    Stata Derived: Any definite previous
+  Derived: |                   stroke?
+Event Type |       Yes         No         99          . |     Total
+-----------+--------------------------------------------+----------
+    Stroke |       111        248        142        189 |       690 
+     Heart |        17        119         49        270 |       455 
+-----------+--------------------------------------------+----------
+     Total |       128        367        191        459 |     1,145
+*/
+tab sd_multievent sd_pstroke if sd_etype==1
+/*
+       Stata |
+    Derived: |
+Patient with |
+    Multiple |
+   Events of |   Stata Derived: Any definite
+   Stroke or |         previous stroke?
+         AMI |       Yes         No         99 |     Total
+-------------+---------------------------------+----------
+ First Event |         3          5          4 |        12 
+Second Event |        12          0          0 |        12 
+-------------+---------------------------------+----------
+       Total |        15          5          4 |        24
+*/
+
+label define sd_fes_lab 1 "First ever stroke" ,modify
+label values sd_fes sd_fes_lab
+label var sd_fes "Stata Derived: First Ever Stroke"
+
+tab sd_fes ,m //897 missing
+/*
+   Stata Derived: |
+First Ever Stroke |      Freq.     Percent        Cum.
+------------------+-----------------------------------
+First ever stroke |        248       21.66       21.66
+                . |        897       78.34      100.00
+------------------+-----------------------------------
+            Total |      1,145      100.00
+*/
+
+
 ***********
 ** AGE_5 **
 ***********
@@ -630,7 +875,9 @@ tab sd_etype ,m
 ------------+-----------------------------------
       Total |      1,145      100.00
 */
-//Note: some death records had both heart and stroke CODs so need to re-assign event type when splitting datasets below
+
+count if dd_heart==1 & dd_stroke==1 //17
+//Note: the above death records had both heart and stroke CODs so need to re-assign event type when splitting datasets below
 
 count //1145
 
@@ -643,7 +890,7 @@ note: TS This dataset includes all reportable heart and stroke incidence and dea
 
 ** Create identifiable HEART dataset
 preserve
-drop sri srirec evolution ssym1* ssym2* ssym3* ssym4* sign1 sign2 sign3 sign4 sonset sday swalldate swalld* cardmon nihss stype dstroke tia assess assess1 assess2 assess3 assess4 assess7 assess8 assess9 assess10 assess12 assess14 dct dmri dcerangio dcarangio dcarus ct doct doctday doctmonth doctyear stime ctfeat ctinfarct ctsubhaem ctinthaem tdhemi tvdrain huti hfall hhydro hhaemo absdxs_* cors* antih* nimo* antis* ted* duti dfall dhydro dhaemo disdxs_* recdxs_* strunit sunitadmsame astrunitd astrunitdday astrunitdmonth astrunitdyear sunitdissame dstrunitd dstrunitdday dstrunitdmonth dstrunitdyear pstrsit pstrosit rankin* f1rankin* dd_stroke sd_corsdt sd_antihdt sd_nimodt sd_antisdt sd_teddt //stroke variables
+drop sri srirec evolution ssym1* ssym2* ssym3* ssym4* sign1 sign2 sign3 sign4 sonset sday swalldate swalld* cardmon nihss stype dstroke tia assess assess1 assess2 assess3 assess4 assess7 assess8 assess9 assess10 assess12 assess14 dct dmri dcerangio dcarangio dcarus ct doct doctday doctmonth doctyear stime ctfeat ctinfarct ctsubhaem ctinthaem tdhemi tvdrain huti hfall hhydro hhaemo absdxs_* cors* antih* nimo* antis* ted* duti dfall dhydro dhaemo disdxs_* recdxs_* strunit sunitadmsame astrunitd astrunitdday astrunitdmonth astrunitdyear sunitdissame dstrunitd dstrunitdday dstrunitdmonth dstrunitdyear pstrsit pstrosit rankin* f1rankin* dd_stroke sd_corsdt sd_antihdt sd_nimodt sd_antisdt sd_teddt sd_fes sd_readmitadm_ward sd_readmitdis sd_readmitdays_ward //stroke variables
 replace sd_bothevent=2 if dd_deathid==34138
 replace sd_bothevent=2 if record_id=="2915"
 replace sd_bothevent=1 if record_id=="3128"
@@ -662,7 +909,7 @@ restore
 
 ** Create de-identified HEART dataset
 preserve
-drop sri srirec evolution ssym1* ssym2* ssym3* ssym4* sign1 sign2 sign3 sign4 sonset sday swalldate swalld* cardmon nihss stype dstroke tia assess assess1 assess2 assess3 assess4 assess7 assess8 assess9 assess10 assess12 assess14 dct dmri dcerangio dcarangio dcarus ct doct doctday doctmonth doctyear stime ctfeat ctinfarct ctsubhaem ctinthaem tdhemi tvdrain huti hfall hhydro hhaemo absdxs_* cors* antih* nimo* antis* ted* duti dfall dhydro dhaemo disdxs_* recdxs_* strunit sunitadmsame astrunitd astrunitdday astrunitdmonth astrunitdyear sunitdissame dstrunitd dstrunitdday dstrunitdmonth dstrunitdyear pstrsit pstrosit rankin* f1rankin* dd_stroke sd_corsdt sd_antihdt sd_nimodt sd_antisdt sd_teddt //stroke variables
+drop sri srirec evolution ssym1* ssym2* ssym3* ssym4* sign1 sign2 sign3 sign4 sonset sday swalldate swalld* cardmon nihss stype dstroke tia assess assess1 assess2 assess3 assess4 assess7 assess8 assess9 assess10 assess12 assess14 dct dmri dcerangio dcarangio dcarus ct doct doctday doctmonth doctyear stime ctfeat ctinfarct ctsubhaem ctinthaem tdhemi tvdrain huti hfall hhydro hhaemo absdxs_* cors* antih* nimo* antis* ted* duti dfall dhydro dhaemo disdxs_* recdxs_* strunit sunitadmsame astrunitd astrunitdday astrunitdmonth astrunitdyear sunitdissame dstrunitd dstrunitdday dstrunitdmonth dstrunitdyear pstrsit pstrosit rankin* f1rankin* dd_stroke sd_corsdt sd_antihdt sd_nimodt sd_antisdt sd_teddt sd_fes sd_readmitadm_ward sd_readmitdis sd_readmitdays_ward //stroke variables
 drop dd_fname dd_lname dd_dob dd_natregno dd_pname fname lname mname dob dobday dobmonth dobyear natregno sd_natregno nrnyear nrnmonth nrnday nrnnum recnum addr parish hometel worktel celltel fnamekin lnamekin sametel homekin workkin cellkin dd_mname dd_regnum dd_nrn dd_address dd_parish //identifiable variables
 replace sd_bothevent=2 if dd_deathid==34138
 replace sd_bothevent=2 if record_id=="2915"
@@ -679,6 +926,7 @@ save "`datapath'\version03\3-output\2021_prep analysis_deidentified_heart" ,repl
 note: TS This dataset is used for for analysis of heart incidence data
 note: TS This dataset includes all reportable heart incidence and death data; excludes identifiable data
 restore
+
 
 ** Create identifiable STROKE dataset
 preserve
@@ -699,6 +947,20 @@ replace sd_bothevent=1 if dd_deathid==36738
 replace sd_bothevent=1 if dd_deathid==37287
 replace sd_etype=1 if dd_stroke==1 & sd_etype!=1 //4 changes
 drop if sd_etype!=1 //451 deleted
+tab sd_fes ,m //for the 4 DCO records
+count if sd_pstroke==2 & sd_fes!=1 //3
+//list sd_etype record_id dd_deathid sd_fes sd_multievent sd_pstroke pstroke if sd_pstroke==2 & sd_fes!=1
+replace sd_fes=1 if sd_pstroke==2 & sd_fes!=1 //3 changes
+tab sd_fes ,m
+/*
+   Stata Derived: |
+First Ever Stroke |      Freq.     Percent        Cum.
+------------------+-----------------------------------
+First ever stroke |        251       36.17       36.17
+                . |        443       63.83      100.00
+------------------+-----------------------------------
+            Total |        694      100.00
+*/
 count //694
 label data "BNR-CVD data 2021: Identifiable Dataset (STROKE)"
 notes _dta :These data prepared from BB national death register and REDCap BNRCVD_CORE database
@@ -727,6 +989,20 @@ replace sd_bothevent=2 if dd_deathid==36738
 replace sd_bothevent=2 if dd_deathid==37287
 replace sd_etype=1 if dd_stroke==1 & sd_etype!=1 //4 changes
 drop if sd_etype!=1 //451 deleted
+tab sd_fes ,m //for the 4 DCO records
+count if sd_pstroke==2 & sd_fes!=1 //3
+//list sd_etype record_id dd_deathid sd_fes sd_multievent sd_pstroke pstroke if sd_pstroke==2 & sd_fes!=1
+replace sd_fes=1 if sd_pstroke==2 & sd_fes!=1 //3 changes
+tab sd_fes ,m
+/*
+   Stata Derived: |
+First Ever Stroke |      Freq.     Percent        Cum.
+------------------+-----------------------------------
+First ever stroke |        251       36.17       36.17
+                . |        443       63.83      100.00
+------------------+-----------------------------------
+            Total |        694      100.00
+*/
 count //694
 label data "BNR-CVD data 2021: De-identified Dataset (STROKE)"
 notes _dta :These data prepared from BB national death register and REDCap BNRCVD_CORE database
