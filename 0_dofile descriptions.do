@@ -6,6 +6,7 @@
 *	     data missing from database, code 99999 has been used to signify data missing in CVDdb
 
 * NOTE2: variable names prefixed with 'sd_' mean these are Stata derived variables
+*		 (only age5 and age_10 variables are missing this prefix)
 
 * NOTE3: variable names prefixed with 'dd_' mean these are Death Data derived variables
 

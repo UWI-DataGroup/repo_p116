@@ -783,10 +783,12 @@ replace atscnd=hospd if atscene==1 & atscnd==. //375 changes
 replace atscnd=ambcalld if atscene==2 & atscnd==dae //1 change
 replace frmscnd=atscnd if atscene==2 & frmscene==1 //3 changes
 replace frmscnd=atscnd if frmscene==1 & frmscnd==. //376 changes
+replace doh=cfadmdate if dohsame==1 & doh==. //39 changes
 count if atscene==1 & atscnd==. //0
 count if frmscene==1 & frmscnd==. //0
 count if sameadm==1 & hospd==. //0
 count if sameadm==1 & hospt=="" //0
+
 
 
 ** Create datetime variables in prep for analysis (prepend with 'sd_') - only for variables wherein both date and time are not missing

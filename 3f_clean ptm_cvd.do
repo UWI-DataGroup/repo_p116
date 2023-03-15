@@ -156,6 +156,8 @@ gen flagdate=sd_currentdate if record_id=="3963"|record_id=="2791"|record_id=="2
 count if aeadmit==. & patient_management_complete!=0 & patient_management_complete!=. //0 - note we have to add in the form status variable since cases wherein dx was confirmed but case not abstracted as year was closed would have NO data in this form.
 ** Invalid missing code
 count if aeadmit==88|aeadmit==99|aeadmit==999|aeadmit==9999 //0
+** Invalid (seen in A&E=No; ward=A&E)
+count if aeadmit==2 & ward___2==1 //2 - stroke records 2800 + 3109 corrected below (this check added post-cleaning of this form)
 
 *************************
 ** A&E Adm Date & Time **
@@ -233,6 +235,8 @@ count if taedisampm==88|taedisampm==99|taedisampm==999|taedisampm==9999 //0
 
 
 ** Corrections from above checks
+destring flag116 ,replace
+destring flag1041 ,replace
 destring flag117 ,replace
 destring flag1042 ,replace
 destring flag120 ,replace
@@ -243,13 +247,16 @@ destring flag240 ,replace
 destring flag1165 ,replace
 format flag117 flag1042 flag120 flag1045 flag194 flag1119 flag240 flag1165 %dM_d,_CY
 
-replace flag117=dae if record_id=="2351"
+replace flag117=dae if record_id=="2351"|record_id=="2800"|record_id=="3109"
 replace dae=dae+365 if record_id=="2351" //see above
-replace flag1042=dae if record_id=="2351"
+replace dae=cfadmdate if record_id=="2800"|record_id=="3109" //see above
+replace flag1042=dae if record_id=="2351"|record_id=="2800"|record_id=="3109"
 
-replace flag120=daedis if record_id=="2211"
+replace flag120=daedis if record_id=="2211"|record_id=="2800"|record_id=="3109"
 replace daedis=daedis-10 if record_id=="2211" //see above
-replace flag1045=daedis if record_id=="2211"
+replace daedis=disd if record_id=="3109" //see above
+replace daedis=dod if record_id=="2800" //see above
+replace flag1045=daedis if record_id=="2211"|record_id=="2800"|record_id=="3109"
 
 replace flag194=ssym1d if record_id=="4289"
 replace ssym1d=ssym1d+365 if record_id=="4289" //see above
@@ -264,8 +271,21 @@ replace edate=edate+365 if record_id=="4289" //see above
 replace flag1192=edate if record_id=="4289"
 //remove this record at the end of this dofile after the corrections list has been generated
 
+replace flag116=aeadmit if record_id=="2800"|record_id=="3109"
+replace aeadmit=1 if record_id=="2800"|record_id=="3109" //see above
+replace flag1041=aeadmit if record_id=="2800"|record_id=="3109"
+
+replace flag118=tae if record_id=="2800"|record_id=="3109"
+replace tae="99" if record_id=="2800"|record_id=="3109" //see above
+replace flag1043=tae if record_id=="2800"|record_id=="3109"
+
+replace flag121=taedis if record_id=="2800"|record_id=="3109"
+replace taedis=dist if record_id=="3109" //see above
+replace taedis=tod if record_id=="2800" //see above
+replace flag1046=taedis if record_id=="2800"|record_id=="3109"
+
 ** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
-replace flagdate=sd_currentdate if record_id=="2351"|record_id=="2211"|record_id=="4289"
+replace flagdate=sd_currentdate if record_id=="2351"|record_id=="2211"|record_id=="4289"|record_id=="2800"|record_id=="3109"
 
 ** WARD Info **
 
@@ -701,6 +721,33 @@ using "`datapath'\version03\3-output\CVDCleaning2021_PTM1_`listdate'.xlsx", shee
 capture export_excel record_id sd_etype flag999 flag1042 flag1043 flag1045 flag1049 flag1050 flag1054 flag1058 flag1065 flag1075 flag1079 flag1083 flag1086 flag1165 flag1192 if ///
 		 (flag999!=. | flag1042!=. | flag1043!="" | flag1045!=. | flag1049!=. | flag1050!=. | flag1054!=. | flag1058!="" | flag1065!="" | flag1075!=. | flag1079!="" | flag1083!=. | flag1086!=. | flag1165!=. | flag1192!=.) & flagdate!=. ///
 using "`datapath'\version03\3-output\CVDCleaning2021_PTM1_`listdate'.xlsx", sheet("CORRECTIONS") firstrow(varlabels)
+restore
+*/
+
+
+** JC 15mar2023: Stroke records 2800 + 3109 were corrected post-cleaning of this form so creating new corrections list for these records
+
+/*
+** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile (so added the code for that to this dofile and all the others preceding it with corrections).
+
+** Export corrections before dropping ineligible cases since errors maybe in these records (I only exported the flags with errors/corrections from above)
+** Prepare this dataset for export to excel
+** NOTE: once this list is generated then the code can be disabled to avoid generating multiple lists that will take up storage space on SharePoint
+preserve
+sort record_id
+
+** Format the date flags so they are exported as dates not numbers
+format flagdate flag117 flag1042 flag120 flag1045 %dM_d,_CY
+
+** Create excel errors list before deleting incorrect records
+** Use below code to automate file names using current date
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+capture export_excel record_id sd_etype flag116 flag117 flag118 flag120 flag121 if ///
+		record_id=="2800"|record_id=="3109" ///
+using "`datapath'\version03\3-output\CVDCleaning2021_PTM2_`listdate'.xlsx", sheet("ERRORS") firstrow(varlabels)
+capture export_excel record_id sd_etype flag1041 flag1042 flag1043 flag1045 flag1046 if ///
+		 record_id=="2800"|record_id=="3109" ///
+using "`datapath'\version03\3-output\CVDCleaning2021_PTM2_`listdate'.xlsx", sheet("CORRECTIONS") firstrow(varlabels)
 restore
 */
 
