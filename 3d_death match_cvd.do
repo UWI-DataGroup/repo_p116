@@ -430,13 +430,14 @@ count if dup>1 & record_id!="" & dd_deathid!=. //18 records merged with more tha
 drop if dup>0 & dd_deathid!=. & record_id=="" //257 deleted 
 drop dup
 
+
 ** Remove unmerged death records that are not assigned as heart or stroke
 count if record_id=="" & dd_heart!=1 & dd_stroke!=1 //2478
 count if record_id=="" & (dd_heart==1|dd_strok==1) //414
 drop if record_id=="" & dd_heart!=1 & dd_stroke!=1 //2478 deleted
 
-count if record_id=="" //414
-count //1147
+count if record_id=="" //415
+count //1148
 
 
 ** Update incidence variables with death variables info for DCO cases as these are needed for cleaning and analysis
@@ -467,7 +468,7 @@ replace edate=cfdod if edate==. & sd_casetype==2 //414 changes
 count if slc==2 & cfdod==. //1 - stroke record 3362: cannot find pt in 2022 or multi-yr Deathdb + no death info in MedData but documented as dead on 28d form
 
 
-
+/*
 ** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
 gen currentd=c(current_date)
 gen double sd_currentdate=date(currentd, "DMY", 2017)
@@ -476,7 +477,7 @@ format sd_currentdate %dD_m_CY
 
 gen flagdate=sd_currentdate if record_id=="3055"|record_id=="3773"|record_id=="2263"|record_id=="2720"|record_id=="2822"|record_id=="3763"|record_id=="2248"|(flag51!="" & flag976=="")|(flag45!=. & flag970==.)|(flag60!=. & flag985==.)|(flag65!=. & flag990==.)
 
-/*
+
 ** Export corrections before dropping ineligible cases since errors maybe in these records (I only exported the flags with errors/corrections from above)
 ** Prepare this dataset for export to excel
 ** NOTE: once this list is generated then the code can be disabled to avoid generating multiple lists that will take up storage space on SharePoint
