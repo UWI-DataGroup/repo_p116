@@ -501,7 +501,7 @@ restore
 
 
 ** Remove unnecessary variables
-drop _merge match c d sd_currentdate flagdate
+drop _merge match c d //sd_currentdate flagdate
 
 ** To reduce storage space on SharePoint, remove temporary datasets used in the above process
 erase "`datapath'\version03\2-working\nomissNRNs_death.dta"
