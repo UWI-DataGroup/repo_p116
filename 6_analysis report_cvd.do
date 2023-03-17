@@ -4,7 +4,7 @@
     //  project:                BNR-CVD
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      16-MAR-2023
-    // 	date last modified      16-MAR-2023
+    // 	date last modified      17-MAR-2023
     //  algorithm task          Creating MS Word document with 2021 statistical + figure outputs for 2021 annual report
     //  status                  Pending
     //  objective               To have methods, tables, figures and text in an easy-to-use format for the report writer
@@ -581,7 +581,7 @@ putdocx pagenumber
 putdocx paragraph, style(Title)
 putdocx text ("CVD 2021 Annual Report: Stata Results"), bold
 putdocx textblock begin
-Date First Prepared + Last Updated: 16-MAR-2023 + 16-MAR-2023, respectively
+Date First Prepared + Last Updated: 16-MAR-2023 + 17-MAR-2023, respectively
 putdocx textblock end
 putdocx textblock begin
 Prepared by: JC using Stata 17.0
@@ -1111,7 +1111,7 @@ restore
 
 clear
 
-/*
+
 preserve
 use "`datapath'\version03\2-working\mort_heart", clear
 
@@ -1124,13 +1124,13 @@ putdocx pagebreak
 putdocx paragraph, style(Heading1)
 putdocx text ("AMI: Mortality"), bold
 putdocx paragraph, style(Heading2)
-putdocx text ("AMI: Secular trends in case fatality rates for AMI (Dofile: 1.3_heart_cvd_analysis.do)"), bold
+putdocx text ("AMI: Secular trends in case fatality rates for AMI (Dofile: 5l_analysis CFRs_heart.do)"), bold
 putdocx paragraph, halign(center)
-putdocx text ("Table 1.5 Mortality statistics for acute MI patients in Barbados, 2020"), bold font(Helvetica,10,"blue")
+putdocx text ("Table 1.5 Mortality statistics for acute MI patients in Barbados, 2021"), bold font(Helvetica,10,"blue")
 
 rename mort_heart_ar category
-rename year_* year__*
-putdocx table tbl1 = data(category year__*), halign(center) varnames
+rename number year_2021
+putdocx table tbl1 = data(category year_2021), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
 putdocx table tbl1(1,2), bold shading(lightgray)
 putdocx table tbl1(1,3), bold shading(lightgray)
@@ -1139,9 +1139,10 @@ putdocx table tbl1(1,5), bold shading(lightgray)
 putdocx table tbl1(1,6), bold shading(lightgray)
 putdocx table tbl1(1,7), bold shading(lightgray)
 putdocx table tbl1(1,8), bold shading(lightgray)
-putdocx table tbl1(1,9), bold shading(lightgray)
-putdocx table tbl1(1,10), bold shading(lightgray)
-putdocx table tbl1(1,11), bold shading(lightgray)
+
+putdocx textblock begin
+(1) Total number of events registered or entered into the BNR CVD and Death databases; (2+3) Total number of hospital admissions as a proportion of registrations - hospital admission defined in 2 ways: (a) A&E + WARD are those patients who were seen ONLY in A&E + those admitted to hospital ward (b) WARD are those patients admitted to hospital ward i.e. patients seen ONLY in A&E but not admitted to ward are excluded; (4) Number of cases that were fully abstracted (5) Case fatality rate in hospital for hospitalised patients as a proportion of cases that were fully abstracted; (6+7) Total hospitalised deaths as a proportion of hospitalised cases as defined in the 2 ways above; (8) Case fatality rate at day 28 for cases that were fully abstracted;
+putdocx textblock end
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
 putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
@@ -1161,12 +1162,12 @@ putdocx begin
 
 //putdocx pagebreak
 putdocx paragraph, style(Heading2)
-putdocx text ("AMI: Focus on acute MI in-hospital outcomes (Dofile: 1.3_heart_cvd_analysis.do)"), bold
+putdocx text ("AMI: Focus on acute MI in-hospital outcomes (Dofile: 5l_analysis CFRs_heart.do)"), bold
 putdocx paragraph, halign(center)
-putdocx text ("Figure 1.4 Flow chart of vital status of acute MI patients admitted to the Queen Elizabeth Hospital in Barbados, 2020"), bold font(Helvetica,10,"blue")
+putdocx text ("Figure 1.5 Flow chart of vital status of acute MI patients admitted to the Queen Elizabeth Hospital in Barbados, 2021"), bold font(Helvetica,10,"blue")
 
 rename outcomes_heart_ar category
-//rename year_* year__*
+rename number year_2021
 putdocx table tbl1 = data(category year_2021), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
 putdocx table tbl1(1,2), bold shading(lightgray)
@@ -1187,41 +1188,36 @@ putdocx begin
 
 putdocx pagebreak
 putdocx paragraph, style(Heading1)
-putdocx text ("AMI: Performance measures, 2020"), bold
+putdocx text ("AMI: Performance measures, 2021"), bold
 putdocx paragraph, style(Heading2)
-putdocx text ("AMI: Performance measures for acute care (Dofile: 1.3_heart_cvd_analysis.do)"), bold
+putdocx text ("AMI: Performance measures for acute care (Dofile: 5n_analysis PMs_heart.do)"), bold
 putdocx paragraph, halign(center)
 putdocx text ("PM 1: Documented aspirin use within the first 24 hours"), bold font(Helvetica,10,"blue")
 
 putdocx paragraph
-qui sum percent_pm1heart_2021
+qui sum number_total
 local sum : display %3.0f `r(sum)'
-putdocx text ("Typically, the AHA Get with the Guidelines Program (GWGT) recognises performance of 85% or greater compliance on each performance measure11. Standards of care suggest that patients with acute myocardial infarction receive aspirin within the first 24 hours of arrival at hospital or first onset of symptoms (see Appendix B- Descriptions) In Barbados, in 2020,`sum'%")
-qui sum percent_pm1heart_2017
+putdocx text ("Typically, the AHA Get with the Guidelines Program (GWGT) recognises performance of 85% or greater compliance on each performance measure11. Standards of care suggest that patients with acute myocardial infarction receive aspirin within the first 24 hours of arrival at hospital or first onset of symptoms (see Appendix B- Descriptions) In Barbados, in 2021, of the 185 cases that were fully abstracted, `sum'% were documented as having received aspirin. Of these `sum'%,")
+qui sum adm2asp_percent
 local sum : display %3.0f `r(sum)'
-putdocx text (" of patients received aspirin within 24 hours, in comparison to`sum'%,")
-qui sum percent_pm1heart_2018
+putdocx text (" `sum'% of patients received aspirin within 24 hours of arrival at hospital and")
+qui sum onset2asp_percent
 local sum : display %3.0f `r(sum)'
-putdocx text ("`sum'%")
-qui sum percent_pm1heart_2019
-local sum : display %3.0f `r(sum)'
-putdocx text (" and`sum'% in 2017, 2018 and 2019 respectively. Poor documentation of medications prescribed at admission and during care is one possible reason for low rates described.")
+putdocx text (" `sum'% of patients received aspirin within 24 hours of first onset of symptoms.")
 
-use "`datapath'\version03\2-working\pm1_asp24h_heart_ar" ,clear
 putdocx paragraph
-putdocx text ("Below tables use the variable [aspact] - Possibility of using this variable for this PM instead of current method in analysis dofile, as per discussion with NS.")
-putdocx paragraph, halign(center)
-putdocx text ("2017"), bold font(Helvetica,10,"blue")
-tab2docx aspact if year==2017
-putdocx paragraph, halign(center)
-putdocx text ("2018"), bold font(Helvetica,10,"blue")
-tab2docx aspact if year==2018
-putdocx paragraph, halign(center)
-putdocx text ("2019"), bold font(Helvetica,10,"blue")
-tab2docx aspact if year==2019
-putdocx paragraph, halign(center)
-putdocx text ("2020"), bold font(Helvetica,10,"blue")
-tab2docx aspact if year==2020
+putdocx text ("These results were assessed using the variable [asp___1] of the cases that were fully abstracted. Whether aspirin was given within 24 hrs was assessed using A&E admission date [dae] and Event date [edate] in comparison with Aspirin date [aspd]. I dropped any wherein aspirin date preceded admission or event date. I didn't use date and times in this output but the dofile where these were calculated has the date and times results but they did not differ greatly so I excluded them here in the interest of deadline to complete analysis.")
+
+rename number_total aspirin_total
+rename onset2asp onset2asp_total
+rename adm2asp adm2asp_total
+putdocx table tbl1 = data(asp___1 onset2asp_total onset2asp_percent adm2asp_total adm2asp_percent aspirin_total), halign(center) varnames
+putdocx table tbl1(1,1), bold shading(lightgray)
+putdocx table tbl1(1,2), bold shading(lightgray)
+putdocx table tbl1(1,3), bold shading(lightgray)
+putdocx table tbl1(1,4), bold shading(lightgray)
+putdocx table tbl1(1,5), bold shading(lightgray)
+putdocx table tbl1(1,6), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
 putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
@@ -1234,26 +1230,29 @@ clear
 preserve
 use "`datapath'\version03\2-working\pm2_stemi_heart", clear
 
-sort year
-
 putdocx clear
 putdocx begin
 
 putdocx paragraph, style(Heading2)
-putdocx text ("AMI: PM 2-Proportion of STEMI patients who received reperfusion via fibrinolysis (Dofile: 1.3_heart_cvd_analysis.do)"), bold
+putdocx text ("AMI: PM 2-Proportion of STEMI patients who received reperfusion via fibrinolysis (Dofile: 5n_analysis PMs_heart.do)"), bold
 putdocx paragraph, halign(center)
 putdocx text ("Table 1.6. Number of STEMI cases and proportion reperfused by gender"), bold font(Helvetica,10,"blue")
 
-//rename year_* year__*
-putdocx table tbl1 = data(year female percent_female male percent_male total_number percent_total total_stemi), halign(center) varnames
+putdocx paragraph
+qui sum number_total
+local sum : display %3.0f `r(sum)'
+putdocx text ("Of the `sum' hospitalised cases with full information in 2021,")
+qui sum stemi_total
+local sum : display %3.0f `r(sum)'
+putdocx text ("`sum' persons were diagnosed with a STEMI.")
+
+putdocx table tbl1 = data(reperfused_female stemi_female reperfused_male stemi_male reperfused_total stemi_total), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
 putdocx table tbl1(1,2), bold shading(lightgray)
 putdocx table tbl1(1,3), bold shading(lightgray)
 putdocx table tbl1(1,4), bold shading(lightgray)
 putdocx table tbl1(1,5), bold shading(lightgray)
 putdocx table tbl1(1,6), bold shading(lightgray)
-putdocx table tbl1(1,7), bold shading(lightgray)
-putdocx table tbl1(1,8), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
 putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
@@ -1262,6 +1261,8 @@ restore
 
 clear
 
+STOP
+/*
 preserve
 use "`datapath'\version03\2-working\pm2_stemi_heart_ar", clear
 
@@ -1935,8 +1936,8 @@ restore
 
 clear
 
-STOP
-/*
+
+
 preserve
 use "`datapath'\version03\2-working\mort_stroke", clear
 
@@ -1949,13 +1950,13 @@ putdocx pagebreak
 putdocx paragraph, style(Heading1)
 putdocx text ("Stroke: Mortality"), bold
 putdocx paragraph, style(Heading2)
-putdocx text ("Stroke: Secular trends in Stroke Mortality (Dofile: 1.3_stroke_cvd_analysis.do)"), bold
+putdocx text ("Stroke: Secular trends in Stroke Mortality (Dofile: 5m_analysis CFRs_stroke.do)"), bold
 putdocx paragraph, halign(center)
-putdocx text ("Table 2.5 Mortality statistics for stroke patients in Barbados, 2020"), bold font(Helvetica,10,"blue")
+putdocx text ("Table 2.5 Mortality statistics for stroke patients in Barbados, 2021"), bold font(Helvetica,10,"blue")
 
 rename mort_stroke_ar category
-rename year_* year__*
-putdocx table tbl1 = data(category year__*), halign(center) varnames
+rename number year_2021
+putdocx table tbl1 = data(category year_2021), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
 putdocx table tbl1(1,2), bold shading(lightgray)
 putdocx table tbl1(1,3), bold shading(lightgray)
@@ -1968,6 +1969,10 @@ putdocx table tbl1(1,9), bold shading(lightgray)
 putdocx table tbl1(1,10), bold shading(lightgray)
 putdocx table tbl1(1,11), bold shading(lightgray)
 //putdocx table tbl1(1,12), bold shading(lightgray)
+
+putdocx textblock begin
+(1) Total number of events registered or entered into the BNR CVD and Death databases; (2+3) Total number of hospital admissions as a proportion of registrations - hospital admission defined in 2 ways: (a) A&E + WARD are those patients who were seen ONLY in A&E + those admitted to hospital ward (b) WARD are those patients admitted to hospital ward i.e. patients seen ONLY in A&E but not admitted to ward are excluded; (4) Number of cases that were fully abstracted (5) Case fatality rate in hospital for hospitalised patients as a proportion of cases that were fully abstracted; (6+7) Total hospitalised deaths as a proportion of hospitalised cases as defined in the 2 ways above; (8) Case fatality rate at day 28 for cases that were fully abstracted;
+putdocx textblock end
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
 putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
@@ -1987,12 +1992,12 @@ putdocx begin
 
 putdocx pagebreak
 putdocx paragraph, style(Heading2)
-putdocx text ("Stroke: Focus on acute stroke in-hospital outcomes (Dofile: 1.3_stroke_cvd_analysis.do)"), bold
+putdocx text ("Stroke: Focus on acute stroke in-hospital outcomes (Dofile: 5m_analysis CFRs_stroke.do)"), bold
 putdocx paragraph, halign(center)
-putdocx text ("Figure 2.4 Flow chart of vital status of stroke patients admitted to the Queen Elizabeth Hospital in Barbados, 2020"), bold font(Helvetica,10,"blue")
+putdocx text ("Figure 2.5 Flow chart of vital status of stroke patients admitted to the Queen Elizabeth Hospital in Barbados, 2021"), bold font(Helvetica,10,"blue")
 
 rename outcomes_stroke_ar category
-//rename year_* year__*
+rename number year_2021
 putdocx table tbl1 = data(category year_2021), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
 putdocx table tbl1(1,2), bold shading(lightgray)
@@ -2004,6 +2009,7 @@ restore
 
 clear
 
+/*
 preserve
 use "`datapath'\version03\2-working\pm1_stroke", clear
 

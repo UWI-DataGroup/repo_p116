@@ -770,247 +770,6 @@ restore
 */
 
 
-** Populate SU admission + discharge dates in prep for analysis
-count if sunitadmsame==1 & astrunitd==. & doh!=. //131
-replace astrunitd=doh if sunitadmsame==1 & astrunitd==. //131 changes
-count if sunitdissame==1 & dstrunitd==. & disd!=. //138
-replace dstrunitd=disd if sunitdissame==1 & dstrunitd==. //138 changes
-
-** Populate date (& time: hospt) variables for atscene, frmscene and sameadm in prep for analysis
-replace hospd=dae if sameadm==1 & hospd==. //86 changes
-replace hospt=tae if sameadm==1 & hospt=="" //88 changes
-replace atscnd=hospd if atscene==1 & atscnd==. //375 changes
-replace atscnd=ambcalld if atscene==2 & atscnd==dae //1 change
-replace frmscnd=atscnd if atscene==2 & frmscene==1 //3 changes
-replace frmscnd=atscnd if frmscene==1 & frmscnd==. //376 changes
-replace doh=cfadmdate if dohsame==1 & doh==. //39 changes
-count if atscene==1 & atscnd==. //0
-count if frmscene==1 & frmscnd==. //0
-count if sameadm==1 & hospd==. //0
-count if sameadm==1 & hospt=="" //0
-
-
-
-** Create datetime variables in prep for analysis (prepend with 'sd_') - only for variables wherein both date and time are not missing
-** FMC
-drop sd_fmcdatetime fmcdate_text fmcdatetime2
-gen fmcdate_text = string(fmcdate, "%td")
-gen fmcdatetime2 = fmcdate_text+" "+fmctime if fmcdate!=. & fmctime!="" & fmctime!="88" & fmctime!="99"
-gen double sd_fmcdatetime = clock(fmcdatetime2,"DMYhm") if fmcdatetime2!=""
-format sd_fmcdatetime %tc
-label var sd_fmcdatetime "DateTime of FIRST MEDICAL CONTACT"
-** A&E admission
-drop sd_daetae dae_text daetae2
-gen dae_text = string(dae, "%td")
-gen daetae2 = dae_text+" "+tae if dae!=. & tae!="" & tae!="88" & tae!="99"
-gen double sd_daetae = clock(daetae2,"DMYhm") if daetae2!=""
-format sd_daetae %tc
-label var sd_daetae "DateTime Admitted to A&E"
-** A&E discharge
-drop sd_daetaedis daedis_text daetaedis2
-gen daedis_text = string(daedis, "%td")
-gen daetaedis2 = daedis_text+" "+taedis if daedis!=. & taedis!="" & taedis!="88" & taedis!="99"
-gen double sd_daetaedis = clock(daetaedis2,"DMYhm") if daetaedis2!=""
-format sd_daetaedis %tc
-label var sd_daetaedis "DateTime Discharged from A&E"
-** Admission (Ward)
-drop sd_dohtoh doh_text dohtoh2
-gen doh_text = string(doh, "%td")
-gen dohtoh2 = doh_text+" "+toh if doh!=. & toh!="" & toh!="88" & toh!="99"
-gen double sd_dohtoh = clock(dohtoh2,"DMYhm") if dohtoh2!=""
-format sd_dohtoh %tc
-label var sd_dohtoh "DateTime Admitted to Ward"
-** Notified (Ambulance)
-drop sd_ambcalldt ambcalld_text ambcalldt2
-gen ambcalld_text = string(ambcalld, "%td")
-gen ambcalldt2 = ambcalld_text+" "+ambcallt if ambcalld!=. & ambcallt!="" & ambcallt!="88" & ambcallt!="99"
-gen double sd_ambcalldt = clock(ambcalldt2,"DMYhm") if ambcalldt2!=""
-format sd_ambcalldt %tc
-label var sd_ambcalldt "DateTime Ambulance NOTIFIED"
-** At Scene (Ambulance)
-drop sd_atscndt atscnd_text atscndt2
-gen atscnd_text = string(atscnd, "%td")
-gen atscndt2 = atscnd_text+" "+atscnt if atscnd!=. & atscnt!="" & atscnt!="88" & atscnt!="99"
-gen double sd_atscndt = clock(atscndt2,"DMYhm") if atscndt2!=""
-format sd_atscndt %tc
-label var sd_atscndt "DateTime Ambulance AT SCENE"
-** From Scene (Ambulance)
-drop sd_frmscndt frmscnd_text frmscndt2
-gen frmscnd_text = string(frmscnd, "%td")
-gen frmscndt2 = frmscnd_text+" "+frmscnt if frmscnd!=. & frmscnt!="" & frmscnt!="88" & frmscnt!="99"
-gen double sd_frmscndt = clock(frmscndt2,"DMYhm") if frmscndt2!=""
-format sd_frmscndt %tc
-label var sd_frmscndt "DateTime Ambulance FROM SCENE"
-** At Hospital (Ambulance)
-drop sd_hospdt hospd_text hospdt2
-gen hospd_text = string(hospd, "%td")
-gen hospdt2 = hospd_text+" "+hospt if hospd!=. & hospt!="" & hospt!="88" & hospt!="99"
-gen double sd_hospdt = clock(hospdt2,"DMYhm") if hospdt2!=""
-format sd_hospdt %tc
-label var sd_hospdt "DateTime Ambulance AT HOSPITAL"
-** Chest Pain
-drop hsym1d_text hsym1dt2 sd_hsym1dt
-gen hsym1d_text = string(hsym1d, "%td")
-gen hsym1dt2 = hsym1d_text+" "+hsym1t if hsym1d!=. & hsym1t!="" & hsym1t!="88" & hsym1t!="99"
-gen double sd_hsym1dt = clock(hsym1dt2,"DMYhm") if hsym1dt2!=""
-format sd_hsym1dt %tc
-label var sd_hsym1dt "DateTime of Chest Pain"
-** Event
-drop edate_text eventdt2 sd_eventdt
-gen edate_text = string(edate, "%td")
-gen eventdt2 = edate_text+" "+etime if edate!=. & etime!="" & etime!="88" & etime!="99"
-gen double sd_eventdt = clock(eventdt2,"DMYhm") if eventdt2!=""
-format sd_eventdt %tc
-label var sd_eventdt "DateTime of Event"
-** Troponin
-drop tropd_text tropdt2 sd_tropdt
-gen tropd_text = string(tropd, "%td")
-gen tropdt2 = tropd_text+" "+tropt if tropd!=. & tropt!="" & tropt!="88" & tropt!="99"
-gen double sd_tropdt = clock(tropdt2,"DMYhm") if tropdt2!=""
-format sd_tropdt %tc
-label var sd_tropdt "DateTime of Troponin"
-** ECG
-drop ecgd_text ecgdt2 sd_ecgdt
-gen ecgd_text = string(ecgd, "%td")
-gen ecgdt2 = ecgd_text+" "+ecgt if ecgd!=. & ecgt!="" & ecgt!="88" & ecgt!="99"
-gen double sd_ecgdt = clock(ecgdt2,"DMYhm") if ecgdt2!=""
-format sd_ecgdt %tc
-label var sd_ecgdt "DateTime of ECG"
-** Reperfusion
-drop reperfd_text reperfdt2 sd_reperfdt
-gen reperfd_text = string(reperfd, "%td")
-gen reperfdt2 = reperfd_text+" "+reperft if reperfd!=. & reperft!="" & reperft!="88" & reperft!="99"
-gen double sd_reperfdt = clock(reperfdt2,"DMYhm") if reperfdt2!=""
-format sd_reperfdt %tc
-label var sd_reperfdt "DateTime of Reperfusion"
-** Aspirin
-drop aspd_text aspdt2 sd_aspdt
-gen aspd_text = string(aspd, "%td")
-gen aspdt2 = aspd_text+" "+aspt if aspd!=. & aspt!="" & aspt!="88" & aspt!="99"
-gen double sd_aspdt = clock(aspdt2,"DMYhm") if aspdt2!=""
-format sd_aspdt %tc
-label var sd_aspdt "DateTime of Aspirin"
-** Warfarin
-drop warfd_text warfdt2 sd_warfdt
-gen warfd_text = string(warfd, "%td")
-gen warfdt2 = warfd_text+" "+warft if warfd!=. & warft!="" & warft!="88" & warft!="99"
-gen double sd_warfdt = clock(warfdt2,"DMYhm") if warfdt2!=""
-format sd_warfdt %tc
-label var sd_warfdt "DateTime of Warfarin"
-** Heparin (sc/iv)
-drop hepd_text hepdt2 sd_hepdt
-gen hepd_text = string(hepd, "%td")
-gen hepdt2 = hepd_text+" "+hept if hepd!=. & hept!="" & hept!="88" & hept!="99"
-gen double sd_hepdt = clock(hepdt2,"DMYhm") if hepdt2!=""
-format sd_hepdt %tc
-label var sd_hepdt "DateTime of Heparin (sc/iv)"
-** Heparin (lmw)
-drop heplmwd_text heplmwdt2 sd_heplmwdt
-gen heplmwd_text = string(heplmwd, "%td")
-gen heplmwdt2 = heplmwd_text+" "+heplmwt if heplmwd!=. & heplmwt!="" & heplmwt!="88" & heplmwt!="99"
-gen double sd_heplmwdt = clock(heplmwdt2,"DMYhm") if heplmwdt2!=""
-format sd_heplmwdt %tc
-label var sd_heplmwdt "DateTime of Heparin (lmw)"
-** Antiplatelets
-drop plad_text pladt2 sd_pladt
-gen plad_text = string(plad, "%td")
-gen pladt2 = plad_text+" "+plat if plad!=. & plat!="" & plat!="88" & plat!="99"
-gen double sd_pladt = clock(pladt2,"DMYhm") if pladt2!=""
-format sd_pladt %tc
-label var sd_pladt "DateTime of Antiplatelets"
-** Statin
-drop statd_text statdt2 sd_statdt
-gen statd_text = string(statd, "%td")
-gen statdt2 = statd_text+" "+statt if statd!=. & statt!="" & statt!="88" & statt!="99"
-gen double sd_statdt = clock(statdt2,"DMYhm") if statdt2!=""
-format sd_statdt %tc
-label var sd_statdt "DateTime of Statin"
-** Fibrinolytics
-drop fibrd_text fibrdt2 sd_fibrdt
-gen fibrd_text = string(fibrd, "%td")
-gen fibrdt2 = fibrd_text+" "+fibrt if fibrd!=. & fibrt!="" & fibrt!="88" & fibrt!="99"
-gen double sd_fibrdt = clock(fibrdt2,"DMYhm") if fibrdt2!=""
-format sd_fibrdt %tc
-label var sd_fibrdt "DateTime of Fibrinolytics"
-** ACE
-drop aced_text acedt2 sd_acedt
-gen aced_text = string(aced, "%td")
-gen acedt2 = aced_text+" "+acet if aced!=. & acet!="" & acet!="88" & acet!="99"
-gen double sd_acedt = clock(acedt2,"DMYhm") if acedt2!=""
-format sd_acedt %tc
-label var sd_acedt "DateTime of ACE Inhibitors"
-** ARBs
-drop arbsd_text arbsdt2 sd_arbsdt
-gen arbsd_text = string(arbsd, "%td")
-gen arbsdt2 = arbsd_text+" "+arbst if arbsd!=. & arbst!="" & arbst!="88" & arbst!="99"
-gen double sd_arbsdt = clock(arbsdt2,"DMYhm") if arbsdt2!=""
-format sd_arbsdt %tc
-label var sd_arbsdt "DateTime of ARBs"
-** Corticosteroids
-drop corsd_text corsdt2 sd_corsdt
-gen corsd_text = string(corsd, "%td")
-gen corsdt2 = corsd_text+" "+corst if corsd!=. & corst!="" & corst!="88" & corst!="99"
-gen double sd_corsdt = clock(corsdt2,"DMYhm") if corsdt2!=""
-format sd_corsdt %tc
-label var sd_corsdt "DateTime of Corticosteroids"
-** Antihypertensives
-drop antihd_text antihdt2 sd_antihdt
-gen antihd_text = string(antihd, "%td")
-gen antihdt2 = antihd_text+" "+antiht if antihd!=. & antiht!="" & antiht!="88" & antiht!="99"
-gen double sd_antihdt = clock(antihdt2,"DMYhm") if antihdt2!=""
-format sd_antihdt %tc
-label var sd_antihdt "DateTime of Antihypertensives"
-** Nimodipine
-drop nimod_text nimodt2 sd_nimodt
-gen nimod_text = string(nimod, "%td")
-gen nimodt2 = nimod_text+" "+nimot if nimod!=. & nimot!="" & nimot!="88" & nimot!="99"
-gen double sd_nimodt = clock(nimodt2,"DMYhm") if nimodt2!=""
-format sd_nimodt %tc
-label var sd_nimodt "DateTime of Nimodipine"
-** Antiseizures
-drop antisd_text antisdt2 sd_antisdt
-gen antisd_text = string(antisd, "%td")
-gen antisdt2 = antisd_text+" "+antist if antisd!=. & antist!="" & antist!="88" & antist!="99"
-gen double sd_antisdt = clock(antisdt2,"DMYhm") if antisdt2!=""
-format sd_antisdt %tc
-label var sd_antisdt "DateTime of Antiseizures"
-** TED Stockings
-drop tedd_text teddt2 sd_teddt
-gen tedd_text = string(tedd, "%td")
-gen teddt2 = tedd_text+" "+tedt if tedd!=. & tedt!="" & tedt!="88" & tedt!="99"
-gen double sd_teddt = clock(teddt2,"DMYhm") if teddt2!=""
-format sd_teddt %tc
-label var sd_teddt "DateTime of TED Stockings"
-** Beta Blockers
-drop betad_text betadt2 sd_betadt
-gen betad_text = string(betad, "%td")
-gen betadt2 = betad_text+" "+betat if betad!=. & betat!="" & betat!="88" & betat!="99"
-gen double sd_betadt = clock(betadt2,"DMYhm") if betadt2!=""
-format sd_betadt %tc
-label var sd_betadt "DateTime of Beta Blockers"
-** Bivalrudin
-drop bivald_text bivaldt2 sd_bivaldt
-gen bivald_text = string(bivald, "%td")
-gen bivaldt2 = bivald_text+" "+bivalt if bivald!=. & bivalt!="" & bivalt!="88" & bivalt!="99"
-gen double sd_bivaldt = clock(bivaldt2,"DMYhm") if bivaldt2!=""
-format sd_bivaldt %tc
-label var sd_bivaldt "DateTime of Bivalrudin"
-** Discharge
-drop disd_text disdt2 sd_disdt
-gen disd_text = string(disd, "%td")
-gen disdt2 = disd_text+" "+dist if disd!=. & dist!="" & dist!="88" & dist!="99"
-gen double sd_disdt = clock(disdt2,"DMYhm") if disdt2!=""
-format sd_disdt %tc
-label var sd_disdt "DateTime of Discharge"
-** Death
-drop dod_text dodtod2 sd_dodtod
-gen dod_text = string(dod, "%td")
-gen dodtod2 = dod_text+" "+tod if dod!=. & tod!="" & tod!="88" & tod!="99"
-gen double sd_dodtod = clock(dodtod2,"DMYhm") if dodtod2!=""
-format sd_dodtod %tc
-label var sd_dodtod "DateTime of Death"
-
-
 *****************************
 ** 	   Final Cleaning of   **
 ** Annual Report Variables **
@@ -1331,6 +1090,14 @@ count if sd_disdt!=. & sd_ambcalldt!=. & sd_disdt<sd_ambcalldt //0
 //list sd_etype record_id ambcalld ambcallt atscnd atscnt frmscnd frmscnt hospd hospt dae tae if arrival==1
 //order sd_etype record_id ambcalld ambcallt atscnd atscnt frmscnd frmscnt sameadm hospd hospt dae tae
 
+count if dae<frmscnd & dae!=. & frmscnd!=. //0
+//list record_id dae frmscnd if dae<frmscnd & dae!=. & frmscnd!=.
+count if sd_daetae<sd_frmscndt & sd_daetae!=. & sd_frmscndt!=. //11 - heart record 3227 has corresponding stroke record 4088 which has correct A&E time so corrected below
+list sd_etype record_id fname lname frmscnd frmscnt dae tae if sd_daetae<sd_frmscndt & sd_daetae!=. & sd_frmscndt!=.
+
+STOP review 11 above and then perform other checks on notified/at/from scene/at hosp to admission; admission to ecg; admission to reperfusion; event to reperfusion
+Create corrections list for these cases below
+
 ****************
 ** Event Type **
 ****************
@@ -1340,6 +1107,316 @@ count if sd_etype==2 & stype!=. //0
 count if dd_heart==1 & dd_stroke==1 //17 - in analysis prep
 count if dd_heart==1 & dd_stroke==1 & sd_casetype==1 //8
 count if dd_heart==1 & dd_stroke==1 & sd_casetype==2 //9
+
+
+
+
+** Corrections from above checks
+destring flag117 ,replace
+destring flag1042 ,replace
+destring flag257 ,replace
+destring flag1182 ,replace
+destring flag343 ,replace
+destring flag1268 ,replace
+destring flag349 ,replace
+destring flag1274 ,replace
+destring flag350 ,replace
+destring flag1275 ,replace
+destring flag351 ,replace
+destring flag1276 ,replace
+destring flag407 ,replace
+destring flag1332 ,replace
+destring flag531 ,replace
+destring flag1456 ,replace
+destring flag534 ,replace
+destring flag1459 ,replace
+format flag117 flag1042 flag343 flag1268 %dM_d,_CY
+
+
+replace flag117=dae if record_id==""
+replace dae=dae-1 if record_id=="" //see above
+replace flag1042=dae if record_id==""
+
+
+replace flag118=tae if record_id=="3227"
+replace tae=subinstr(tae,"13","23",.) if record_id=="3227" //see above
+replace flag1043=tae if record_id=="3227"
+
+
+replace flag269=etime if record_id==""
+replace etime=subinstr(etime,"19","07",.) if record_id=="" //see above
+replace flag1194=etime if record_id==""
+
+
+
+** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
+replace flagdate=sd_currentdate if record_id=="3227"
+
+
+
+/*
+** Export corrections before dropping ineligible cases since errors maybe in these records (I only exported the flags with errors/corrections from above)
+** Prepare this dataset for export to excel
+** NOTE: once this list is generated then the code can be disabled to avoid generating multiple lists that will take up storage space on SharePoint
+preserve
+sort record_id
+
+** Format the date flags so they are exported as dates not numbers
+format flag117 flag1042 flag343 flag1268 %dM_d,_CY
+
+** Create excel errors list before deleting incorrect records
+** Use below code to automate file names using current date
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+capture export_excel record_id sd_etype flag117 flag118 flag257 flag258 flag269 flag343 flag349 flag350 flag351 flag407 flag531 flag534 if ///
+		(flag117!=. | flag118!="" | flag257!=. | flag258!=. | flag269!="" | flag343!=. | flag349!=. | flag350!=. | flag351!=. | flag407!=. | flag531!=. | flag534!=.) & flagdate!=. ///
+using "`datapath'\version03\3-output\CVDCleaning2021_FINAL2_`listdate'.xlsx", sheet("ERRORS") firstrow(varlabels)
+capture export_excel record_id sd_etype flag1042 flag1043 flag1182 flag1183 flag1194 flag1268 flag1274 flag1275 flag1276 flag1332 flag1456 flag1459 if ///
+		 (flag1042!=. | flag1043!="" | flag1182!=. | flag1183!=. | flag1194!="" | flag1268!=. | flag1274!=. | flag1275!=. | flag1276!=. | flag1332!=. | flag1456!=. | flag1459!=.) & flagdate!=. ///
+using "`datapath'\version03\3-output\CVDCleaning2021_FINAL2_`listdate'.xlsx", sheet("CORRECTIONS") firstrow(varlabels)
+restore
+*/
+
+
+** Populate SU admission + discharge dates in prep for analysis
+count if sunitadmsame==1 & astrunitd==. & doh!=. //131
+replace astrunitd=doh if sunitadmsame==1 & astrunitd==. //131 changes
+count if sunitdissame==1 & dstrunitd==. & disd!=. //138
+replace dstrunitd=disd if sunitdissame==1 & dstrunitd==. //138 changes
+
+** Populate date (& time: hospt) variables for atscene, frmscene and sameadm in prep for analysis
+replace hospd=dae if sameadm==1 & hospd==. //86 changes
+replace hospt=tae if sameadm==1 & hospt=="" //88 changes
+replace atscnd=hospd if atscene==1 & atscnd==. //375 changes
+replace atscnd=ambcalld if atscene==2 & atscnd==dae //1 change
+replace frmscnd=atscnd if atscene==2 & frmscene==1 //3 changes
+replace frmscnd=atscnd if frmscene==1 & frmscnd==. //376 changes
+replace doh=cfadmdate if dohsame==1 & doh==. //39 changes
+count if atscene==1 & atscnd==. //0
+count if frmscene==1 & frmscnd==. //0
+count if sameadm==1 & hospd==. //0
+count if sameadm==1 & hospt=="" //0
+
+
+
+** Create datetime variables in prep for analysis (prepend with 'sd_') - only for variables wherein both date and time are not missing
+** FMC
+drop sd_fmcdatetime fmcdate_text fmcdatetime2
+gen fmcdate_text = string(fmcdate, "%td")
+gen fmcdatetime2 = fmcdate_text+" "+fmctime if fmcdate!=. & fmctime!="" & fmctime!="88" & fmctime!="99"
+gen double sd_fmcdatetime = clock(fmcdatetime2,"DMYhm") if fmcdatetime2!=""
+format sd_fmcdatetime %tc
+label var sd_fmcdatetime "DateTime of FIRST MEDICAL CONTACT"
+** A&E admission
+drop sd_daetae dae_text daetae2
+gen dae_text = string(dae, "%td")
+gen daetae2 = dae_text+" "+tae if dae!=. & tae!="" & tae!="88" & tae!="99"
+gen double sd_daetae = clock(daetae2,"DMYhm") if daetae2!=""
+format sd_daetae %tc
+label var sd_daetae "DateTime Admitted to A&E"
+** A&E discharge
+drop sd_daetaedis daedis_text daetaedis2
+gen daedis_text = string(daedis, "%td")
+gen daetaedis2 = daedis_text+" "+taedis if daedis!=. & taedis!="" & taedis!="88" & taedis!="99"
+gen double sd_daetaedis = clock(daetaedis2,"DMYhm") if daetaedis2!=""
+format sd_daetaedis %tc
+label var sd_daetaedis "DateTime Discharged from A&E"
+** Admission (Ward)
+drop sd_dohtoh doh_text dohtoh2
+gen doh_text = string(doh, "%td")
+gen dohtoh2 = doh_text+" "+toh if doh!=. & toh!="" & toh!="88" & toh!="99"
+gen double sd_dohtoh = clock(dohtoh2,"DMYhm") if dohtoh2!=""
+format sd_dohtoh %tc
+label var sd_dohtoh "DateTime Admitted to Ward"
+** Notified (Ambulance)
+drop sd_ambcalldt ambcalld_text ambcalldt2
+gen ambcalld_text = string(ambcalld, "%td")
+gen ambcalldt2 = ambcalld_text+" "+ambcallt if ambcalld!=. & ambcallt!="" & ambcallt!="88" & ambcallt!="99"
+gen double sd_ambcalldt = clock(ambcalldt2,"DMYhm") if ambcalldt2!=""
+format sd_ambcalldt %tc
+label var sd_ambcalldt "DateTime Ambulance NOTIFIED"
+** At Scene (Ambulance)
+drop sd_atscndt atscnd_text atscndt2
+gen atscnd_text = string(atscnd, "%td")
+gen atscndt2 = atscnd_text+" "+atscnt if atscnd!=. & atscnt!="" & atscnt!="88" & atscnt!="99"
+gen double sd_atscndt = clock(atscndt2,"DMYhm") if atscndt2!=""
+format sd_atscndt %tc
+label var sd_atscndt "DateTime Ambulance AT SCENE"
+** From Scene (Ambulance)
+drop sd_frmscndt frmscnd_text frmscndt2
+gen frmscnd_text = string(frmscnd, "%td")
+gen frmscndt2 = frmscnd_text+" "+frmscnt if frmscnd!=. & frmscnt!="" & frmscnt!="88" & frmscnt!="99"
+gen double sd_frmscndt = clock(frmscndt2,"DMYhm") if frmscndt2!=""
+format sd_frmscndt %tc
+label var sd_frmscndt "DateTime Ambulance FROM SCENE"
+** At Hospital (Ambulance)
+drop sd_hospdt hospd_text hospdt2
+gen hospd_text = string(hospd, "%td")
+gen hospdt2 = hospd_text+" "+hospt if hospd!=. & hospt!="" & hospt!="88" & hospt!="99"
+gen double sd_hospdt = clock(hospdt2,"DMYhm") if hospdt2!=""
+format sd_hospdt %tc
+label var sd_hospdt "DateTime Ambulance AT HOSPITAL"
+** Chest Pain
+drop hsym1d_text hsym1dt2 sd_hsym1dt
+gen hsym1d_text = string(hsym1d, "%td")
+gen hsym1dt2 = hsym1d_text+" "+hsym1t if hsym1d!=. & hsym1t!="" & hsym1t!="88" & hsym1t!="99"
+gen double sd_hsym1dt = clock(hsym1dt2,"DMYhm") if hsym1dt2!=""
+format sd_hsym1dt %tc
+label var sd_hsym1dt "DateTime of Chest Pain"
+** Event
+drop edate_text eventdt2 sd_eventdt
+gen edate_text = string(edate, "%td")
+gen eventdt2 = edate_text+" "+etime if edate!=. & etime!="" & etime!="88" & etime!="99"
+gen double sd_eventdt = clock(eventdt2,"DMYhm") if eventdt2!=""
+format sd_eventdt %tc
+label var sd_eventdt "DateTime of Event"
+** Troponin
+drop tropd_text tropdt2 sd_tropdt
+gen tropd_text = string(tropd, "%td")
+gen tropdt2 = tropd_text+" "+tropt if tropd!=. & tropt!="" & tropt!="88" & tropt!="99"
+gen double sd_tropdt = clock(tropdt2,"DMYhm") if tropdt2!=""
+format sd_tropdt %tc
+label var sd_tropdt "DateTime of Troponin"
+** ECG
+drop ecgd_text ecgdt2 sd_ecgdt
+gen ecgd_text = string(ecgd, "%td")
+gen ecgdt2 = ecgd_text+" "+ecgt if ecgd!=. & ecgt!="" & ecgt!="88" & ecgt!="99"
+gen double sd_ecgdt = clock(ecgdt2,"DMYhm") if ecgdt2!=""
+format sd_ecgdt %tc
+label var sd_ecgdt "DateTime of ECG"
+** Reperfusion
+drop reperfd_text reperfdt2 sd_reperfdt
+gen reperfd_text = string(reperfd, "%td")
+gen reperfdt2 = reperfd_text+" "+reperft if reperfd!=. & reperft!="" & reperft!="88" & reperft!="99"
+gen double sd_reperfdt = clock(reperfdt2,"DMYhm") if reperfdt2!=""
+format sd_reperfdt %tc
+label var sd_reperfdt "DateTime of Reperfusion"
+** Aspirin
+drop aspd_text aspdt2 sd_aspdt
+gen aspd_text = string(aspd, "%td")
+gen aspdt2 = aspd_text+" "+aspt if aspd!=. & aspt!="" & aspt!="88" & aspt!="99"
+gen double sd_aspdt = clock(aspdt2,"DMYhm") if aspdt2!=""
+format sd_aspdt %tc
+label var sd_aspdt "DateTime of Aspirin"
+** Warfarin
+drop warfd_text warfdt2 sd_warfdt
+gen warfd_text = string(warfd, "%td")
+gen warfdt2 = warfd_text+" "+warft if warfd!=. & warft!="" & warft!="88" & warft!="99"
+gen double sd_warfdt = clock(warfdt2,"DMYhm") if warfdt2!=""
+format sd_warfdt %tc
+label var sd_warfdt "DateTime of Warfarin"
+** Heparin (sc/iv)
+drop hepd_text hepdt2 sd_hepdt
+gen hepd_text = string(hepd, "%td")
+gen hepdt2 = hepd_text+" "+hept if hepd!=. & hept!="" & hept!="88" & hept!="99"
+gen double sd_hepdt = clock(hepdt2,"DMYhm") if hepdt2!=""
+format sd_hepdt %tc
+label var sd_hepdt "DateTime of Heparin (sc/iv)"
+** Heparin (lmw)
+drop heplmwd_text heplmwdt2 sd_heplmwdt
+gen heplmwd_text = string(heplmwd, "%td")
+gen heplmwdt2 = heplmwd_text+" "+heplmwt if heplmwd!=. & heplmwt!="" & heplmwt!="88" & heplmwt!="99"
+gen double sd_heplmwdt = clock(heplmwdt2,"DMYhm") if heplmwdt2!=""
+format sd_heplmwdt %tc
+label var sd_heplmwdt "DateTime of Heparin (lmw)"
+** Antiplatelets
+drop plad_text pladt2 sd_pladt
+gen plad_text = string(plad, "%td")
+gen pladt2 = plad_text+" "+plat if plad!=. & plat!="" & plat!="88" & plat!="99"
+gen double sd_pladt = clock(pladt2,"DMYhm") if pladt2!=""
+format sd_pladt %tc
+label var sd_pladt "DateTime of Antiplatelets"
+** Statin
+drop statd_text statdt2 sd_statdt
+gen statd_text = string(statd, "%td")
+gen statdt2 = statd_text+" "+statt if statd!=. & statt!="" & statt!="88" & statt!="99"
+gen double sd_statdt = clock(statdt2,"DMYhm") if statdt2!=""
+format sd_statdt %tc
+label var sd_statdt "DateTime of Statin"
+** Fibrinolytics
+drop fibrd_text fibrdt2 sd_fibrdt
+gen fibrd_text = string(fibrd, "%td")
+gen fibrdt2 = fibrd_text+" "+fibrt if fibrd!=. & fibrt!="" & fibrt!="88" & fibrt!="99"
+gen double sd_fibrdt = clock(fibrdt2,"DMYhm") if fibrdt2!=""
+format sd_fibrdt %tc
+label var sd_fibrdt "DateTime of Fibrinolytics"
+** ACE
+drop aced_text acedt2 sd_acedt
+gen aced_text = string(aced, "%td")
+gen acedt2 = aced_text+" "+acet if aced!=. & acet!="" & acet!="88" & acet!="99"
+gen double sd_acedt = clock(acedt2,"DMYhm") if acedt2!=""
+format sd_acedt %tc
+label var sd_acedt "DateTime of ACE Inhibitors"
+** ARBs
+drop arbsd_text arbsdt2 sd_arbsdt
+gen arbsd_text = string(arbsd, "%td")
+gen arbsdt2 = arbsd_text+" "+arbst if arbsd!=. & arbst!="" & arbst!="88" & arbst!="99"
+gen double sd_arbsdt = clock(arbsdt2,"DMYhm") if arbsdt2!=""
+format sd_arbsdt %tc
+label var sd_arbsdt "DateTime of ARBs"
+** Corticosteroids
+drop corsd_text corsdt2 sd_corsdt
+gen corsd_text = string(corsd, "%td")
+gen corsdt2 = corsd_text+" "+corst if corsd!=. & corst!="" & corst!="88" & corst!="99"
+gen double sd_corsdt = clock(corsdt2,"DMYhm") if corsdt2!=""
+format sd_corsdt %tc
+label var sd_corsdt "DateTime of Corticosteroids"
+** Antihypertensives
+drop antihd_text antihdt2 sd_antihdt
+gen antihd_text = string(antihd, "%td")
+gen antihdt2 = antihd_text+" "+antiht if antihd!=. & antiht!="" & antiht!="88" & antiht!="99"
+gen double sd_antihdt = clock(antihdt2,"DMYhm") if antihdt2!=""
+format sd_antihdt %tc
+label var sd_antihdt "DateTime of Antihypertensives"
+** Nimodipine
+drop nimod_text nimodt2 sd_nimodt
+gen nimod_text = string(nimod, "%td")
+gen nimodt2 = nimod_text+" "+nimot if nimod!=. & nimot!="" & nimot!="88" & nimot!="99"
+gen double sd_nimodt = clock(nimodt2,"DMYhm") if nimodt2!=""
+format sd_nimodt %tc
+label var sd_nimodt "DateTime of Nimodipine"
+** Antiseizures
+drop antisd_text antisdt2 sd_antisdt
+gen antisd_text = string(antisd, "%td")
+gen antisdt2 = antisd_text+" "+antist if antisd!=. & antist!="" & antist!="88" & antist!="99"
+gen double sd_antisdt = clock(antisdt2,"DMYhm") if antisdt2!=""
+format sd_antisdt %tc
+label var sd_antisdt "DateTime of Antiseizures"
+** TED Stockings
+drop tedd_text teddt2 sd_teddt
+gen tedd_text = string(tedd, "%td")
+gen teddt2 = tedd_text+" "+tedt if tedd!=. & tedt!="" & tedt!="88" & tedt!="99"
+gen double sd_teddt = clock(teddt2,"DMYhm") if teddt2!=""
+format sd_teddt %tc
+label var sd_teddt "DateTime of TED Stockings"
+** Beta Blockers
+drop betad_text betadt2 sd_betadt
+gen betad_text = string(betad, "%td")
+gen betadt2 = betad_text+" "+betat if betad!=. & betat!="" & betat!="88" & betat!="99"
+gen double sd_betadt = clock(betadt2,"DMYhm") if betadt2!=""
+format sd_betadt %tc
+label var sd_betadt "DateTime of Beta Blockers"
+** Bivalrudin
+drop bivald_text bivaldt2 sd_bivaldt
+gen bivald_text = string(bivald, "%td")
+gen bivaldt2 = bivald_text+" "+bivalt if bivald!=. & bivalt!="" & bivalt!="88" & bivalt!="99"
+gen double sd_bivaldt = clock(bivaldt2,"DMYhm") if bivaldt2!=""
+format sd_bivaldt %tc
+label var sd_bivaldt "DateTime of Bivalrudin"
+** Discharge
+drop disd_text disdt2 sd_disdt
+gen disd_text = string(disd, "%td")
+gen disdt2 = disd_text+" "+dist if disd!=. & dist!="" & dist!="88" & dist!="99"
+gen double sd_disdt = clock(disdt2,"DMYhm") if disdt2!=""
+format sd_disdt %tc
+label var sd_disdt "DateTime of Discharge"
+** Death
+drop dod_text dodtod2 sd_dodtod
+gen dod_text = string(dod, "%td")
+gen dodtod2 = dod_text+" "+tod if dod!=. & tod!="" & tod!="88" & tod!="99"
+gen double sd_dodtod = clock(dodtod2,"DMYhm") if dodtod2!=""
+format sd_dodtod %tc
+label var sd_dodtod "DateTime of Death"
+
 
 count //1145
 
