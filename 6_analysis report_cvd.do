@@ -3,8 +3,8 @@
     //  algorithm name          6_analysis report_cvd.do
     //  project:                BNR-CVD
     //  analysts:               Jacqueline CAMPBELL
-    //  date first created      15-MAR-2023
-    // 	date last modified      15-MAR-2023
+    //  date first created      16-MAR-2023
+    // 	date last modified      16-MAR-2023
     //  algorithm task          Creating MS Word document with 2021 statistical + figure outputs for 2021 annual report
     //  status                  Pending
     //  objective               To have methods, tables, figures and text in an easy-to-use format for the report writer
@@ -42,12 +42,12 @@
 ** Annual report: Table 1.1
 use "`datapath'\version03\3-output\2021_prep analysis_deidentified_heart", clear
 
-count //471
+count //467
 
 ** POPULATION
 gen poptot_2021=281207
 
-** REGISTRATIONS (Number of registrations)
+** REGISTRATIONS (Number of registrations) + RATE per population
 egen hregtot_2021=count(sd_etype) if sd_eyear==2021
 gen hregtotper_2021=hregtot_2021/poptot_2021*100
 format hregtotper_2021 %04.2f
@@ -55,20 +55,14 @@ format hregtotper_2021 %04.2f
 ** HOSPITAL ADMISSIONS (Hospital admissions (percentage admitted))
 //JC 15mar2023: per discussion with NS via WA, I will output both definitions used by BNR for hospital admission over the years
 ** A&E + Ward
-egen hreghosptot_2021=count(sd_etype) if sd_admstatus!=3
+egen hreghosptot_2021=count(sd_etype) if sd_admstatus!=3 & sd_admstatus!=4
 gen hreghosptotper_2021=hreghosptot_2021/hregtot_2021*100
 format hreghosptotper_2021 %02.0f
-** A&E only
-egen hreghosptot_ae_2021=count(sd_etype) if sd_admstatus==1
-gen hreghosptotper_ae_2021=hreghosptot_ae_2021/hregtot_2021*100
-format hreghosptotper_ae_2021 %02.0f
+** WARD only
+egen hreghosptot_ward_2021=count(sd_etype) if sd_admstatus==1
+gen hreghosptotper_ward_2021=hreghosptot_ward_2021/hregtot_2021*100
+format hreghosptotper_ward_2021 %02.0f
 
-/*
-** DECEASED AT 28-DAY (% Deceased at 28 day)
-egen hregdeadtot_2021=count(anon_pid) if abstracted==1 & year==2020 & f1vstatus==2
-gen hregdeadtotper_2021=hregdeadtot_2021/hreghosptot_2021*100
-format hregdeadtotper_2021 %02.0f
-*/
 
 ** In-hospital CFR (Case Fatality Rate for fully abstracted cases)
 egen fabstot_2021=count(sd_etype) if sd_absstatus==1
@@ -88,80 +82,117 @@ append using "`datapath'\version03\2-working\los_ae_heart"
 ** Ward
 append using "`datapath'\version03\2-working\los_ward_heart"
 
-STOP
+
 ** Re-arrange dataset
 gen id=_n
-keep id hregtot_2021 hregtotper_2021 hreghosptot_2021 hreghosptotper_2021 hregdeadtot_2021 hregdeadtotper_2021 hdcotot_2021 hdcototper_2021 medianlos range_lower range_upper
+keep id hregtot_2021 hregtotper_2021 hreghosptot_2021 hreghosptotper_2021 hreghosptot_ward_2021 hreghosptotper_ward_2021 hcfrtot_2021 hcfrtotper_2021 hdcotot_2021 hdcototper_2021 medianlos_ae range_lower_ae range_upper_ae medianlos_ward range_lower_ward range_upper_ward
 
+order id
+fillmissing hregtot_2021 hregtotper_2021 hreghosptot_2021 hreghosptotper_2021 hreghosptot_ward_2021 hreghosptotper_ward_2021 hcfrtot_2021 hcfrtotper_2021 hdcotot_2021 hdcototper_2021 medianlos_ae range_lower_ae range_upper_ae medianlos_ward range_lower_ward range_upper_ward
 
-gen title=1 if hregtot_2021!=. & id==1058
+gen title=1 if hregtot_2021!=. & id==1
 order id title
 
-replace title=2 if hreghosptot_2021!=. & id==1059
-replace title=3 if hreghosptotper_2021!=. & id==1061
-replace title=4 if hregtotper_2021!=. & id==1070
-replace title=5 if hregdeadtotper_2021!=. & id==1144
-replace title=6 if hdcototper_2021!=. & id==1148
-replace title=7 if hdcotot_2021!=. & id==1156
-replace title=8 if medianlos!=. & id==4795
+replace title=2 if hregtotper_2021!=. & id==2
+replace title=3 if hreghosptot_2021!=. & id==3
+replace title=4 if hreghosptotper_2021!=. & id==4
+replace title=5 if hreghosptot_ward_2021!=. & id==5
+replace title=6 if hreghosptotper_ward_2021!=. & id==6
+replace title=7 if hcfrtot_2021!=. & id==7
+replace title=8 if hcfrtotper_2021!=. & id==8
+replace title=9 if hdcotot_2021!=. & id==9
+replace title=10 if hdcototper_2021!=. & id==10
+replace title=11 if medianlos_ae!=. & id==11
+replace title=12 if range_lower_ae!=. & id==12
+replace title=13 if range_upper_ae!=. & id==13
+replace title=14 if medianlos_ward!=. & id==14
+replace title=15 if range_lower_ward!=. & id==15
+replace title=16 if range_upper_ward!=. & id==16
 
-expand=2 in 4795, gen (medianlos_dup1)
-replace id=4796 if medianlos_dup1==1
-replace title=9 if medianlos_dup1==1
-expand=2 in 4795, gen (medianlos_dup2)
-replace id=4797 if medianlos_dup2==1
-replace title=10 if medianlos_dup2==1
 
-label define title_lab 1 "Number of registrations(1)" 2 "Hospital admissions (percentage admitted)(2)" 3 "percentage admitted" 4 "Rate per population(3)" 5 "% Deceased at 28 day(4)" 6 "% Cases who died" 7 "Death Certificate Only (DCO)(5)" 8 "Median (range) length of hospital stay (days)(6)" 9 "Range (lower) length of hospital stay (days)" 10 "Range (upper) length of hospital stay (days)" ,modify
+label define title_lab 1 "Number of registrations(1)" 2 "Rate per population(2)" 3 "Hospital admissions A&E + WARD (percentage admitted)(3)" 4 "percentage admitted A&E + WARD" 5 "Hospital admissions WARD (percentage admitted)(3)" 6 "percentage admitted WARD" 7 "In-hospital case fatality rate (cases with full information),n(%)(4)" 8 "CFR(percentage)" 9 "Death Certificate Only (DCO)(5)" 10 "DCO percentage" 11 "Median (range) length of hospital stay A&E (days)(6)" 12 "Range (lower) length of hospital stay A&E (days)" 13 "Range (upper) length of hospital stay A&E (days)" 14 "Median (range) length of hospital stay WARD (days)(6)" 15 "Range (lower) length of hospital stay WARD (days)" 16 "Range (upper) length of hospital stay WARD (days)" ,modify
 label values title title_lab
 label var title "Title"
 
 *-------------------------------------------------------------------------------
 
 tab title ,m
-drop if title==. //4797 deleted
-drop hregdeadtot_2021 medianlos_dup1 medianlos_dup2
+drop if title==. // deleted
 sort title
 drop id
 gen id=_n
 order id title hregtot_2021
 
-//tostring poptot_2021 ,replace
+** Convert the stats into string allowing for placing percentages next to totals
 tostring hregtot_2021 ,replace
+gen hregtotper_2021_1=string(hregtotper_2021, "%04.2f")
+drop hregtotper_2021
+rename hregtotper_2021_1 hregtotper_2021
+
 tostring hreghosptot_2021 ,replace
 gen hreghosptotper_2021_1=string(hreghosptotper_2021, "%02.0f")
 drop hreghosptotper_2021
 rename hreghosptotper_2021_1 hreghosptotper_2021
-gen hregtotper_2021_1=string(hregtotper_2021, "%04.2f")
-drop hregtotper_2021
-rename hregtotper_2021_1 hregtotper_2021
-gen hregdeadtotper_2021_1=string(hregdeadtotper_2021, "%02.0f")
-drop hregdeadtotper_2021
-rename hregdeadtotper_2021_1 hregdeadtotper_2021
+
+tostring hreghosptot_ward_2021 ,replace
+gen hreghosptotper_ward_2021_1=string(hreghosptotper_ward_2021, "%02.0f")
+drop hreghosptotper_ward_2021
+rename hreghosptotper_ward_2021_1 hreghosptotper_ward_2021
+
+gen hcfrtotper_2021_1=string(hcfrtotper_2021, "%02.0f")
+drop hcfrtotper_2021
+rename hcfrtotper_2021_1 hcfrtotper_2021
+
+tostring hcfrtot_2021 ,replace
 gen hdcototper_2021_1=string(hdcototper_2021, "%02.0f")
 drop hdcototper_2021
 rename hdcototper_2021_1 hdcototper_2021
 tostring hdcotot_2021 ,replace
-tostring medianlos ,replace
-tostring range_lower ,replace
-tostring range_upper ,replace
 
-replace hregtot_2021=hreghosptot_2021 if id==2
-replace hregtot_2021=hreghosptotper_2021 if id==3
-replace hregtot_2021=hregtotper_2021 if id==4
-replace hregtot_2021=hregdeadtotper_2021 if id==5
-replace hregtot_2021=hdcototper_2021 if id==6
-replace hregtot_2021=hdcotot_2021 if id==7
-replace hregtot_2021=medianlos if id==8
-replace hregtot_2021=range_lower if id==9
-replace hregtot_2021=range_upper if id==10
+tostring medianlos_ae ,replace
+tostring range_lower_ae ,replace
+tostring range_upper_ae ,replace
 
-gen medianrange=medianlos+" "+"("+range_lower+" "+"-"+" "+range_upper+")"
-replace hregtot_2021=medianrange if id==8
+tostring medianlos_ward ,replace
+tostring range_lower_ward ,replace
+tostring range_upper_ward ,replace
+
+replace hregtot_2021=hregtotper_2021 if id==2
+replace hregtot_2021=hreghosptot_2021 if id==3
+replace hregtot_2021=hreghosptotper_2021 if id==4
+replace hregtot_2021=hreghosptot_ward_2021 if id==5
+replace hregtot_2021=hreghosptotper_ward_2021 if id==6
+replace hregtot_2021=hcfrtot_2021 if id==7
+replace hregtot_2021=hcfrtotper_2021 if id==8
+replace hregtot_2021=hdcotot_2021 if id==9
+replace hregtot_2021=hdcototper_2021 if id==10
+replace hregtot_2021=medianlos_ae if id==11
+replace hregtot_2021=range_lower_ae if id==12
+replace hregtot_2021=range_upper_ae if id==13
+replace hregtot_2021=medianlos_ward if id==14
+replace hregtot_2021=range_lower_ward if id==15
+replace hregtot_2021=range_upper_ward if id==16
 
 gen hospadmpercent=hreghosptot_2021+" "+"("+hreghosptotper_2021+"%"+")"
-replace hregtot_2021=hospadmpercent if id==2
-drop if id==3|id==9|id==10
+replace hregtot_2021=hospadmpercent if id==3
+
+gen hospadmpercent_ward=hreghosptot_ward_2021+" "+"("+hreghosptotper_ward_2021+"%"+")"
+replace hregtot_2021=hospadmpercent_ward if id==5
+
+gen cfrpercent=hcfrtot_2021+" "+"("+hcfrtotper_2021+"%"+")"
+replace hregtot_2021=cfrpercent if id==7
+
+gen dcopercent=hdcotot_2021+" "+"("+hdcototper_2021+"%"+")"
+replace hregtot_2021=dcopercent if id==9
+
+gen medianrange_ae=medianlos_ae+" "+"("+range_lower_ae+" "+"-"+" "+range_upper_ae+")"
+replace hregtot_2021=medianrange_ae if id==11
+
+gen medianrange_ward=medianlos_ward+" "+"("+range_lower_ward+" "+"-"+" "+range_upper_ward+")"
+replace hregtot_2021=medianrange_ward if id==14
+
+
+drop if id==4|id==6|id==8|id==10|id==12|id==13|id==15|id==16
 drop id
 gen id=_n
 order id title hregtot_2021
@@ -180,114 +211,163 @@ clear
 **  SUMMARY STATISTICS - STROKE **
 **********************************
 ** Annual report: Table 1.1
-** Load the stroke cleaned dataset AH used (and JC updated) in 1.0_stroke_cvd_analysis.do
-use "`datapath'\version03\3-output\stroke_2009-2020_v9_names_Stata_v16_clean", clear
+use "`datapath'\version03\3-output\2021_prep analysis_deidentified_stroke", clear
 
-count //7649
+count //691
 
 ** POPULATION
-gen poptot_2021=287371
+gen poptot_2021=281207
 
 ******************
 ** STROKE (ALL) **
 ******************
 
-** REGISTRATIONS (Number of registrations)
-egen sregtot_2021=count(anon_pid) if year==2020
+** REGISTRATIONS (Number of registrations) + RATE per population
+egen sregtot_2021=count(sd_etype) if sd_eyear==2021
 gen sregtotper_2021=sregtot_2021/poptot_2021*100
 format sregtotper_2021 %04.2f
 
 ** HOSPITAL ADMISSIONS (Hospital admissions (percentage admitted))
-egen sreghosptot_2021=count(anon_pid) if year==2020 & hosp==1
+//JC 15mar2023: per discussion with NS via WA, I will output both definitions used by BNR for hospital admission over the years
+** A&E + Ward
+egen sreghosptot_2021=count(sd_etype) if sd_admstatus!=3 & sd_admstatus!=4
 gen sreghosptotper_2021=sreghosptot_2021/sregtot_2021*100
 format sreghosptotper_2021 %02.0f
+** WARD only
+egen sreghosptot_ward_2021=count(sd_etype) if sd_admstatus==1
+gen sreghosptotper_ward_2021=sreghosptot_ward_2021/sregtot_2021*100
+format sreghosptotper_ward_2021 %02.0f
 
-** DECEASED AT 28-DAY (% Deceased at 28 day)
-egen sregdeadtot_2021=count(anon_pid) if abstracted==1 & year==2020 & f1vstatus==2
-gen sregdeadtotper_2021=sregdeadtot_2021/sreghosptot_2021*100
-format sregdeadtotper_2021 %02.0f
 
-** DCOs (% Cases who died + Death Certificate Only (DCO))
-egen sdcotot_2021=count(anon_pid) if abstracted==2 & year==2020
+** In-hospital CFR (Case Fatality Rate for fully abstracted cases)
+egen fabstot_2021=count(sd_etype) if sd_absstatus==1
+egen scfrtot_2021=count(sd_etype) if sd_absstatus==1 & vstatus==2
+gen scfrtotper_2021=scfrtot_2021/fabstot_2021*100
+format scfrtotper_2021 %02.0f
+
+** DCOs (Death Certificate Only)
+egen sdcotot_2021=count(sd_etype) if sd_casetype==2
 gen sdcototper_2021=sdcotot_2021/sregtot_2021*100
 format sdcototper_2021 %02.0f
 
 ** LOS (Median (range) length of hospital stay (days))
-**Median Legthn of stay in hospital (analysis performed in 1.0_stroke_cvd_analysis.do)
-append using "`datapath'\version03\2-working\los_stroke_all"
+**Median Legthn of stay in hospital (analysis performed in 5c_analysis summ_stroke.do)
+** A&E
+append using "`datapath'\version03\2-working\los_ae_stroke_all"
+** Ward
+append using "`datapath'\version03\2-working\los_ward_stroke_all"
+
 
 ** Re-arrange dataset
 gen id=_n
-keep id sregtot_2021 sregtotper_2021 sreghosptot_2021 sreghosptotper_2021 sregdeadtot_2021 sregdeadtotper_2021 sdcotot_2021 sdcototper_2021 medianlos_s range_lower_s range_upper_s
+keep id sregtot_2021 sregtotper_2021 sreghosptot_2021 sreghosptotper_2021 sreghosptot_ward_2021 sreghosptotper_ward_2021 scfrtot_2021 scfrtotper_2021 sdcotot_2021 sdcototper_2021 medianlos_s_ae range_lower_s_ae range_upper_s_ae medianlos_s_ward range_lower_s_ward range_upper_s_ward
 
-gen title=1 if sregtot_2021!=. & id==5510
+order id
+fillmissing sregtot_2021 sregtotper_2021 sreghosptot_2021 sreghosptotper_2021 sreghosptot_ward_2021 sreghosptotper_ward_2021 scfrtot_2021 scfrtotper_2021 sdcotot_2021 sdcototper_2021 medianlos_s_ae range_lower_s_ae range_upper_s_ae medianlos_s_ward range_lower_s_ward range_upper_s_ward
+
+gen title=1 if sregtot_2021!=. & id==1
 order id title
 
-replace title=2 if sreghosptot_2021!=. & id==5512
-replace title=3 if sreghosptotper_2021!=. & id==5516
-replace title=4 if sregtotper_2021!=. & id==5511
-replace title=5 if sregdeadtotper_2021!=. & id==5521
-replace title=6 if sdcototper_2021!=. & id==5540
-replace title=7 if sdcotot_2021!=. & id==5541
-replace title=8 if medianlos_s!=. & id==7650
+replace title=2 if sregtotper_2021!=. & id==2
+replace title=3 if sreghosptot_2021!=. & id==3
+replace title=4 if sreghosptotper_2021!=. & id==4
+replace title=5 if sreghosptot_ward_2021!=. & id==5
+replace title=6 if sreghosptotper_ward_2021!=. & id==6
+replace title=7 if scfrtot_2021!=. & id==7
+replace title=8 if scfrtotper_2021!=. & id==8
+replace title=9 if sdcotot_2021!=. & id==9
+replace title=10 if sdcototper_2021!=. & id==10
+replace title=11 if medianlos_s_ae!=. & id==11
+replace title=12 if range_lower_s_ae!=. & id==12
+replace title=13 if range_upper_s_ae!=. & id==13
+replace title=14 if medianlos_s_ward!=. & id==14
+replace title=15 if range_lower_s_ward!=. & id==15
+replace title=16 if range_upper_s_ward!=. & id==16
 
-expand=2 in 7650, gen (medianlos_s_dup1)
-replace id=7650 if medianlos_s_dup1==1
-replace title=9 if medianlos_s_dup1==1
-expand=2 in 7650, gen (medianlos_s_dup2)
-replace id=7650 if medianlos_s_dup2==1
-replace title=10 if medianlos_s_dup2==1
 
-label define title_lab 1 "Number of registrations(1)" 2 "Hospital admissions (percentage admitted)(2)" 3 "percentage admitted" 4 "Rate per population(3)" 5 "% Deceased at 28 day(4)" 6 "% Cases who died" 7 "Death Certificate Only (DCO)(5)" 8 "Median (range) length of hospital stay (days)(6)" 9 "Range (lower) length of hospital stay (days)" 10 "Range (upper) length of hospital stay (days)" ,modify
+label define title_lab 1 "Number of registrations(1)" 2 "Rate per population(2)" 3 "Hospital admissions A&E + WARD (percentage admitted)(3)" 4 "percentage admitted A&E + WARD" 5 "Hospital admissions WARD (percentage admitted)(3)" 6 "percentage admitted WARD" 7 "In-hospital case fatality rate (cases with full information),n(%)(4)" 8 "CFR(percentage)" 9 "Death Certificate Only (DCO)(5)" 10 "DCO percentage" 11 "Median (range) length of hospital stay A&E (days)(6)" 12 "Range (lower) length of hospital stay A&E (days)" 13 "Range (upper) length of hospital stay A&E (days)" 14 "Median (range) length of hospital stay WARD (days)(6)" 15 "Range (lower) length of hospital stay WARD (days)" 16 "Range (upper) length of hospital stay WARD (days)" ,modify
 label values title title_lab
 label var title "Title"
 
 *-------------------------------------------------------------------------------
 
 tab title ,m
-drop if title==. //7642 deleted
-drop sregdeadtot_2021 medianlos_s_dup1 medianlos_s_dup2
+drop if title==. // deleted
 sort title
 drop id
 gen id=_n
 order id title sregtot_2021
 
-//tostring poptot_2021 ,replace
+** Convert the stats into string allowing for placing percentages next to totals
 tostring sregtot_2021 ,replace
+gen sregtotper_2021_1=string(sregtotper_2021, "%04.2f")
+drop sregtotper_2021
+rename sregtotper_2021_1 sregtotper_2021
+
 tostring sreghosptot_2021 ,replace
 gen sreghosptotper_2021_1=string(sreghosptotper_2021, "%02.0f")
 drop sreghosptotper_2021
 rename sreghosptotper_2021_1 sreghosptotper_2021
-gen sregtotper_2021_1=string(sregtotper_2021, "%04.2f")
-drop sregtotper_2021
-rename sregtotper_2021_1 sregtotper_2021
-gen sregdeadtotper_2021_1=string(sregdeadtotper_2021, "%02.0f")
-drop sregdeadtotper_2021
-rename sregdeadtotper_2021_1 sregdeadtotper_2021
+
+tostring sreghosptot_ward_2021 ,replace
+gen sreghosptotper_ward_2021_1=string(sreghosptotper_ward_2021, "%02.0f")
+drop sreghosptotper_ward_2021
+rename sreghosptotper_ward_2021_1 sreghosptotper_ward_2021
+
+gen scfrtotper_2021_1=string(scfrtotper_2021, "%02.0f")
+drop scfrtotper_2021
+rename scfrtotper_2021_1 scfrtotper_2021
+
+tostring scfrtot_2021 ,replace
 gen sdcototper_2021_1=string(sdcototper_2021, "%02.0f")
 drop sdcototper_2021
 rename sdcototper_2021_1 sdcototper_2021
 tostring sdcotot_2021 ,replace
-tostring medianlos_s ,replace
-tostring range_lower_s ,replace
-tostring range_upper_s ,replace
 
-replace sregtot_2021=sreghosptot_2021 if id==2
-replace sregtot_2021=sreghosptotper_2021 if id==3
-replace sregtot_2021=sregtotper_2021 if id==4
-replace sregtot_2021=sregdeadtotper_2021 if id==5
-replace sregtot_2021=sdcototper_2021 if id==6
-replace sregtot_2021=sdcotot_2021 if id==7
-replace sregtot_2021=medianlos_s if id==8
-replace sregtot_2021=range_lower_s if id==9
-replace sregtot_2021=range_upper_s if id==10
+tostring medianlos_s_ae ,replace
+tostring range_lower_s_ae ,replace
+tostring range_upper_s_ae ,replace
 
-gen medianrange_s=medianlos_s+" "+"("+range_lower_s+" "+"-"+" "+range_upper_s+")"
-replace sregtot_2021=medianrange_s if id==8
+tostring medianlos_s_ward ,replace
+tostring range_lower_s_ward ,replace
+tostring range_upper_s_ward ,replace
+
+replace sregtot_2021=sregtotper_2021 if id==2
+replace sregtot_2021=sreghosptot_2021 if id==3
+replace sregtot_2021=sreghosptotper_2021 if id==4
+replace sregtot_2021=sreghosptot_ward_2021 if id==5
+replace sregtot_2021=sreghosptotper_ward_2021 if id==6
+replace sregtot_2021=scfrtot_2021 if id==7
+replace sregtot_2021=scfrtotper_2021 if id==8
+replace sregtot_2021=sdcotot_2021 if id==9
+replace sregtot_2021=sdcototper_2021 if id==10
+replace sregtot_2021=medianlos_s_ae if id==11
+replace sregtot_2021=range_lower_s_ae if id==12
+replace sregtot_2021=range_upper_s_ae if id==13
+replace sregtot_2021=medianlos_s_ward if id==14
+replace sregtot_2021=range_lower_s_ward if id==15
+replace sregtot_2021=range_upper_s_ward if id==16
 
 gen hospadmpercent_s=sreghosptot_2021+" "+"("+sreghosptotper_2021+"%"+")"
-replace sregtot_2021=hospadmpercent_s if id==2
-drop if id==3|id==9|id==10
+replace sregtot_2021=hospadmpercent_s if id==3
+
+gen hospadmpercent_s_ward=sreghosptot_ward_2021+" "+"("+sreghosptotper_ward_2021+"%"+")"
+replace sregtot_2021=hospadmpercent_s_ward if id==5
+
+gen cfrpercent_s=scfrtot_2021+" "+"("+scfrtotper_2021+"%"+")"
+replace sregtot_2021=cfrpercent_s if id==7
+
+gen dcopercent_s=sdcotot_2021+" "+"("+sdcototper_2021+"%"+")"
+replace sregtot_2021=dcopercent_s if id==9
+
+gen medianrange_s_ae=medianlos_s_ae+" "+"("+range_lower_s_ae+" "+"-"+" "+range_upper_s_ae+")"
+replace sregtot_2021=medianrange_s_ae if id==11
+
+gen medianrange_s_ward=medianlos_s_ward+" "+"("+range_lower_s_ward+" "+"-"+" "+range_upper_s_ward+")"
+replace sregtot_2021=medianrange_s_ward if id==14
+
+
+drop if id==4|id==6|id==8|id==10|id==12|id==13|id==15|id==16
 drop id
 gen id=_n
 order id title sregtot_2021
@@ -295,123 +375,173 @@ order id title sregtot_2021
 keep id title sregtot_2021
 rename sregtot_2021 Stroke_all
 rename title Title
-
-** Create dataset with summary stats for stroke (all) (Table 1.1.)
+ 
+** Create dataset with summary stats for all strokes (Table 1.1.)
 save "`datapath'\version03\3-output\summstats_stroke_all", replace
+
 clear
+
 
 *************************
 ** STROKE (FIRST EVER) **
 *************************
 ** Annual report: Table 1.1
-** Load the stroke cleaned dataset AH used (and JC updated) in 1.0_stroke_cvd_analysis.do
-use "`datapath'\version03\3-output\stroke_2009-2020_v9_names_Stata_v16_clean", clear
+use "`datapath'\version03\3-output\2021_prep analysis_deidentified_stroke", clear
 
-count //7649
+count //248
 
 ** POPULATION
-gen poptot_2021=287371
+gen poptot_2021=281207
 
-** REGISTRATIONS (Number of registrations)
-egen fesregtot_2021=count(anon_pid) if year==2020 & np==1
+** REGISTRATIONS (Number of registrations) + RATE per population
+egen fesregtot_2021=count(sd_etype) if sd_fes==1
 gen fesregtotper_2021=fesregtot_2021/poptot_2021*100
 format fesregtotper_2021 %04.2f
 
 ** HOSPITAL ADMISSIONS (Hospital admissions (percentage admitted))
-egen fesreghosptot_2021=count(anon_pid) if year==2020 & hosp==1 & np==1
+//JC 15mar2023: per discussion with NS via WA, I will output both definitions used by BNR for hospital admission over the years
+** A&E + Ward
+egen fesreghosptot_2021=count(sd_etype) if sd_admstatus!=3 & sd_admstatus!=4 & sd_fes==1
 gen fesreghosptotper_2021=fesreghosptot_2021/fesregtot_2021*100
 format fesreghosptotper_2021 %02.0f
+** WARD only
+egen fesreghosptot_ward_2021=count(sd_etype) if sd_admstatus==1 & sd_fes==1
+gen fesreghosptotper_ward_2021=fesreghosptot_ward_2021/fesregtot_2021*100
+format fesreghosptotper_ward_2021 %02.0f
 
-** DECEASED AT 28-DAY (% Deceased at 28 day)
-egen fesregdeadtot_2021=count(anon_pid) if abstracted==1 & year==2020 & f1vstatus==2 & np==1
-gen fesregdeadtotper_2021=fesregdeadtot_2021/fesreghosptot_2021*100
-format fesregdeadtotper_2021 %02.0f
 
-** DCOs (% Cases who died + Death Certificate Only (DCO))
-egen fesdcotot_2021=count(anon_pid) if abstracted==2 & year==2020 & np==1
+** In-hospital CFR (Case Fatality Rate for fully abstracted cases)
+egen fabstot_2021=count(sd_etype) if sd_absstatus==1 & sd_fes==1
+egen fescfrtot_2021=count(sd_etype) if sd_absstatus==1 & vstatus==2 & sd_fes==1
+gen fescfrtotper_2021=fescfrtot_2021/fabstot_2021*100
+format fescfrtotper_2021 %02.0f
+
+** DCOs (Death Certificate Only)
+egen fesdcotot_2021=count(sd_etype) if sd_casetype==2 & sd_fes==1
 gen fesdcototper_2021=fesdcotot_2021/fesregtot_2021*100
 format fesdcototper_2021 %02.0f
 
 ** LOS (Median (range) length of hospital stay (days))
-**Median Legthn of stay in hospital (analysis performed in 1.0_stroke_cvd_analysis.do)
-append using "`datapath'\version03\2-working\los_stroke_fes"
+**Median Legthn of stay in hospital (analysis performed in 5c_analysis summ_stroke.do)
+** A&E
+append using "`datapath'\version03\2-working\los_ae_stroke_fes"
+** Ward
+append using "`datapath'\version03\2-working\los_ward_stroke_fes"
+
 
 ** Re-arrange dataset
 gen id=_n
-keep id fesregtot_2021 fesregtotper_2021 fesreghosptot_2021 fesreghosptotper_2021 fesregdeadtot_2021 fesregdeadtotper_2021 fesdcotot_2021 fesdcototper_2021 medianlos_fes range_lower_fes range_upper_fes
+keep id fesregtot_2021 fesregtotper_2021 fesreghosptot_2021 fesreghosptotper_2021 fesreghosptot_ward_2021 fesreghosptotper_ward_2021 fescfrtot_2021 fescfrtotper_2021 fesdcotot_2021 fesdcototper_2021 medianlos_fes_ae range_lower_fes_ae range_upper_fes_ae medianlos_fes_ward range_lower_fes_ward range_upper_fes_ward
 
+order id
+fillmissing fesregtot_2021 fesregtotper_2021 fesreghosptot_2021 fesreghosptotper_2021 fesreghosptot_ward_2021 fesreghosptotper_ward_2021 fescfrtot_2021 fescfrtotper_2021 fesdcotot_2021 fesdcototper_2021 medianlos_fes_ae range_lower_fes_ae range_upper_fes_ae medianlos_fes_ward range_lower_fes_ward range_upper_fes_ward
 
-gen title=1 if fesregtot_2021!=. & id==5510
+gen title=1 if fesregtot_2021!=. & id==1
 order id title
 
-replace title=2 if fesreghosptot_2021!=. & id==5516
-replace title=3 if fesreghosptotper_2021!=. & id==5521
-replace title=4 if fesregtotper_2021!=. & id==5535
-replace title=5 if fesregdeadtotper_2021!=. & id==5550
-//replace title=6 if fesdcototper_2021!=. & id==5536
-replace title=6 if id==5560
-//replace title=7 if fesdcotot_2021!=. & id==5566
-replace title=7 if id==5564
-replace title=8 if medianlos_fes!=. & id==7650
+replace title=2 if fesregtotper_2021!=. & id==2
+replace title=3 if fesreghosptot_2021!=. & id==3
+replace title=4 if fesreghosptotper_2021!=. & id==4
+replace title=5 if fesreghosptot_ward_2021!=. & id==5
+replace title=6 if fesreghosptotper_ward_2021!=. & id==6
+replace title=7 if fescfrtot_2021!=. & id==7
+replace title=8 if fescfrtotper_2021!=. & id==8
+replace title=9 if fesdcotot_2021!=. & id==9
+replace title=10 if fesdcototper_2021!=. & id==10
+replace title=11 if medianlos_fes_ae!=. & id==11
+replace title=12 if range_lower_fes_ae!=. & id==12
+replace title=13 if range_upper_fes_ae!=. & id==13
+replace title=14 if medianlos_fes_ward!=. & id==14
+replace title=15 if range_lower_fes_ward!=. & id==15
+replace title=16 if range_upper_fes_ward!=. & id==16
 
-expand=2 in 7650, gen (medianlos_fes_dup1)
-replace id=7650 if medianlos_fes_dup1==1
-replace title=9 if medianlos_fes_dup1==1
-expand=2 in 7650, gen (medianlos_fes_dup2)
-replace id=7650 if medianlos_fes_dup2==1
-replace title=10 if medianlos_fes_dup2==1
 
-label define title_lab 1 "Number of registrations(1)" 2 "Hospital admissions (percentage admitted)(2)" 3 "percentage admitted" 4 "Rate per population(3)" 5 "% Deceased at 28 day(4)" 6 "% Cases who died" 7 "Death Certificate Only (DCO)(5)" 8 "Median (range) length of hospital stay (days)(6)" 9 "Range (lower) length of hospital stay (days)" 10 "Range (upper) length of hospital stay (days)" ,modify
+label define title_lab 1 "Number of registrations(1)" 2 "Rate per population(2)" 3 "Hospital admissions A&E + WARD (percentage admitted)(3)" 4 "percentage admitted A&E + WARD" 5 "Hospital admissions WARD (percentage admitted)(3)" 6 "percentage admitted WARD" 7 "In-hospital case fatality rate (cases with full information),n(%)(4)" 8 "CFR(percentage)" 9 "Death Certificate Only (DCO)(5)" 10 "DCO percentage" 11 "Median (range) length of hospital stay A&E (days)(6)" 12 "Range (lower) length of hospital stay A&E (days)" 13 "Range (upper) length of hospital stay A&E (days)" 14 "Median (range) length of hospital stay WARD (days)(6)" 15 "Range (lower) length of hospital stay WARD (days)" 16 "Range (upper) length of hospital stay WARD (days)" ,modify
 label values title title_lab
 label var title "Title"
 
 *-------------------------------------------------------------------------------
 
 tab title ,m
-drop if title==. //7642 deleted
-drop fesregdeadtot_2021 medianlos_fes_dup1 medianlos_fes_dup2
+drop if title==. // deleted
 sort title
 drop id
 gen id=_n
 order id title fesregtot_2021
 
-//tostring poptot_2021 ,replace
+** Convert the stats into string allowing for placing percentages next to totals
 tostring fesregtot_2021 ,replace
+gen fesregtotper_2021_1=string(fesregtotper_2021, "%04.2f")
+drop fesregtotper_2021
+rename fesregtotper_2021_1 fesregtotper_2021
+
 tostring fesreghosptot_2021 ,replace
 gen fesreghosptotper_2021_1=string(fesreghosptotper_2021, "%02.0f")
 drop fesreghosptotper_2021
 rename fesreghosptotper_2021_1 fesreghosptotper_2021
-gen fesregtotper_2021_1=string(fesregtotper_2021, "%04.2f")
-drop fesregtotper_2021
-rename fesregtotper_2021_1 fesregtotper_2021
-gen fesregdeadtotper_2021_1=string(fesregdeadtotper_2021, "%02.0f")
-drop fesregdeadtotper_2021
-rename fesregdeadtotper_2021_1 fesregdeadtotper_2021
+
+tostring fesreghosptot_ward_2021 ,replace
+gen fesreghosptotper_ward_2021_1=string(fesreghosptotper_ward_2021, "%02.0f")
+drop fesreghosptotper_ward_2021
+rename fesreghosptotper_ward_2021_1 fesreghosptotper_ward_2021
+
+gen fescfrtotper_2021_1=string(fescfrtotper_2021, "%02.0f")
+drop fescfrtotper_2021
+rename fescfrtotper_2021_1 fescfrtotper_2021
+
+tostring fescfrtot_2021 ,replace
 gen fesdcototper_2021_1=string(fesdcototper_2021, "%02.0f")
 drop fesdcototper_2021
 rename fesdcototper_2021_1 fesdcototper_2021
 tostring fesdcotot_2021 ,replace
-tostring medianlos_fes ,replace
-tostring range_lower_fes ,replace
-tostring range_upper_fes ,replace
 
-replace fesregtot_2021=fesreghosptot_2021 if id==2
-replace fesregtot_2021=fesreghosptotper_2021 if id==3
-replace fesregtot_2021=fesregtotper_2021 if id==4
-replace fesregtot_2021=fesregdeadtotper_2021 if id==5
-replace fesregtot_2021=fesdcototper_2021 if id==6
-replace fesregtot_2021=fesdcotot_2021 if id==7
-replace fesregtot_2021=medianlos_fes if id==8
-replace fesregtot_2021=range_lower_fes if id==9
-replace fesregtot_2021=range_upper_fes if id==10
+tostring medianlos_fes_ae ,replace
+tostring range_lower_fes_ae ,replace
+tostring range_upper_fes_ae ,replace
 
-gen medianrange_fes=medianlos_fes+" "+"("+range_lower_fes+" "+"-"+" "+range_upper_fes+")"
-replace fesregtot_2021=medianrange_fes if id==8
+tostring medianlos_fes_ward ,replace
+tostring range_lower_fes_ward ,replace
+tostring range_upper_fes_ward ,replace
+
+replace fesregtot_2021=fesregtotper_2021 if id==2
+replace fesregtot_2021=fesreghosptot_2021 if id==3
+replace fesregtot_2021=fesreghosptotper_2021 if id==4
+replace fesregtot_2021=fesreghosptot_ward_2021 if id==5
+replace fesregtot_2021=fesreghosptotper_ward_2021 if id==6
+replace fesregtot_2021=fescfrtot_2021 if id==7
+replace fesregtot_2021=fescfrtotper_2021 if id==8
+replace fesregtot_2021=fesdcotot_2021 if id==9
+replace fesregtot_2021=fesdcototper_2021 if id==10
+replace fesregtot_2021=medianlos_fes_ae if id==11
+replace fesregtot_2021=range_lower_fes_ae if id==12
+replace fesregtot_2021=range_upper_fes_ae if id==13
+replace fesregtot_2021=medianlos_fes_ward if id==14
+replace fesregtot_2021=range_lower_fes_ward if id==15
+replace fesregtot_2021=range_upper_fes_ward if id==16
 
 gen hospadmpercent_fes=fesreghosptot_2021+" "+"("+fesreghosptotper_2021+"%"+")"
-replace fesregtot_2021=hospadmpercent_fes if id==2
-drop if id==3|id==9|id==10
-replace fesregtot_2021="n/a" if id==7
+replace fesregtot_2021=hospadmpercent_fes if id==3
+
+gen hospadmpercent_fes_ward=fesreghosptot_ward_2021+" "+"("+fesreghosptotper_ward_2021+"%"+")"
+replace fesregtot_2021=hospadmpercent_fes_ward if id==5
+
+gen cfrpercent_fes=fescfrtot_2021+" "+"("+fescfrtotper_2021+"%"+")"
+replace fesregtot_2021=cfrpercent_fes if id==7
+
+//gen dcopercent_fes=fesdcotot_2021+" "+"("+fesdcototper_2021+"%"+")"
+//replace fesregtot_2021=dcopercent_s if id==9
+
+gen dcopercent_fes="n/a"
+replace fesregtot_2021=dcopercent_fes if id==9
+
+gen medianrange_fes_ae=medianlos_fes_ae+" "+"("+range_lower_fes_ae+" "+"-"+" "+range_upper_fes_ae+")"
+replace fesregtot_2021=medianrange_fes_ae if id==11
+
+gen medianrange_fes_ward=medianlos_fes_ward+" "+"("+range_lower_fes_ward+" "+"-"+" "+range_upper_fes_ward+")"
+replace fesregtot_2021=medianrange_fes_ward if id==14
+
+
+drop if id==4|id==6|id==8|id==10|id==12|id==13|id==15|id==16
 drop id
 gen id=_n
 order id title fesregtot_2021
@@ -419,9 +549,10 @@ order id title fesregtot_2021
 keep id title fesregtot_2021
 rename fesregtot_2021 Stroke_first_ever
 rename title Title
-
-** Create dataset with summary stats for stroke (first ever) (Table 1.1.)
+ 
+** Create dataset with summary stats for first ever strokes (Table 1.1.)
 save "`datapath'\version03\3-output\summstats_stroke_fes", replace
+
 
 merge 1:1 id using "`datapath'\version03\3-output\summstats_heart"
 drop _merge
@@ -434,7 +565,7 @@ erase "`datapath'\version03\3-output\summstats_heart.dta"
 erase "`datapath'\version03\3-output\summstats_stroke_all.dta"
 erase "`datapath'\version03\3-output\summstats_stroke_fes.dta"
 
-** Create dataset with summary stats for stroke (first ever) (Table 1.1.)
+** Create dataset with summary stats for heart, all strokes + first ever strokes (Table 1.1.)
 save "`datapath'\version03\2-working\summstats", replace
 
 preserve
@@ -448,9 +579,9 @@ putdocx paragraph, tofooter(foot1)
 putdocx text ("Page ")
 putdocx pagenumber
 putdocx paragraph, style(Title)
-putdocx text ("CVD 2020 Annual Report: Stata Results"), bold
+putdocx text ("CVD 2021 Annual Report: Stata Results"), bold
 putdocx textblock begin
-Date First Prepared + Last Updated: 16-FEB-2022 + 21-JUN-2022, respectively
+Date First Prepared + Last Updated: 16-MAR-2023 + 16-MAR-2023, respectively
 putdocx textblock end
 putdocx textblock begin
 Prepared by: JC using Stata 17.0
@@ -459,51 +590,104 @@ putdocx textblock begin
 Data source: REDCap's BNRCVD_CORE database
 putdocx textblock end
 putdocx textblock begin
-Data release date: 29-Oct-2021
+Data release date: 07-Dec-2022
 putdocx textblock end
 putdocx textblock begin
-Stata code file: 1.4_cvd_results report.do
+Stata code file: 6_analysis results_cvd.do
 putdocx textblock end
 putdocx textblock begin
-Dataset + dofile path: repo_data/data_p116/version03
+Dataset path: repo_data/data_p116/version03
+putdocx textblock end
+putdocx textblock begin
+Dofile path (VS Code branch): repo_p116/2021AnnualReport
 putdocx textblock end
 putdocx paragraph, halign(center)
 putdocx text ("Methods"), bold font(Helvetica,10,"blue")
 putdocx textblock begin
-(1) Incidence dataset used for heart analyses: "p116\version03\3-output\heart_2009-2020_v9_anonymised_Stata_v16_clean(25-Jan-2022)" - Note: one record with unknown sex for 2018 case was corrected and other corrections to be done were noted but not performed in light of pending CVD DM re-engineer process.
+(1) Incidence dataset used for heart analyses: "p116\version03\3-output\2021_prep analysis_deidentified_heart"
 putdocx textblock end
 putdocx textblock begin
-(2) Incidence dataset used for stroke analyses: "p116\version03\3-output\stroke_2009-2020_v9_names_Stata_v16_clean".
+(2) Incidence dataset used for stroke analyses: "p116\version03\3-output\2021_prep analysis_deidentified_stroke".
 putdocx textblock end
 putdocx textblock begin
-(3) Population datasets used for heart and stroke analyses: WPP populations generated for each year from 2010-2020 (see: sync-stata-statadofiles-datareview-2019-pop_cmpile) + ("p116\version03\3-output\pop_wpp_yyyy-10") - JC 12may2022: unsure how population was generated as the pop totals in this path differ from those in the pop dataset.
+(3) Population datasets used for heart and stroke analyses: WPP populations generated for 2021 (see: 4_population_cvd.do) + ("p116\version03\2-working\pop_wpp_yyyy-5") + ("p116\version03\2-working\pop_wpp_yyyy-10")
 putdocx textblock end
 putdocx textblock begin
-The above population datasets were used in conjunction with this WHO dataset when using distrate for ASIRs and ASMRs: "p116\version03\3-output\who2000_10-2".
+The above population datasets were used in conjunction with this WHO dataset when using distrate for ASIRs and ASMRs: "p116\version03\3-output\who2000_5" and "p116\version03\3-output\who2000_10-2".
 putdocx textblock end
 putdocx textblock begin
-(4) Dofiles used for heart and stroke analyses: VS Code branch 2020AnnualReport for p116. Each dofile used in the below tables and outputs is listed below each title. 
+(4) Dofiles used for heart and stroke analyses: VS Code branch 2021AnnualReport for repo_p116. Each dofile used in the below tables and outputs is listed below each title. 
+putdocx textblock end
+putdocx textblock begin
+(5) Dofile labelled '0_dofile descriptions.do' has a summary of all the cleaning and analysis dofiles in addition to some notes which are listed below. 
+putdocx textblock end
+putdocx textblock begin
+NOTE1: to differentiate between data missing from patient notes (i.e. 99, 999 or 9999) VS data missing from database, code 99999 has been used to signify data missing in CVDdb
+putdocx textblock end
+putdocx textblock begin
+NOTE2: variable names prefixed with 'sd_' mean these are Stata derived variables (only age5 and age_10 variables are missing this prefix)
+putdocx textblock end
+putdocx textblock begin
+NOTE3: variable names prefixed with 'dd_' mean these are Death Data derived variables
+putdocx textblock end
+putdocx textblock begin
+NOTE4: there are several vital status variables as each document vital status at different points during the event: 
+slc = last known/contact vital status; 
+vstatus = vital status at discharge from hospital; 
+f1vstatus = vital status at day 28 post event
+putdocx textblock end
+putdocx textblock begin
+NOTE5: labels prefixed with 'Death Data:' mean these are Death Data derived variables
+putdocx textblock end
+putdocx textblock begin
+NOTE6: labels prefixed with 'Incidence Data:' mean these are Incidence Data/REDCap BNRCVD_CORE database variables. All incidence variable labels are NOT prefixed with 'Incidence Data:' due to large number of variables. All death data and Stata derived labels are prefixed so any labels that are missing a prefix are from the incidence database.
+putdocx textblock end
+putdocx textblock begin
+NOTE7: both the cleaning and analysis dofiles are in sequential order so they should be executed in the order in which they appear
+putdocx textblock end
+putdocx textblock begin
+NOTE8: 2021: the y-axis for age-sex stratified incidence rate graphs are distributed by 1000 with a range of 0 to 4000; 
+2020: the y-axis for age-sex stratified incidence rate graphs are distributed by 500 with a range of 0 to 2000; 
+This applies to the HEART graphs as the graphs looked skewed for 2021.
+putdocx textblock end
+putdocx textblock begin
+NOTE9: 2021: the y-axis for age-sex stratified incidence rate graphs are distributed by 1500 with a range of 0 to 6000; 
+2020: the y-axis for age-sex stratified incidence rate graphs are distributed by 500 with a range of 0 to 2000; 
+This applies to the STROKE graphs as the graphs looked skewed for 2021.
+putdocx textblock end
+putdocx textblock begin
+NOTE10: there is one case wherein sourcetype = Community (in the stroke dataset)
+putdocx textblock end
+putdocx textblock begin
+NOTE11: 2021 ASMRs will most likely not be comparable with ASMRs from previous years as previous years used deaths from the incidence dataset vs 2021 that used deaths from the death dataset.
+putdocx textblock end
+putdocx textblock begin
+NOTE12: 2021 population number is lower than previous years as UN-WPP may have adjusted estiamtes due to COVID-19.
 putdocx textblock end
 
 
 putdocx pagebreak
 putdocx paragraph, style(Heading1)
-putdocx text ("Summary Statistics (Dofile: 1.0_heart_cvd_analysis.do + 1.0_stroke_cvd_analysis.do)"), bold
+putdocx text ("Summary Statistics (Dofile: 5b_analysis summ_heart.do + 5c_analysis summ_stroke.do)"), bold
 putdocx paragraph, halign(center)
-putdocx text ("Table 1.1 Summary Statistics for BNR-CVD, 2020 (Population=287,371)"), bold font(Helvetica,10,"blue")
+putdocx text ("Table 1.1 Summary Statistics for BNR-CVD, 2021 (Population=281,207)"), bold font(Helvetica,10,"blue")
 
 putdocx table tbl1 = data(Title Myocardial_Infarction Stroke_all Stroke_first_ever), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
 putdocx table tbl1(1,2), bold shading(lightgray)
 putdocx table tbl1(1,3), bold shading(lightgray)
 putdocx table tbl1(1,4), bold shading(lightgray)
+putdocx table tbl1(1,5), bold shading(lightgray)
+putdocx table tbl1(1,6), bold shading(lightgray)
+putdocx table tbl1(1,7), bold shading(lightgray)
+putdocx table tbl1(1,8), bold shading(lightgray)
 
 putdocx textblock begin
-(1) Total numbers of persons who had events registered or entered into the BNR database; (2) Total number of hospital admissions as a proportion of registrations; (3) Total number of registrations as a proportion of the population; (4) Total number of patients as a proportion of hospital admission who were deceased 28 days after their event; (5) Total number of deaths collected from death registry as a proportion of registrations; (6) Median and range of length of hospital stay (in days).
+(1) Total number of events registered or entered into the BNR CVD and Death databases; (2) Total number of registrations as a proportion of the population; (3) Total number of hospital admissions as a proportion of registrations - hospital admission defined in 2 ways: (a) A&E + WARD are those patients who were seen ONLY in A&E + those admitted to hospital ward (b) WARD are those patients admitted to hospital ward i.e. patients seen ONLY in A&E but not admitted to ward are excluded; (4) Case fatality rate in hospital for hospitalised patients as a proportion of cases that were fully abstracted; (5) Total number of deaths collected from death registry that were not abstracted as a proportion of registrations; (6) Median and range of length of hospital stay (in days) - defined in 2 ways: (a) from date seen in A&E to discharge/death (b) from date admitted to WARD to discharge/death.
 putdocx textblock end
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", replace
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", replace
 putdocx clear
 
 restore
@@ -512,10 +696,10 @@ clear
 
 ********************************************************* HEART *******************************************************************
 preserve
-use "`datapath'\version03\2-working\ASIRs_heart", clear
+use "`datapath'\version03\2-working\ASIRs_age10_heart", clear
 drop percent asir ui_range
 
-append using "`datapath'\version03\2-working\CIRsASIRs_total_heart"
+append using "`datapath'\version03\2-working\CIRsASIRs_total_age10_heart"
 drop percent asir ui_*
 
 replace sex=3 if sex==.
@@ -537,9 +721,9 @@ putdocx pagebreak
 putdocx paragraph, style(Heading1)
 putdocx text ("AMI: Burden"), bold
 putdocx paragraph, style(Heading2)
-putdocx text ("AMI: Cases and Crude Incidence Rates (Dofile: 1.1_heart_cvd_analysis.do)"), bold
+putdocx text ("AMI: Cases and Crude Incidence Rates (Dofile: 5d_analysis IRs_heart.do)"), bold
 putdocx paragraph, halign(center)
-putdocx text ("Figure 1.1 Number of men and women with acute MI by year in Barbados. 2010-2020"), bold font(Helvetica,10,"blue")
+putdocx text ("Figure 1.1 Number of men and women with acute MI by year in Barbados. 2021"), bold font(Helvetica,10,"blue")
 
 putdocx table tbl1 = data(year sex number), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
@@ -547,13 +731,16 @@ putdocx table tbl1(1,2), bold shading(lightgray)
 putdocx table tbl1(1,3), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
 clear
 
 
+***********
+** AGE10 **
+***********
 ** JC 12may2022: SF uses excel to create CIR graphs so export this table to excel as well
 preserve
 use "`datapath'\version03\2-working\CIRs_heart", clear
@@ -566,18 +753,22 @@ rename cir1 cir
 sort year sex
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-export_excel year sex number cir using "`datapath'\version03\3-output\2020AnnualReportCIR_`listdate'.xlsx", firstrow(variables) sheet(CIR_heart, replace) 
+export_excel year sex number cir using "`datapath'\version03\3-output\2021AnnualReportCIR_`listdate'.xlsx", firstrow(variables) sheet(CIR_heart, replace) 
 
-putexcel set "`datapath'\version03\3-output\2020AnnualReportCIR_`listdate'.xlsx", sheet(CIR_heart) modify
+putexcel set "`datapath'\version03\3-output\2021AnnualReportCIR_`listdate'.xlsx", sheet(CIR_heart) modify
 putexcel A1:D1, bold
 //putexcel D2:D4, rownames nformat(number_d1) - this causes an error when opening the excel workbook so reformatted cir variable above
 putexcel A1 = "Year"
 putexcel B1 = "Sex"
 putexcel C1 = "Number"
-putexcel D1 = "CrudeIR"
+putexcel D1 = "CrudeIR(AGE10)"
 putexcel save
 restore
 
+
+***********
+** AGE10 **
+***********
 preserve
 use "`datapath'\version03\2-working\CIRs_heart", clear
 
@@ -587,11 +778,11 @@ sort year sex
 putdocx clear
 putdocx begin
 
-putdocx pagebreak
+//putdocx pagebreak
 putdocx paragraph, style(Heading2)
-putdocx text ("AMI: Cases and Crude Incidence Rates (Dofile: 1.1_heart_cvd_analysis.do)"), bold
+putdocx text ("AMI: Cases and Crude Incidence Rates (Dofile: 5d_analysis IRs_heart.do)"), bold
 putdocx paragraph, halign(center)
-putdocx text ("Figure 1.2 Crude incidence rate of men and women per 100,000 population with acute MI by year in Barbados. 2010-2020"), bold font(Helvetica,10,"blue")
+putdocx text ("Figure 1.2 Crude incidence rate of men and women per 100,000 population with acute MI by year in Barbados. 2021"), bold font(Helvetica,10,"blue")
 
 putdocx table tbl1 = data(year sex cir), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
@@ -599,16 +790,19 @@ putdocx table tbl1(1,2), bold shading(lightgray)
 putdocx table tbl1(1,3), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
 
+**********
+** AGE5 **
+**********
 preserve
-use "`datapath'\version03\2-working\ASIRs_heart", clear
+use "`datapath'\version03\2-working\ASIRs_age5_heart", clear
 drop cir
 
-append using "`datapath'\version03\2-working\CIRsASIRs_total_heart"
+append using "`datapath'\version03\2-working\CIRsASIRs_total_age5_heart"
 
 replace sex=3 if sex==.
 replace number=totnumber if number==.
@@ -626,9 +820,11 @@ putdocx begin
 
 putdocx pagebreak
 putdocx paragraph, style(Heading2)
-putdocx text ("AMI: Age-standardised Incidence + Mortality Rates (Dofile: 1.1_heart_cvd_analysis.do)"), bold
+putdocx text ("AMI: Age-standardised Incidence + Mortality Rates (5-yr + 10yr bands) (Dofile: 5d_analysis IRs_heart.do)"), bold
 putdocx paragraph, halign(center)
-putdocx text ("Table 1.2 ASIRs (INCIDENCE) of men and women per 100,000 population with acute MI or sudden cardiac death by year in Barbados. 2010-2020"), bold font(Helvetica,10,"blue")
+putdocx text ("Table 1.2 ASIRs (INCIDENCE) of men and women per 100,000 population with acute MI or sudden cardiac death by year in Barbados. 2021"), bold font(Helvetica,10,"blue")
+putdocx paragraph, halign(center)
+putdocx text ("AGE5"), bold font(Helvetica,10,"red")
 
 putdocx table tbl1 = data(year sex number percent asir ui_range), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
@@ -639,20 +835,66 @@ putdocx table tbl1(1,5), bold shading(lightgray)
 putdocx table tbl1(1,6), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
 clear
 
-preserve
-use "`datapath'\version03\2-working\ASMRs_heart", clear
 
-append using "`datapath'\version03\2-working\ASMRs_total_heart"
+***********
+** AGE10 **
+***********
+preserve
+use "`datapath'\version03\2-working\ASIRs_age10_heart", clear
+drop cir
+
+append using "`datapath'\version03\2-working\CIRsASIRs_total_age10_heart"
+
+replace sex=3 if sex==.
+replace number=totnumber if number==.
+drop totnumber
+
+label drop sex_
+label define sex_lab 1 "Female" 2 "Male" 3 "Total"
+label values sex sex_lab
+
+sort sex year
+//gsort -sex -year
+
+putdocx clear
+putdocx begin
+
+//putdocx pagebreak
+putdocx paragraph, halign(center)
+putdocx text ("AGE10"), bold font(Helvetica,10,"red")
+
+putdocx table tbl1 = data(year sex number percent asir ui_range), halign(center) varnames
+putdocx table tbl1(1,1), bold shading(lightgray)
+putdocx table tbl1(1,2), bold shading(lightgray)
+putdocx table tbl1(1,3), bold shading(lightgray)
+putdocx table tbl1(1,4), bold shading(lightgray)
+putdocx table tbl1(1,5), bold shading(lightgray)
+putdocx table tbl1(1,6), bold shading(lightgray)
+
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
+putdocx clear
+restore
+
+clear
+
+**********
+** AGE5 **
+**********
+preserve
+use "`datapath'\version03\2-working\ASMRs_age5_heart", clear
+
+append using "`datapath'\version03\2-working\ASMRs_total_age5_heart"
 
 replace sex=3 if sex==.
 
-label drop sex_
+label drop sex_lab
 label define sex_lab 1 "Female" 2 "Male" 3 "Total"
 label values sex sex_lab
 
@@ -661,11 +903,13 @@ sort sex year
 putdocx clear
 putdocx begin
 
-putdocx pagebreak
+//putdocx pagebreak
 putdocx paragraph, style(Heading2)
-putdocx text ("AMI: Age-standardised Incidence + Mortality Rates (Dofile: 1.1_heart_cvd_analysis.do)"), bold
+putdocx text ("AMI: Age-standardised Incidence + Mortality Rates (5-yr + 10yr bands) (Dofile: 5f_analysis MRs_heart.do)"), bold
 putdocx paragraph, halign(center)
-putdocx text ("Table 1.2 ASMRs (MORTALITY) of men and women per 100,000 population with acute MI or sudden cardiac death by year in Barbados. 2010-2020"), bold font(Helvetica,10,"blue")
+putdocx text ("Table 1.2 ASMRs (MORTALITY) of men and women per 100,000 population with acute MI or sudden cardiac death by year in Barbados. 2021"), bold font(Helvetica,10,"blue")
+putdocx paragraph, halign(center)
+putdocx text ("AGE5"), bold font(Helvetica,10,"red")
 
 putdocx table tbl1 = data(year sex number percent asmr ui_range), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
@@ -676,59 +920,109 @@ putdocx table tbl1(1,5), bold shading(lightgray)
 putdocx table tbl1(1,6), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
+***********
+** AGE10 **
+***********
+preserve
+use "`datapath'\version03\2-working\ASMRs_age10_heart", clear
+
+append using "`datapath'\version03\2-working\ASMRs_total_age10_heart"
+
+replace sex=3 if sex==.
+
+label drop sex_lab
+label define sex_lab 1 "Female" 2 "Male" 3 "Total"
+label values sex sex_lab
+
+sort sex year
+
+putdocx clear
+putdocx begin
+
+//putdocx pagebreak
+putdocx paragraph, halign(center)
+putdocx text ("AGE10"), bold font(Helvetica,10,"red")
+
+putdocx table tbl1 = data(year sex number percent asmr ui_range), halign(center) varnames
+putdocx table tbl1(1,1), bold shading(lightgray)
+putdocx table tbl1(1,2), bold shading(lightgray)
+putdocx table tbl1(1,3), bold shading(lightgray)
+putdocx table tbl1(1,4), bold shading(lightgray)
+putdocx table tbl1(1,5), bold shading(lightgray)
+putdocx table tbl1(1,6), bold shading(lightgray)
+
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
+putdocx clear
+restore
+
+**********
+** AGE5 **
+**********
 preserve
 putdocx clear
 putdocx begin
 
 putdocx pagebreak
 putdocx paragraph, style(Heading2)
-putdocx text ("AMI: Age and Gender Stratified Incidence Rates (Dofile: 1.1_heart_cvd_analysis.do)"), bold
+putdocx text ("AMI: Age (5-yr + 10yr bands) and Gender Stratified Incidence Rates (Dofile: 1.1_heart_cvd_analysis.do + 5d_analysis IRs_heart.do)"), bold
 putdocx paragraph, halign(center)
-putdocx text ("Figure 1.3a Age and gender stratified incidence rate per 100,000 population of AMI, Barbados, 2020 (N=547)"), bold font(Helvetica,10,"blue")
+putdocx text ("Figure 1.3a Age and gender stratified incidence rate per 100,000 population of AMI, Barbados, 2021 (N=467)"), bold font(Helvetica,10,"blue")
+putdocx paragraph, halign(center)
+putdocx text ("AGE5"), bold font(Helvetica,10,"red")
 putdocx paragraph
 
-putdocx image "`datapath'\version03\3-output\2020_age-sex graph_heart.png", width(5.5) height(2.0)
+putdocx image "`datapath'\version03\3-output\2021_age-sex graph_age5_heart.png", width(5.5) height(2.0)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
 clear
 
+***********
+** AGE10 **
+***********
 preserve
 putdocx clear
 putdocx begin
 
 putdocx paragraph, halign(center)
-putdocx text ("Figure 1.3b Age and gender stratified incidence rate per 100,000 population of AMI, Barbados, 2019 (N=547)"), bold font(Helvetica,10,"blue")
+putdocx text ("AGE10"), bold font(Helvetica,10,"red")
 putdocx paragraph
 
-putdocx image "`datapath'\version03\3-output\2019_age-sex graph_heart.png", width(5.5) height(2.0)
+putdocx image "`datapath'\version03\3-output\2021_age-sex graph_age10_heart.png", width(5.5) height(2.0)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
+***********
+** AGE10 **
+***********
 preserve
 putdocx clear
 putdocx begin
 
 putdocx paragraph, halign(center)
-putdocx text ("Figure 1.3c Age and gender stratified incidence rate per 100,000 population of AMI, Barbados, 2018 (N=483)"), bold font(Helvetica,10,"blue")
+putdocx text ("Figure 1.3b Age and gender stratified incidence rate per 100,000 population of AMI, Barbados, 2020 (N=547)"), bold font(Helvetica,10,"blue")
+putdocx paragraph, halign(center)
+putdocx text ("AGE10"), bold font(Helvetica,10,"red")
 putdocx paragraph
 
-putdocx image "`datapath'\version03\3-output\2018_age-sex graph_heart.png", width(5.5) height(2.0)
+putdocx image "`datapath'\version03\3-output\2020_age-sex graph_heart.png", width(5.5) height(2.0)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
+
 
 
 preserve
@@ -745,21 +1039,12 @@ putdocx begin
 putdocx paragraph, style(Heading1)
 putdocx text ("AMI: Symptoms and Risk Factors"), bold
 putdocx paragraph, style(Heading2)
-putdocx text ("AMI: Symptoms (Dofile: 1.2_heart_cvd_analysis.do)"), bold
+putdocx text ("AMI: Symptoms (Dofile: 5h_analysis sym_heart.do)"), bold
 putdocx paragraph, halign(center)
 qui sum totsympts
 local sum : display %3.0f `r(sum)'
-putdocx text ("Table 1.3 Main presenting symptoms for acute MI patients in Barbados. Jan-Dec 2020 (N=`sum')"), bold font(Helvetica,10,"blue")
+putdocx text ("Table 1.3 Main presenting symptoms for acute MI patients in Barbados. Jan-Dec 2021 (N=`sum')"), bold font(Helvetica,10,"blue")
 
-/*
-rename number_female WomenNum
-rename percent_female WomenPercent
-rename number_male MenNum
-rename percent_male MenPercent
-rename number_total TotalNum
-rename percent_total TotalPercent
-putdocx table tbl1 = data(hsym_ar WomenNum WomenPercent MenNum MenPercent TotalNum TotalPercent), halign(center) varnames
-*/
 putdocx table tbl1 = data(hsym_ar number_female percent_female number_male percent_male number_total percent_total), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
 putdocx table tbl1(1,2), bold shading(lightgray)
@@ -786,7 +1071,7 @@ putdocx text ("Totals –The total number and percentage of patients (men & wome
 
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -803,14 +1088,10 @@ putdocx begin
 
 putdocx pagebreak
 putdocx paragraph, style(Heading2)
-putdocx text ("AMI: Risk Factors (Dofile: 1.2_heart_cvd_analysis.do)"), bold
+putdocx text ("AMI: Risk Factors (Dofile: 5j_analysis RFs_heart.do)"), bold
 putdocx paragraph, halign(center)
-//qui sum total
-//local sum : display %3.0f `r(sum)'
-//putdocx text ("Table 1.4 Prevalence of known risk factors among hospitalised acute MI patients, 2020 (N=`sum')"), bold font(Helvetica,10,"blue")
-putdocx text ("Table 1.4 Prevalence of known risk factors among hospitalised acute MI patients, 2020"), bold font(Helvetica,10,"blue")
+putdocx text ("Table 1.4 Prevalence of known risk factors among hospitalised acute MI patients, 2021 (N=201)"), bold font(Helvetica,10,"blue")
 
-//drop if id==8
 rename rftype_ar rf_category
 rename rf_ar risk_factor
 putdocx table tbl1 = data(rf_category risk_factor number rf_percent denominator), halign(center) varnames
@@ -824,12 +1105,13 @@ putdocx paragraph
 putdocx text ("n1 = denominator (i.e. total number reporting information about that risk factor). NR = Numbers too small for adequate representation")
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
 clear
 
+/*
 preserve
 use "`datapath'\version03\2-working\mort_heart", clear
 
@@ -862,7 +1144,7 @@ putdocx table tbl1(1,10), bold shading(lightgray)
 putdocx table tbl1(1,11), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -890,7 +1172,7 @@ putdocx table tbl1(1,1), bold shading(lightgray)
 putdocx table tbl1(1,2), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -942,7 +1224,7 @@ putdocx text ("2020"), bold font(Helvetica,10,"blue")
 tab2docx aspact if year==2020
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -974,7 +1256,7 @@ putdocx table tbl1(1,7), bold shading(lightgray)
 putdocx table tbl1(1,8), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -1014,7 +1296,7 @@ putdocx text ("2020: Male"), bold font(Helvetica,10,"blue")
 tab2docx ecgste if sex==2 & year==2020 & diagnosis==2
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -1038,7 +1320,7 @@ putdocx table tbl1(1,3), bold shading(lightgray)
 putdocx table tbl1(1,4), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -1077,7 +1359,7 @@ tab2docx decho if (sex==1 | sex==2) & decho==1
 
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -1141,7 +1423,7 @@ tab2docx aspchr if year==2020 & (aspdis==99|aspdis==2)
 
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -1173,7 +1455,7 @@ putdocx table tbl1(1,6), bold shading(lightgray)
 putdocx table tbl1(1,7), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -1202,19 +1484,20 @@ putdocx text ("2020"), bold font(Helvetica,10,"blue")
 tab2docx statdis if vstatus==1 & year==2020
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
 clear
+*/
 
 ***************************************************** STROKE *************************************************************
 
 preserve
-use "`datapath'\version03\2-working\ASIRs_stroke", clear
+use "`datapath'\version03\2-working\ASIRs_age10_stroke", clear
 drop percent asir ui_range
 
-append using "`datapath'\version03\2-working\CIRsASIRs_total_stroke"
+append using "`datapath'\version03\2-working\CIRsASIRs_total_age10_stroke"
 drop percent asir ui_*
 
 replace sex=3 if sex==.
@@ -1236,9 +1519,9 @@ putdocx pagebreak
 putdocx paragraph, style(Heading1)
 putdocx text ("Stroke: Burden"), bold
 putdocx paragraph, style(Heading2)
-putdocx text ("Stroke: Cases and Crude Incidence Rates (Dofile: 1.1_stroke_cvd_analysis.do)"), bold
+putdocx text ("Stroke: Cases and Crude Incidence Rates (Dofile: 5e_analysis IRs_stroke.do)"), bold
 putdocx paragraph, halign(center)
-putdocx text ("Figure 2.1 Number of men and women with stroke by year in Barbados. 2010-2020"), bold font(Helvetica,10,"blue")
+putdocx text ("Figure 2.1 Number of men and women with stroke by year in Barbados. 2021"), bold font(Helvetica,10,"blue")
 
 putdocx table tbl1 = data(year sex number), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
@@ -1246,13 +1529,16 @@ putdocx table tbl1(1,2), bold shading(lightgray)
 putdocx table tbl1(1,3), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
 clear
 
 
+***********
+** AGE5 **
+***********
 ** JC 12may2022: SF uses excel to create CIR graphs so export this table to excel as well
 preserve
 use "`datapath'\version03\2-working\CIRs_stroke", clear
@@ -1261,23 +1547,25 @@ gen cir1=string(cir, "%03.1f")
 drop cir
 rename cir1 cir
 
-
 sort year sex
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-export_excel year sex number cir using "`datapath'\version03\3-output\2020AnnualReportCIR_`listdate'.xlsx", firstrow(variables) sheet(CIR_stroke, replace) 
+export_excel year sex number cir using "`datapath'\version03\3-output\2021AnnualReportCIR_`listdate'.xlsx", firstrow(variables) sheet(CIR_stroke, replace) 
 
-putexcel set "`datapath'\version03\3-output\2020AnnualReportCIR_`listdate'.xlsx", sheet(CIR_stroke) modify
+putexcel set "`datapath'\version03\3-output\2021AnnualReportCIR_`listdate'.xlsx", sheet(CIR_stroke) modify
 putexcel A1:D1, bold
 //putexcel D2:D4, rownames nformat(number_d1) - this causes an error when opening the excel workbook so reformatted cir variable above
 putexcel A1 = "Year"
 putexcel B1 = "Sex"
 putexcel C1 = "Number"
-putexcel D1 = "CrudeIR"
+putexcel D1 = "CrudeIR(AGE5)"
 putexcel save
 restore
 
 
+***********
+** AGE10 **
+***********
 preserve
 use "`datapath'\version03\2-working\CIRs_stroke", clear
 
@@ -1287,11 +1575,11 @@ sort year sex
 putdocx clear
 putdocx begin
 
-putdocx pagebreak
+//putdocx pagebreak
 putdocx paragraph, style(Heading2)
-putdocx text ("Stroke: Cases and Crude Incidence Rates (Dofile: 1.1_stroke_cvd_analysis.do)"), bold
+putdocx text ("Stroke: Cases and Crude Incidence Rates (Dofile: 5e_analysis IRs_stroke.do)"), bold
 putdocx paragraph, halign(center)
-putdocx text ("Figure 2.2 Crude incidence rate of men and women with stroke by year in Barbados. 2010-2020"), bold font(Helvetica,10,"blue")
+putdocx text ("Figure 2.2 Crude incidence rate of men and women with stroke by year in Barbados. 2021"), bold font(Helvetica,10,"blue")
 
 putdocx table tbl1 = data(year sex cir), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
@@ -1299,16 +1587,18 @@ putdocx table tbl1(1,2), bold shading(lightgray)
 putdocx table tbl1(1,3), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
-
+***********
+** AGE5 **
+***********
 preserve
-use "`datapath'\version03\2-working\ASIRs_stroke", clear
+use "`datapath'\version03\2-working\ASIRs_age5_stroke", clear
 drop cir
 
-append using "`datapath'\version03\2-working\CIRsASIRs_total_stroke"
+append using "`datapath'\version03\2-working\CIRsASIRs_total_age5_stroke"
 
 replace sex=3 if sex==.
 replace number=totnumber if number==.
@@ -1326,9 +1616,11 @@ putdocx begin
 
 putdocx pagebreak
 putdocx paragraph, style(Heading2)
-putdocx text ("Stroke: Age-standardised Incidence + Mortality Rates (Dofile: 1.1_stroke_cvd_analysis.do)"), bold
+putdocx text ("Stroke: Age-standardised Incidence + Mortality Rates (5-yr + 10yr bands) (Dofile: 5e_analysis IRs_stroke.do)"), bold
 putdocx paragraph, halign(center)
-putdocx text ("Table 2.1 ASIRs (INCIDENCE) of men and women per 100,000 population with stroke by year in Barbados. 2010-2020"), bold font(Helvetica,10,"blue")
+putdocx text ("Table 2.1 ASIRs (INCIDENCE) of men and women per 100,000 population with stroke by year in Barbados. 2021"), bold font(Helvetica,10,"blue")
+putdocx paragraph, halign(center)
+putdocx text ("AGE5"), bold font(Helvetica,10,"red")
 
 putdocx table tbl1 = data(year sex number percent asir ui_range), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
@@ -1339,20 +1631,65 @@ putdocx table tbl1(1,5), bold shading(lightgray)
 putdocx table tbl1(1,6), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
 clear
 
+***********
+** AGE10 **
+***********
 preserve
-use "`datapath'\version03\2-working\ASMRs_stroke", clear
+use "`datapath'\version03\2-working\ASIRs_age10_stroke", clear
+drop cir
 
-append using "`datapath'\version03\2-working\ASMRs_total_stroke"
+append using "`datapath'\version03\2-working\CIRsASIRs_total_age10_stroke"
+
+replace sex=3 if sex==.
+replace number=totnumber if number==.
+drop totnumber
+
+label drop sex_
+label define sex_lab 1 "Female" 2 "Male" 3 "Total"
+label values sex sex_lab
+
+sort sex year
+//gsort -sex -year
+
+putdocx clear
+putdocx begin
+
+//putdocx pagebreak
+putdocx paragraph, halign(center)
+putdocx text ("AGE10"), bold font(Helvetica,10,"red")
+
+putdocx table tbl1 = data(year sex number percent asir ui_range), halign(center) varnames
+putdocx table tbl1(1,1), bold shading(lightgray)
+putdocx table tbl1(1,2), bold shading(lightgray)
+putdocx table tbl1(1,3), bold shading(lightgray)
+putdocx table tbl1(1,4), bold shading(lightgray)
+putdocx table tbl1(1,5), bold shading(lightgray)
+putdocx table tbl1(1,6), bold shading(lightgray)
+
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
+putdocx clear
+restore
+
+clear
+
+***********
+** AGE5 **
+***********
+preserve
+use "`datapath'\version03\2-working\ASMRs_age5_stroke", clear
+
+append using "`datapath'\version03\2-working\ASMRs_total_age5_stroke"
 
 replace sex=3 if sex==.
 
-label drop sex_
+label drop sex_lab
 label define sex_lab 1 "Female" 2 "Male" 3 "Total"
 label values sex sex_lab
 
@@ -1361,11 +1698,13 @@ sort sex year
 putdocx clear
 putdocx begin
 
-putdocx pagebreak
+//putdocx pagebreak
 putdocx paragraph, style(Heading2)
-putdocx text ("Stroke: Age-standardised Incidence + Mortality Rates (Dofile: 1.1_stroke_cvd_analysis.do)"), bold
+putdocx text ("Stroke: Age-standardised Incidence + Mortality Rates (5-yr + 10yr bands) (Dofile: 5g_analysis MRs_stroke.do)"), bold
 putdocx paragraph, halign(center)
-putdocx text ("Table 2.1 ASMRs (MORTALITY) of men and women per 100,000 population with stroke by year in Barbados. 2010-2020"), bold font(Helvetica,10,"blue")
+putdocx text ("Table 2.1 ASMRs (MORTALITY) of men and women per 100,000 population with stroke by year in Barbados. 2021"), bold font(Helvetica,10,"blue")
+putdocx paragraph, halign(center)
+putdocx text ("AGE5"), bold font(Helvetica,10,"red")
 
 putdocx table tbl1 = data(year sex number percent asmr ui_range), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
@@ -1376,57 +1715,106 @@ putdocx table tbl1(1,5), bold shading(lightgray)
 putdocx table tbl1(1,6), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
+***********
+** AGE10 **
+***********
+preserve
+use "`datapath'\version03\2-working\ASMRs_age10_stroke", clear
+
+append using "`datapath'\version03\2-working\ASMRs_total_age10_stroke"
+
+replace sex=3 if sex==.
+
+label drop sex_lab
+label define sex_lab 1 "Female" 2 "Male" 3 "Total"
+label values sex sex_lab
+
+sort sex year
+
+putdocx clear
+putdocx begin
+
+//putdocx pagebreak
+putdocx paragraph, halign(center)
+putdocx text ("AGE10"), bold font(Helvetica,10,"red")
+
+putdocx table tbl1 = data(year sex number percent asmr ui_range), halign(center) varnames
+putdocx table tbl1(1,1), bold shading(lightgray)
+putdocx table tbl1(1,2), bold shading(lightgray)
+putdocx table tbl1(1,3), bold shading(lightgray)
+putdocx table tbl1(1,4), bold shading(lightgray)
+putdocx table tbl1(1,5), bold shading(lightgray)
+putdocx table tbl1(1,6), bold shading(lightgray)
+
+local listdate = string( d(`c(current_date)'), "%dCYND" )
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
+putdocx clear
+restore
+
+**********
+** AGE5 **
+**********
 preserve
 putdocx clear
 putdocx begin
 
 putdocx pagebreak
 putdocx paragraph, style(Heading2)
-putdocx text ("Stroke: Age and Gender Stratified Incidence Rates (Dofile: 1.1_stroke_cvd_analysis.do)"), bold
+putdocx text ("Stroke: Age (5-yr + 10yr bands) and Gender Stratified Incidence Rates (Dofile: 1.1_stroke_cvd_analysis.do + 5e_analysis IRs_stroke.do)"), bold
 putdocx paragraph, halign(center)
-putdocx text ("Figure 2.3a Age and gender stratified incidence rate per 100,000 population of stroke, Barbados, 2020 (N=700)"), bold font(Helvetica,10,"blue")
+putdocx text ("Figure 2.3a Age and gender stratified incidence rate per 100,000 population of stroke, Barbados, 2021 (N=691)"), bold font(Helvetica,10,"blue")
+putdocx paragraph, halign(center)
+putdocx text ("AGE5"), bold font(Helvetica,10,"red")
 putdocx paragraph
 
-putdocx image "`datapath'\version03\3-output\2020_age-sex graph_stroke.png", width(5.5) height(2.0)
+putdocx image "`datapath'\version03\3-output\2021_age-sex graph_age5_stroke.png", width(5.5) height(2.0)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
 clear
 
+***********
+** AGE10 **
+***********
 preserve
 putdocx clear
 putdocx begin
 
 putdocx paragraph, halign(center)
-putdocx text ("Figure 2.3b Age and gender stratified incidence rate per 100,000 population of stroke, Barbados, 2019 (N=758)"), bold font(Helvetica,10,"blue")
+putdocx text ("AGE10"), bold font(Helvetica,10,"red")
 putdocx paragraph
 
-putdocx image "`datapath'\version03\3-output\2019_age-sex graph_stroke.png", width(5.5) height(2.0)
+putdocx image "`datapath'\version03\3-output\2021_age-sex graph_age10_stroke.png", width(5.5) height(2.0)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
+***********
+** AGE10 **
+***********
 preserve
 putdocx clear
 putdocx begin
 
 putdocx paragraph, halign(center)
-putdocx text ("Figure 2.3c Age and gender stratified incidence rate per 100,000 population of stroke, Barbados, 2018 (N=682)"), bold font(Helvetica,10,"blue")
+putdocx text ("Figure 2.3b Age and gender stratified incidence rate per 100,000 population of stroke, Barbados, 2020 (N=700)"), bold font(Helvetica,10,"blue")
+putdocx paragraph, halign(center)
+putdocx text ("AGE10"), bold font(Helvetica,10,"red")
 putdocx paragraph
 
-putdocx image "`datapath'\version03\3-output\2018_age-sex graph_stroke.png", width(5.5) height(2.0)
+putdocx image "`datapath'\version03\3-output\2020_age-sex graph_stroke.png", width(5.5) height(2.0)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -1437,39 +1825,25 @@ use "`datapath'\version03\2-working\subtypes_stroke", clear
 putdocx clear
 putdocx begin
 
-putdocx pagebreak
+//putdocx pagebreak
 putdocx paragraph, style(Heading2)
-putdocx text ("Stroke: Category/Subtypes (Dofile: 1.2_stroke_cvd_analysis.do)"), bold
+putdocx text ("Stroke: Category/Subtypes (Dofile: 5i_analysis sym_stroke.do)"), bold
 putdocx paragraph, halign(center)
-putdocx text ("Table 2.2 Stroke subtypes in Barbados, 2018, 2019 & 2020 "), bold font(Helvetica,10,"blue")
+putdocx text ("Table 2.2 Stroke subtypes in Barbados, 2021"), bold font(Helvetica,10,"blue")
 
-qui sum total_abs_2018
-local sum : display %3.0f `r(sum)'
-putdocx text ("(N=`sum',"), bold font(Helvetica,10,"blue")
-qui sum total_abs_2019
-local sum : display %3.0f `r(sum)'
-putdocx text (" N=`sum',"), bold font(Helvetica,10,"blue")
 qui sum total_abs_2021
 local sum : display %3.0f `r(sum)'
-putdocx text (" N=`sum', respectively)"), bold font(Helvetica,10,"blue")
+putdocx text (" N=`sum')"), bold font(Helvetica,10,"blue")
 
-putdocx table tbl1 = data(Stroke_Category num_f_2018 percent_f_2018 num_m_2018 percent_m_2018 num_f_2019 percent_f_2019 num_m_2019 percent_m_2019 num_f_2021 percent_f_2021 num_m_2021 percent_m_2021), halign(center) varnames
+putdocx table tbl1 = data(Stroke_Category num_f_2021 percent_f_2021 num_m_2021 percent_m_2021), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
 putdocx table tbl1(1,2), bold shading(lightgray)
 putdocx table tbl1(1,3), bold shading(lightgray)
 putdocx table tbl1(1,4), bold shading(lightgray)
 putdocx table tbl1(1,5), bold shading(lightgray)
-putdocx table tbl1(1,6), bold shading(lightgray)
-putdocx table tbl1(1,7), bold shading(lightgray)
-putdocx table tbl1(1,8), bold shading(lightgray)
-putdocx table tbl1(1,9), bold shading(lightgray)
-putdocx table tbl1(1,10), bold shading(lightgray)
-putdocx table tbl1(1,11), bold shading(lightgray)
-putdocx table tbl1(1,12), bold shading(lightgray)
-putdocx table tbl1(1,13), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -1485,15 +1859,15 @@ sort ssym_ar
 putdocx clear
 putdocx begin
 
-putdocx pagebreak
+//putdocx pagebreak
 putdocx paragraph, style(Heading1)
 putdocx text ("Stroke: Symptoms and Risk Factors"), bold
 putdocx paragraph, style(Heading2)
-putdocx text ("Stroke: Symptoms (Dofile: 1.2_stroke_cvd_analysis.do)"), bold
+putdocx text ("Stroke: Symptoms (Dofile: 5i_analysis sym_stroke.do)"), bold
 putdocx paragraph, halign(center)
 qui sum totsympts
 local sum : display %3.0f `r(sum)'
-putdocx text ("Table 2.3 Main presenting symptoms for stroke patients in Barbados. Jan-Dec 2020 (N=`sum')"), bold font(Helvetica,10,"blue")
+putdocx text ("Table 2.3 Main presenting symptoms for stroke patients in Barbados. Jan-Dec 2021 (N=`sum')"), bold font(Helvetica,10,"blue")
 
 putdocx table tbl1 = data(ssym_ar number_female percent_female number_male percent_male number_total percent_total), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
@@ -1521,7 +1895,7 @@ putdocx text ("Totals –The total number and percentage of patients (men & wome
 
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -1538,14 +1912,10 @@ putdocx begin
 
 putdocx pagebreak
 putdocx paragraph, style(Heading2)
-putdocx text ("Stroke: Risk Factors (Dofile: 1.2_stroke_cvd_analysis.do)"), bold
+putdocx text ("Stroke: Risk Factors (Dofile: 5k_analysis RFs_stroke.do)"), bold
 putdocx paragraph, halign(center)
-//qui sum total
-//local sum : display %3.0f `r(sum)'
-//putdocx text ("Table 2.4 Prevalence of known risk factors among hospitalised stroke patients, 2020 (N=`sum')"), bold font(Helvetica,10,"blue")
-putdocx text ("Table 2.4 Prevalence of known risk factors among hospitalised stroke patients, 2020"), bold font(Helvetica,10,"blue")
+putdocx text ("Table 2.4 Prevalence of known risk factors among hospitalised stroke patients, 2021 (N=528)"), bold font(Helvetica,10,"blue")
 
-//drop if id==8
 rename rftype_ar rf_category
 rename rf_ar risk_factor
 putdocx table tbl1 = data(rf_category risk_factor number rf_percent denominator), halign(center) varnames
@@ -1559,41 +1929,14 @@ putdocx paragraph
 putdocx text ("n1 = denominator (i.e. total number reporting information about that risk factor). NR = Numbers too small for adequate representation")
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
 clear
 
-preserve
-use "`datapath'\version03\2-working\riskfactors_stroketia", clear
-
-putdocx clear
-putdocx begin
-
-//putdocx pagebreak
-putdocx paragraph, halign(center)
-//qui sum total
-//local sum : display %3.0f `r(sum)'
-//putdocx text ("Table 2.4 Prevalence of known risk factors among hospitalised stroke patients, 2020 (N=`sum')"), bold font(Helvetica,10,"blue")
-putdocx text ("Table 2.4 CORRECTED Prior stroke or TIA, 2019 + 2020"), bold font(Helvetica,10,"blue")
-
-putdocx table tbl1 = data(year numerator percent denominator), halign(center) varnames
-putdocx table tbl1(1,1), bold shading(lightgray)
-putdocx table tbl1(1,2), bold shading(lightgray)
-putdocx table tbl1(1,3), bold shading(lightgray)
-putdocx table tbl1(1,4), bold shading(lightgray)
-
-putdocx paragraph
-putdocx text ("n1 = denominator (i.e. total number reporting information about that risk factor). NR = Numbers too small for adequate representation")
-
-local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
-putdocx clear
-restore
-
-clear
-
+STOP
+/*
 preserve
 use "`datapath'\version03\2-working\mort_stroke", clear
 
@@ -1627,7 +1970,7 @@ putdocx table tbl1(1,11), bold shading(lightgray)
 //putdocx table tbl1(1,12), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -1655,7 +1998,7 @@ putdocx table tbl1(1,1), bold shading(lightgray)
 putdocx table tbl1(1,2), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -1693,7 +2036,7 @@ putdocx text ("2020"), bold font(Helvetica,10,"blue")
 tab2docx reperf if stype==1 & year==2020
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -1720,7 +2063,7 @@ putdocx table tbl1(1,4), bold shading(lightgray)
 putdocx table tbl1(1,5), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -1747,7 +2090,7 @@ putdocx table tbl1(1,4), bold shading(lightgray)
 putdocx table tbl1(1,5), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -1774,7 +2117,7 @@ putdocx table tbl1(1,4), bold shading(lightgray)
 putdocx table tbl1(1,5), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -1806,7 +2149,7 @@ putdocx table tbl1(1,5), bold shading(lightgray)
 putdocx table tbl1(1,6), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 
@@ -1844,7 +2187,7 @@ putdocx table tbl1(1,8), bold shading(lightgray)
 putdocx table tbl1(1,9), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2020AnnualReportStatsV18_`listdate'.docx", append
+putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
 putdocx clear
 restore
 

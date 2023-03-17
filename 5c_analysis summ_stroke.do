@@ -40,7 +40,7 @@
 ** Load cleaned de-identified HEART 2021 INCIDENCE dataset
 use "`datapath'\version03\3-output\2021_prep analysis_deidentified_stroke", clear
 
-count //694
+count //691
 
 ******************************
 ** Summary Statistics Table **
@@ -54,13 +54,12 @@ count //694
 *****************************
 ** Number of Registrations **
 *****************************
-count if sd_eyear==2021 //694
+count if sd_eyear==2021 //691
 
 *************************
 ** Rate per population **
 *************************
-dis (694/281207) * 100 //.24679329
-
+dis (691/281207) * 100 //.24572646
 
 *************************
 ** Hospital Admissions **
@@ -68,23 +67,24 @@ dis (694/281207) * 100 //.24679329
 *************************
 tab sd_admstatus ,m
 /*
-  Stata Derived: Hospital |
-         Admission Status |      Freq.     Percent        Cum.
---------------------------+-----------------------------------
-Admitted to Hospital Ward |        433       62.39       62.39
-         Seen only in A&E |         99       14.27       76.66
- Not admitted to hospital |        162       23.34      100.00
---------------------------+-----------------------------------
-                    Total |        694      100.00
+    Stata Derived: Hospital Admission |
+                               Status |      Freq.     Percent        Cum.
+--------------------------------------+-----------------------------------
+            Admitted to Hospital Ward |        429       62.08       62.08
+                     Seen only in A&E |         99       14.33       76.41
+Unknown if admitted to hospital (DCO) |        162       23.44       99.86
+                       Community Case |          1        0.14      100.00
+--------------------------------------+-----------------------------------
+                                Total |        691      100.00
 */
 
-** Ward admission only
-count if sd_admstatus==1 //433
-dis (433/694) * 100 //62.391931
-
 ** A&E + Ward
-count if sd_admstatus!=3 //532
-dis (532/694) * 100 //76.657061
+count if sd_admstatus!=3 & sd_admstatus!=4 //528
+dis (528/691) * 100 //76.410999
+
+** Ward admission only
+count if sd_admstatus==1 //429
+dis (429/691) * 100 //62.083936
 
 *********************
 ** In-hospital CFR **
@@ -95,11 +95,11 @@ tab sd_absstatus ,m
       Stata Derived: |
   Abstraction Status |      Freq.     Percent        Cum.
 ---------------------+-----------------------------------
-    Full abstraction |        504       72.62       72.62
- Partial abstraction |         29        4.18       76.80
-No abstraction (DCO) |        161       23.20      100.00
+    Full abstraction |        500       72.36       72.36
+ Partial abstraction |         29        4.20       76.56
+No abstraction (DCO) |        162       23.44      100.00
 ---------------------+-----------------------------------
-               Total |        694      100.00
+               Total |        691      100.00
 */
 
 tab vstatus ,m
@@ -108,23 +108,23 @@ tab vstatus ,m
   Status at |
   discharge |      Freq.     Percent        Cum.
 ------------+-----------------------------------
-      Alive |        349       50.29       50.29
-   Deceased |        155       22.33       72.62
-          . |        190       27.38      100.00
+      Alive |        349       50.51       50.51
+   Deceased |        151       21.85       72.36
+          . |        191       27.64      100.00
 ------------+-----------------------------------
-      Total |        694      100.00
+      Total |        691      100.00
 */
 
 ** Fully abstracted cases
-count if sd_absstatus==1 //504
-count if vstatus==2 & sd_absstatus==1 //155
-dis (155/504) * 100 //30.753968
+count if sd_absstatus==1 //500
+count if vstatus==2 & sd_absstatus==1 //151
+dis (151/500) * 100 //30.2
 
 ************************
 ** DCOs + proportions **
 ************************
 count if sd_casetype==2 //162
-dis (162/694) * 100 //23.342939
+dis (162/691) * 100 //23.444284
 
 
 
@@ -162,7 +162,7 @@ replace sd_los_ward=sd_los_ward+sd_readmitdays_ward if readmit==1 //5 changes
 *********
 preserve
 replace sd_los_ae=1 if sd_los_ae==0 //17 changes 
-drop if sd_los_ae==. //187 deleted
+drop if sd_los_ae==. //188 deleted
 gen k=1
 drop if k!=1
 
@@ -171,12 +171,12 @@ table k, stat(q2 sd_los_ae) stat(min sd_los_ae) stat(max sd_los_ae)
 ** Now save the p50, min and max for Table 1.1
 sum sd_los_ae
 sum sd_los_ae ,detail
-gen medianlos_ae=r(p50)
-gen range_lower_ae=r(min)
-gen range_upper_ae=r(max)
+gen medianlos_s_ae=r(p50)
+gen range_lower_s_ae=r(min)
+gen range_upper_s_ae=r(max)
 
-collapse medianlos_ae range_lower_ae range_upper_ae
-order medianlos_ae range_lower_ae range_upper_ae
+collapse medianlos_s_ae range_lower_s_ae range_upper_s_ae
+order medianlos_s_ae range_lower_s_ae range_upper_s_ae
 save "`datapath'\version03\2-working\los_ae_stroke_all" ,replace
 restore
 
@@ -185,7 +185,7 @@ restore
 **********
 preserve
 replace sd_los_ward=1 if sd_los_ward==0 //4 changes
-drop if sd_los_ward==. //261 deleted
+drop if sd_los_ward==. //262 deleted
 gen k=1
 drop if k!=1
 
@@ -194,12 +194,12 @@ table k, stat(q2 sd_los_ward) stat(min sd_los_ward) stat(max sd_los_ward)
 ** Now save the p50, min and max for Table 1.1
 sum sd_los_ward
 sum sd_los_ward ,detail
-gen medianlos_ward=r(p50)
-gen range_lower_ward=r(min)
-gen range_upper_ward=r(max)
+gen medianlos_s_ward=r(p50)
+gen range_lower_s_ward=r(min)
+gen range_upper_s_ward=r(max)
 
-collapse medianlos_ward range_lower_ward range_upper_ward
-order medianlos_ward range_lower_ward range_upper_ward
+collapse medianlos_s_ward range_lower_s_ward range_upper_s_ward
+order medianlos_s_ward range_lower_s_ward range_upper_s_ward
 save "`datapath'\version03\2-working\los_ward_stroke_all" ,replace
 restore
 
@@ -209,12 +209,12 @@ restore
 *****************************
 ** Number of Registrations **
 *****************************
-count if sd_fes==1 //251
+count if sd_fes==1 //248
 
 *************************
 ** Rate per population **
 *************************
-dis (251/281207) * 100 //.08925809
+dis (248/281207) * 100 //.08819126
 
 
 *************************
@@ -223,22 +223,22 @@ dis (251/281207) * 100 //.08925809
 *************************
 tab sd_admstatus if sd_fes==1
 /*
-  Stata Derived: Hospital |
-         Admission Status |      Freq.     Percent        Cum.
---------------------------+-----------------------------------
-Admitted to Hospital Ward |        211       84.06       84.06
-         Seen only in A&E |         40       15.94      100.00
---------------------------+-----------------------------------
-                    Total |        251      100.00
+    Stata Derived: Hospital Admission |
+                               Status |      Freq.     Percent        Cum.
+--------------------------------------+-----------------------------------
+            Admitted to Hospital Ward |        208       83.87       83.87
+                     Seen only in A&E |         40       16.13      100.00
+--------------------------------------+-----------------------------------
+                                Total |        248      100.00
 */
 
-** Ward admission only
-count if sd_admstatus==1 & sd_fes==1 //211
-dis (211/251) * 100 //84.063745
-
 ** A&E + Ward
-count if sd_admstatus!=3 & sd_fes==1 //251
-dis (251/251) * 100 //100
+count if sd_admstatus!=3 & sd_admstatus!=4 & sd_fes==1 //248
+dis (248/248) * 100 //100
+
+** Ward admission only
+count if sd_admstatus==1 & sd_fes==1 //208
+dis (208/248) * 100 //83.870968
 
 *********************
 ** In-hospital CFR **
@@ -249,9 +249,9 @@ tab sd_absstatus if sd_fes==1
       Stata Derived: |
   Abstraction Status |      Freq.     Percent        Cum.
 ---------------------+-----------------------------------
-    Full abstraction |        251      100.00      100.00
+    Full abstraction |        248      100.00      100.00
 ---------------------+-----------------------------------
-               Total |        251      100.00
+               Total |        248      100.00
 */
 tab vstatus if sd_fes==1
 /*
@@ -259,16 +259,16 @@ tab vstatus if sd_fes==1
   Status at |
   discharge |      Freq.     Percent        Cum.
 ------------+-----------------------------------
-      Alive |        136       54.18       54.18
-   Deceased |        115       45.82      100.00
+      Alive |        136       54.84       54.84
+   Deceased |        112       45.16      100.00
 ------------+-----------------------------------
-      Total |        251      100.00
+      Total |        248      100.00
 */
 
 ** Fully abstracted cases
-count if sd_absstatus==1 & sd_fes==1 //251
-count if vstatus==2 & sd_absstatus==1 & sd_fes==1 //115
-dis (115/251) * 100 //45.816733
+count if sd_absstatus==1 & sd_fes==1 //248
+count if vstatus==2 & sd_absstatus==1 & sd_fes==1 //112
+dis (112/248) * 100 //45.16129
 
 ************************
 ** DCOs + proportions **
@@ -321,12 +321,12 @@ table k, stat(q2 sd_los_ae) stat(min sd_los_ae) stat(max sd_los_ae)
 ** Now save the p50, min and max for Table 1.1
 sum sd_los_ae
 sum sd_los_ae ,detail
-gen medianlos_ae=r(p50)
-gen range_lower_ae=r(min)
-gen range_upper_ae=r(max)
+gen medianlos_fes_ae=r(p50)
+gen range_lower_fes_ae=r(min)
+gen range_upper_fes_ae=r(max)
 
-collapse medianlos_ae range_lower_ae range_upper_ae
-order medianlos_ae range_lower_ae range_upper_ae
+collapse medianlos_fes_ae range_lower_fes_ae range_upper_fes_ae
+order medianlos_fes_ae range_lower_fes_ae range_upper_fes_ae
 save "`datapath'\version03\2-working\los_ae_stroke_fes" ,replace
 restore
 
@@ -345,11 +345,11 @@ table k, stat(q2 sd_los_ward) stat(min sd_los_ward) stat(max sd_los_ward)
 ** Now save the p50, min and max for Table 1.1
 sum sd_los_ward
 sum sd_los_ward ,detail
-gen medianlos_ward=r(p50)
-gen range_lower_ward=r(min)
-gen range_upper_ward=r(max)
+gen medianlos_fes_ward=r(p50)
+gen range_lower_fes_ward=r(min)
+gen range_upper_fes_ward=r(max)
 
-collapse medianlos_ward range_lower_ward range_upper_ward
-order medianlos_ward range_lower_ward range_upper_ward
+collapse medianlos_fes_ward range_lower_fes_ward range_upper_fes_ward
+order medianlos_fes_ward range_lower_fes_ward range_upper_fes_ward
 save "`datapath'\version03\2-working\los_ward_stroke_fes" ,replace
 restore

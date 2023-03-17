@@ -32,6 +32,13 @@
 * NOTE9: 2021: the y-axis for age-sex stratified incidence rate graphs are distributed by 1500 with a range of 0 to 6000 
 *		 2020: the y-axis for age-sex stratified incidence rate graphs are distributed by 500 with a range of 0 to 2000
 *		 This applies to the STROKE graphs as the graphs looked skewed for 2021
+
+* NOTE10: there is one case wherein sourcetype = Community (in the stroke data)
+
+* NOTE11: 2021 ASMRs will most likely not be comparable with ASMRs from previous years as previous years used deaths
+*		  from the incidence dataset vs 2021 that used deaths from the death dataset
+
+* NOTE12: 2021 population number is lower than previous years as UN-WPPP may have adjusted estiamtes due to COVID-19
 *
 *********************************************************************************************************************
 *	CLEANING
@@ -167,8 +174,24 @@
 *		* Displays results for Number of deaths + age standardised mortality rates table for annual report
 *		* Creates datasets for outputing results to MS Word
 *	
-*	3. 6_analysis 2016-2020_cvd.do
-*		* Creates datasets for outputting analysed results for 2016-2020 to MS Word and Excel
+*	9. 5h_analysis sym_heart.do
+*		* Displays results for symptoms table for annual report
+*		* Creates datasets for outputing results to MS Word
+*	
+*	10. 5i_analysis sym_stroke.do
+*		* Displays results for sub-type and symptoms table for annual report
+*		* Creates datasets for outputing results to MS Word
+*	
+*	11. 5j_analysis RFs_heart.do
+*		* Displays results for risk factors table for annual report
+*		* Creates datasets for outputing results to MS Word
+*	
+*	12. 5k_analysis RFs_stroke.do
+*		* Displays results for risk factors table for annual report
+*		* Creates datasets for outputing results to MS Word
+*	
+*	20. 6_analysis report_cvd.do
+*		* Creates datasets for outputting analysed results for 2021 to MS Word and Excel
 *   
 *********************************************************************************************************************
 

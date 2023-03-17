@@ -49,6 +49,36 @@ use "`datapath'\version03\2-working\BNRCVDCORE_CleanedData_final", clear
 
 count //1145
 
+** JC 16mar2023: there are 3 records that were correctly abstracted as stroke in CVDdb but also have a reportable heart COD which merged with the stroke record but in order to split the databases for analysis we need to add back in the heart DCOs (see end of this dofile when splitting heart dataset for further details)
+preserve
+use "`datapath'\version03\3-output\2021_prep mort_identifiable_ALL" ,clear
+keep if dd_deathid==35843|dd_deathid==36642|dd_deathid==37259|dd_deathid==34481 //3 heart DCOs & 1 stroke DCO
+save "`datapath'\version03\2-working\heartstroke_DCOs" ,replace
+restore
+
+append using "`datapath'\version03\2-working\heartstroke_DCOs"
+replace sd_etype=2 if (dd_deathid==35843|dd_deathid==36642|dd_deathid==37259) & record_id=="" //3 changes
+replace sd_etype=1 if dd_deathid==34481 & record_id=="" //1 change
+
+** Update incidence variables with death variables info for DCO cases as these are needed for cleaning and analysis
+replace fname=dd_fname if (dd_deathid==35843|dd_deathid==36642|dd_deathid==37259|dd_deathid==34481) & record_id=="" //4 changes
+replace mname=dd_mname if (dd_deathid==35843|dd_deathid==36642|dd_deathid==37259|dd_deathid==34481) & record_id=="" //4 changes
+replace lname=dd_lname if (dd_deathid==35843|dd_deathid==36642|dd_deathid==37259|dd_deathid==34481) & record_id=="" //4 changes
+replace sd_natregno=dd_natregno if (dd_deathid==35843|dd_deathid==36642|dd_deathid==37259|dd_deathid==34481) & record_id=="" //4 changes
+replace natregno=dd_nrn if (dd_deathid==35843|dd_deathid==36642|dd_deathid==37259|dd_deathid==34481) & record_id=="" //4 changes
+replace sex=dd_sex if (dd_deathid==35843|dd_deathid==36642|dd_deathid==37259|dd_deathid==34481) & record_id=="" //4 changes
+replace age=dd_age if (dd_deathid==35843|dd_deathid==36642|dd_deathid==37259|dd_deathid==34481) & record_id=="" //4 changes
+replace cfdod=dd_dod if (dd_deathid==35843|dd_deathid==36642|dd_deathid==37259|dd_deathid==34481) & record_id=="" //4 changes
+replace addr=dd_address if (dd_deathid==35843|dd_deathid==36642|dd_deathid==37259|dd_deathid==34481) & record_id=="" //4 changes
+replace parish=dd_parish if (dd_deathid==35843|dd_deathid==36642|dd_deathid==37259|dd_deathid==34481) & record_id=="" //4 changes
+replace mstatus=dd_mstatus if (dd_deathid==35843|dd_deathid==36642|dd_deathid==37259|dd_deathid==34481) & record_id=="" //4 changes
+replace dob=dd_dob if (dd_deathid==35843|dd_deathid==36642|dd_deathid==37259|dd_deathid==34481) & record_id=="" //4 changes
+replace dlc=dd_dod if (dd_deathid==35843|dd_deathid==36642|dd_deathid==37259|dd_deathid==34481) & record_id=="" //4 changes
+replace slc=2 if (dd_deathid==35843|dd_deathid==36642|dd_deathid==37259|dd_deathid==34481) & record_id=="" //4 changes
+replace edate=cfdod if (dd_deathid==35843|dd_deathid==36642|dd_deathid==37259|dd_deathid==34481) & record_id=="" //4 changes
+
+count //1149
+
 ** Checking to ensure irrelevant missing code checkboxes do not have data in them 
 ** (e.g. nohosp missing code is 99 so the other variables can be removed from the dataset since REDCap db exports all the possible missing codes for checkbox variables)
 count if nohosp___88==1 //0
@@ -147,11 +177,11 @@ count if recdxh___9999==1 //0
 sort record_id 
 quietly by record_id : gen dup = cond(_N==1,0,_n)
 sort record_id
-count if dup>0 //415 - all DCOs with blank record_id
+count if dup>0 //419 - all DCOs with blank record_id
 count if dup>0 & record_id!="" //0
 
 ** Remove unnecessary variables (e.g. cleaning flag variables, irrelevant missing code checkbox variables, etc.)
-drop copycf copydemo copyptm copyeve copyhx copytests copycomp copymeds copydis copyfu1 nohosp___88 nohosp___999 nohosp___9999 absdxs___88 absdxs___999 absdxs___9999 absdxh___88 absdxh___999 absdxh___9999 asp___88 asp___999 asp___9999 warf___88 warf___999 warf___9999 hep___88 hep___999 hep___9999 heplmw___88 heplmw___999 heplmw___9999 pla___88 pla___999 pla___9999 stat___88 stat___999 stat___9999 fibr___88 fibr___999 fibr___9999 ace___88 ace___999 ace___9999 arbs___88 arbs___999 arbs___9999 cors___88 cors___999 cors___9999 antih___88 antih___999 antih___9999 nimo___88 nimo___999 nimo___9999 antis___88 antis___999 antis___9999 ted___88 ted___999 ted___9999 beta___88 beta___999 beta___9999 bival___88 bival___999 bival___9999 disdxs___88 disdxs___999 disdxs___9999 disdxh___88 disdxh___999 disdxh___9999 recdxs___88 recdxs___999 recdxs___9999 recdxh___88 recdxh___999 recdxh___9999 rvetype repinstrument flag1 flag2 flag3 flag4 flag5 flag6 flag7 flag8 flag9 flag10 flag11 flag12 flag13 flag14 flag15 flag16 flag17 flag18 flag19 flag20 flag21 flag22 flag23 flag24 flag25 flag26 flag27 flag28 flag29 flag30 flag31 flag32 flag33 flag34 flag35 flag36 flag37 flag38 flag39 flag40 flag41 flag42 flag43 flag44 flag45 flag46 flag47 flag48 flag49 flag50 flag51 flag52 flag53 flag54 flag55 flag56 flag57 flag58 flag59 flag60 flag61 flag62 flag63 flag64 flag65 flag66 flag67 flag68 flag69 flag70 flag71 flag72 flag73 flag74 flag75 flag76 flag77 flag78 flag79 flag80 flag81 flag82 flag83 flag84 flag85 flag86 flag87 flag88 flag89 flag90 flag91 flag92 flag93 flag94 flag95 flag96 flag97 flag98 flag99 flag100 flag101 flag102 flag103 flag104 flag105 flag106 flag107 flag108 flag109 flag110 flag111 flag112 flag113 flag114 flag115 flag116 flag117 flag118 flag119 flag120 flag121 flag122 flag123 flag124 flag125 flag126 flag127 flag128 flag129 flag130 flag131 flag132 flag133 flag134 flag135 flag136 flag137 flag138 flag139 flag140 flag141 flag142 flag143 flag144 flag145 flag146 flag147 flag148 flag149 flag150 flag151 flag152 flag153 flag154 flag155 flag156 flag157 flag158 flag159 flag160 flag161 flag162 flag163 flag164 flag165 flag166 flag167 flag168 flag169 flag170 flag171 flag172 flag173 flag174 flag175 flag176 flag177 flag178 flag179 flag180 flag181 flag182 flag183 flag184 flag185 flag186 flag187 flag188 flag189 flag190 flag191 flag192 flag193 flag194 flag195 flag196 flag197 flag198 flag199 flag200 flag201 flag202 flag203 flag204 flag205 flag206 flag207 flag208 flag209 flag210 flag211 flag212 flag213 flag214 flag215 flag216 flag217 flag218 flag219 flag220 flag221 flag222 flag223 flag224 flag225 flag226 flag227 flag228 flag229 flag230 flag231 flag232 flag233 flag234 flag235 flag236 flag237 flag238 flag239 flag240 flag241 flag242 flag243 flag244 flag245 flag246 flag247 flag248 flag249 flag250 flag251 flag252 flag253 flag254 flag255 flag256 flag257 flag258 flag259 flag260 flag261 flag262 flag263 flag264 flag265 flag266 flag267 flag268 flag269 flag270 flag271 flag272 flag273 flag274 flag275 flag276 flag277 flag278 flag279 flag280 flag281 flag282 flag283 flag284 flag285 flag286 flag287 flag288 flag289 flag290 flag291 flag292 flag293 flag294 flag295 flag296 flag297 flag298 flag299 flag300 flag301 flag302 flag303 flag304 flag305 flag306 flag307 flag308 flag309 flag310 flag311 flag312 flag313 flag314 flag315 flag316 flag317 flag318 flag319 flag320 flag321 flag322 flag323 flag324 flag325 flag326 flag327 flag328 flag329 flag330 flag331 flag332 flag333 flag334 flag335 flag336 flag337 flag338 flag339 flag340 flag341 flag342 flag343 flag344 flag345 flag346 flag347 flag348 flag349 flag350 flag351 flag352 flag353 flag354 flag355 flag356 flag357 flag358 flag359 flag360 flag361 flag362 flag363 flag364 flag365 flag366 flag367 flag368 flag369 flag370 flag371 flag372 flag373 flag374 flag375 flag376 flag377 flag378 flag379 flag380 flag381 flag382 flag383 flag384 flag385 flag386 flag387 flag388 flag389 flag390 flag391 flag392 flag393 flag394 flag395 flag396 flag397 flag398 flag399 flag400 flag401 flag402 flag403 flag404 flag405 flag406 flag407 flag408 flag409 flag410 flag411 flag412 flag413 flag414 flag415 flag416 flag417 flag418 flag419 flag420 flag421 flag422 flag423 flag424 flag425 flag426 flag427 flag428 flag429 flag430 flag431 flag432 flag433 flag434 flag435 flag436 flag437 flag438 flag439 flag440 flag441 flag442 flag443 flag444 flag445 flag446 flag447 flag448 flag449 flag450 flag451 flag452 flag453 flag454 flag455 flag456 flag457 flag458 flag459 flag460 flag461 flag462 flag463 flag464 flag465 flag466 flag467 flag468 flag469 flag470 flag471 flag472 flag473 flag474 flag475 flag476 flag477 flag478 flag479 flag480 flag481 flag482 flag483 flag484 flag485 flag486 flag487 flag488 flag489 flag490 flag491 flag492 flag493 flag494 flag495 flag496 flag497 flag498 flag499 flag500 flag501 flag502 flag503 flag504 flag505 flag506 flag507 flag508 flag509 flag510 flag511 flag512 flag513 flag514 flag515 flag516 flag517 flag518 flag519 flag520 flag521 flag522 flag523 flag524 flag525 flag526 flag527 flag528 flag529 flag530 flag531 flag532 flag533 flag534 flag535 flag536 flag537 flag538 flag539 flag540 flag541 flag542 flag543 flag544 flag545 flag546 flag547 flag548 flag549 flag550 flag551 flag552 flag553 flag554 flag555 flag556 flag557 flag558 flag559 flag560 flag561 flag562 flag563 flag564 flag565 flag566 flag567 flag568 flag569 flag570 flag571 flag572 flag573 flag574 flag575 flag576 flag577 flag578 flag579 flag580 flag581 flag582 flag583 flag584 flag585 flag586 flag587 flag588 flag589 flag590 flag591 flag592 flag593 flag594 flag595 flag596 flag597 flag598 flag599 flag600 flag601 flag602 flag603 flag604 flag605 flag606 flag607 flag608 flag609 flag610 flag611 flag612 flag613 flag614 flag615 flag616 flag617 flag618 flag619 flag620 flag621 flag622 flag623 flag624 flag625 flag626 flag627 flag628 flag629 flag630 flag631 flag632 flag633 flag634 flag635 flag636 flag637 flag638 flag639 flag640 flag641 flag642 flag643 flag644 flag645 flag646 flag647 flag648 flag649 flag650 flag651 flag652 flag653 flag654 flag655 flag656 flag657 flag658 flag659 flag660 flag661 flag662 flag663 flag664 flag665 flag666 flag667 flag668 flag669 flag670 flag671 flag672 flag673 flag674 flag675 flag676 flag677 flag678 flag679 flag680 flag681 flag682 flag683 flag684 flag685 flag686 flag687 flag688 flag689 flag690 flag691 flag692 flag693 flag694 flag695 flag696 flag697 flag698 flag699 flag700 flag701 flag702 flag703 flag704 flag705 flag706 flag707 flag708 flag709 flag710 flag711 flag712 flag713 flag714 flag715 flag716 flag717 flag718 flag719 flag720 flag721 flag722 flag723 flag724 flag725 flag726 flag727 flag728 flag729 flag730 flag731 flag732 flag733 flag734 flag735 flag736 flag737 flag738 flag739 flag740 flag741 flag742 flag743 flag744 flag745 flag746 flag747 flag748 flag749 flag750 flag751 flag752 flag753 flag754 flag755 flag756 flag757 flag758 flag759 flag760 flag761 flag762 flag763 flag764 flag765 flag766 flag767 flag768 flag769 flag770 flag771 flag772 flag773 flag774 flag775 flag776 flag777 flag778 flag779 flag780 flag781 flag782 flag783 flag784 flag785 flag786 flag787 flag788 flag789 flag790 flag791 flag792 flag793 flag794 flag795 flag796 flag797 flag798 flag799 flag800 flag801 flag802 flag803 flag804 flag805 flag806 flag807 flag808 flag809 flag810 flag811 flag812 flag813 flag814 flag815 flag816 flag817 flag818 flag819 flag820 flag821 flag822 flag823 flag824 flag825 flag826 flag827 flag828 flag829 flag830 flag831 flag832 flag833 flag834 flag835 flag836 flag837 flag838 flag839 flag840 flag841 flag842 flag843 flag844 flag845 flag846 flag847 flag848 flag849 flag850 flag851 flag852 flag853 flag854 flag855 flag856 flag857 flag858 flag859 flag860 flag861 flag862 flag863 flag864 flag865 flag866 flag867 flag868 flag869 flag870 flag871 flag872 flag873 flag874 flag875 flag876 flag877 flag878 flag879 flag880 flag881 flag882 flag883 flag884 flag885 flag886 flag887 flag888 flag889 flag890 flag891 flag892 flag893 flag894 flag895 flag896 flag897 flag898 flag899 flag900 flag901 flag902 flag903 flag904 flag905 flag906 flag907 flag908 flag909 flag910 flag911 flag912 flag913 flag914 flag915 flag916 flag917 flag918 flag919 flag920 flag921 flag922 flag923 flag924 flag925 flag926 flag927 flag928 flag929 flag930 flag931 flag932 flag933 flag934 flag935 flag936 flag937 flag938 flag939 flag940 flag941 flag942 flag943 flag944 flag945 flag946 flag947 flag948 flag949 flag950 flag951 flag952 flag953 flag954 flag955 flag956 flag957 flag958 flag959 flag960 flag961 flag962 flag963 flag964 flag965 flag966 flag967 flag968 flag969 flag970 flag971 flag972 flag973 flag974 flag975 flag976 flag977 flag978 flag979 flag980 flag981 flag982 flag983 flag984 flag985 flag986 flag987 flag988 flag989 flag990 flag991 flag992 flag993 flag994 flag995 flag996 flag997 flag998 flag999 flag1000 flag1001 flag1002 flag1003 flag1004 flag1005 flag1006 flag1007 flag1008 flag1009 flag1010 flag1011 flag1012 flag1013 flag1014 flag1015 flag1016 flag1017 flag1018 flag1019 flag1020 flag1021 flag1022 flag1023 flag1024 flag1025 flag1026 flag1027 flag1028 flag1029 flag1030 flag1031 flag1032 flag1033 flag1034 flag1035 flag1036 flag1037 flag1038 flag1039 flag1040 flag1041 flag1042 flag1043 flag1044 flag1045 flag1046 flag1047 flag1048 flag1049 flag1050 flag1051 flag1052 flag1053 flag1054 flag1055 flag1056 flag1057 flag1058 flag1059 flag1060 flag1061 flag1062 flag1063 flag1064 flag1065 flag1066 flag1067 flag1068 flag1069 flag1070 flag1071 flag1072 flag1073 flag1074 flag1075 flag1076 flag1077 flag1078 flag1079 flag1080 flag1081 flag1082 flag1083 flag1084 flag1085 flag1086 flag1087 flag1088 flag1089 flag1090 flag1091 flag1092 flag1093 flag1094 flag1095 flag1096 flag1097 flag1098 flag1099 flag1100 flag1101 flag1102 flag1103 flag1104 flag1105 flag1106 flag1107 flag1108 flag1109 flag1110 flag1111 flag1112 flag1113 flag1114 flag1115 flag1116 flag1117 flag1118 flag1119 flag1120 flag1121 flag1122 flag1123 flag1124 flag1125 flag1126 flag1127 flag1128 flag1129 flag1130 flag1131 flag1132 flag1133 flag1134 flag1135 flag1136 flag1137 flag1138 flag1139 flag1140 flag1141 flag1142 flag1143 flag1144 flag1145 flag1146 flag1147 flag1148 flag1149 flag1150 flag1151 flag1152 flag1153 flag1154 flag1155 flag1156 flag1157 flag1158 flag1159 flag1160 flag1161 flag1162 flag1163 flag1164 flag1165 flag1166 flag1167 flag1168 flag1169 flag1170 flag1171 flag1172 flag1173 flag1174 flag1175 flag1176 flag1177 flag1178 flag1179 flag1180 flag1181 flag1182 flag1183 flag1184 flag1185 flag1186 flag1187 flag1188 flag1189 flag1190 flag1191 flag1192 flag1193 flag1194 flag1195 flag1196 flag1197 flag1198 flag1199 flag1200 flag1201 flag1202 flag1203 flag1204 flag1205 flag1206 flag1207 flag1208 flag1209 flag1210 flag1211 flag1212 flag1213 flag1214 flag1215 flag1216 flag1217 flag1218 flag1219 flag1220 flag1221 flag1222 flag1223 flag1224 flag1225 flag1226 flag1227 flag1228 flag1229 flag1230 flag1231 flag1232 flag1233 flag1234 flag1235 flag1236 flag1237 flag1238 flag1239 flag1240 flag1241 flag1242 flag1243 flag1244 flag1245 flag1246 flag1247 flag1248 flag1249 flag1250 flag1251 flag1252 flag1253 flag1254 flag1255 flag1256 flag1257 flag1258 flag1259 flag1260 flag1261 flag1262 flag1263 flag1264 flag1265 flag1266 flag1267 flag1268 flag1269 flag1270 flag1271 flag1272 flag1273 flag1274 flag1275 flag1276 flag1277 flag1278 flag1279 flag1280 flag1281 flag1282 flag1283 flag1284 flag1285 flag1286 flag1287 flag1288 flag1289 flag1290 flag1291 flag1292 flag1293 flag1294 flag1295 flag1296 flag1297 flag1298 flag1299 flag1300 flag1301 flag1302 flag1303 flag1304 flag1305 flag1306 flag1307 flag1308 flag1309 flag1310 flag1311 flag1312 flag1313 flag1314 flag1315 flag1316 flag1317 flag1318 flag1319 flag1320 flag1321 flag1322 flag1323 flag1324 flag1325 flag1326 flag1327 flag1328 flag1329 flag1330 flag1331 flag1332 flag1333 flag1334 flag1335 flag1336 flag1337 flag1338 flag1339 flag1340 flag1341 flag1342 flag1343 flag1344 flag1345 flag1346 flag1347 flag1348 flag1349 flag1350 flag1351 flag1352 flag1353 flag1354 flag1355 flag1356 flag1357 flag1358 flag1359 flag1360 flag1361 flag1362 flag1363 flag1364 flag1365 flag1366 flag1367 flag1368 flag1369 flag1370 flag1371 flag1372 flag1373 flag1374 flag1375 flag1376 flag1377 flag1378 flag1379 flag1380 flag1381 flag1382 flag1383 flag1384 flag1385 flag1386 flag1387 flag1388 flag1389 flag1390 flag1391 flag1392 flag1393 flag1394 flag1395 flag1396 flag1397 flag1398 flag1399 flag1400 flag1401 flag1402 flag1403 flag1404 flag1405 flag1406 flag1407 flag1408 flag1409 flag1410 flag1411 flag1412 flag1413 flag1414 flag1415 flag1416 flag1417 flag1418 flag1419 flag1420 flag1421 flag1422 flag1423 flag1424 flag1425 flag1426 flag1427 flag1428 flag1429 flag1430 flag1431 flag1432 flag1433 flag1434 flag1435 flag1436 flag1437 flag1438 flag1439 flag1440 flag1441 flag1442 flag1443 flag1444 flag1445 flag1446 flag1447 flag1448 flag1449 flag1450 flag1451 flag1452 flag1453 flag1454 flag1455 flag1456 flag1457 flag1458 flag1459 flag1460 flag1461 flag1462 flag1463 flag1464 flag1465 flag1466 flag1467 flag1468 flag1469 flag1470 flag1471 flag1472 flag1473 flag1474 flag1475 flag1476 flag1477 flag1478 flag1479 flag1480 flag1481 flag1482 flag1483 flag1484 flag1485 flag1486 flag1487 flag1488 flag1489 flag1490 flag1491 flag1492 flag1493 flag1494 flag1495 flag1496 flag1497 flag1498 flag1499 flag1500 flag1501 flag1502 flag1503 flag1504 flag1505 flag1506 flag1507 flag1508 flag1509 flag1510 flag1511 flag1512 flag1513 flag1514 flag1515 flag1516 flag1517 flag1518 flag1519 flag1520 flag1521 flag1522 flag1523 flag1524 flag1525 flag1526 flag1527 flag1528 flag1529 flag1530 flag1531 flag1532 flag1533 flag1534 flag1535 flag1536 flag1537 flag1538 flag1539 flag1540 flag1541 flag1542 flag1543 flag1544 flag1545 flag1546 flag1547 flag1548 flag1549 flag1550 flag1551 flag1552 flag1553 flag1554 flag1555 flag1556 flag1557 flag1558 flag1559 flag1560 flag1561 flag1562 flag1563 flag1564 flag1565 flag1566 flag1567 flag1568 flag1569 flag1570 flag1571 flag1572 flag1573 flag1574 flag1575 flag1576 flag1577 flag1578 flag1579 flag1580 flag1581 flag1582 flag1583 flag1584 flag1585 flag1586 flag1587 flag1588 flag1589 flag1590 flag1591 flag1592 flag1593 flag1594 flag1595 flag1596 flag1597 flag1598 flag1599 flag1600 flag1601 flag1602 flag1603 flag1604 flag1605 flag1606 flag1607 flag1608 flag1609 flag1610 flag1611 flag1612 flag1613 flag1614 flag1615 flag1616 flag1617 flag1618 flag1619 flag1620 flag1621 flag1622 flag1623 flag1624 flag1625 flag1626 flag1627 flag1628 flag1629 flag1630 flag1631 flag1632 flag1633 flag1634 flag1635 flag1636 flag1637 flag1638 flag1639 flag1640 flag1641 flag1642 flag1643 flag1644 flag1645 flag1646 flag1647 flag1648 flag1649 flag1650 flag1651 flag1652 flag1653 flag1654 flag1655 flag1656 flag1657 flag1658 flag1659 flag1660 flag1661 flag1662 flag1663 flag1664 flag1665 flag1666 flag1667 flag1668 flag1669 flag1670 flag1671 flag1672 flag1673 flag1674 flag1675 flag1676 flag1677 flag1678 flag1679 flag1680 flag1681 flag1682 flag1683 flag1684 flag1685 flag1686 flag1687 flag1688 flag1689 flag1690 flag1691 flag1692 flag1693 flag1694 flag1695 flag1696 flag1697 flag1698 flag1699 flag1700 flag1701 flag1702 flag1703 flag1704 flag1705 flag1706 flag1707 flag1708 flag1709 flag1710 flag1711 flag1712 flag1713 flag1714 flag1715 flag1716 flag1717 flag1718 flag1719 flag1720 flag1721 flag1722 flag1723 flag1724 flag1725 flag1726 flag1727 flag1728 flag1729 flag1730 flag1731 flag1732 flag1733 flag1734 flag1735 flag1736 flag1737 flag1738 flag1739 flag1740 flag1741 flag1742 flag1743 flag1744 flag1745 flag1746 flag1747 flag1748 flag1749 flag1750 flag1751 flag1752 flag1753 flag1754 flag1755 flag1756 flag1757 flag1758 flag1759 flag1760 flag1761 flag1762 flag1763 flag1764 flag1765 flag1766 flag1767 flag1768 flag1769 flag1770 flag1771 flag1772 flag1773 flag1774 flag1775 flag1776 flag1777 flag1778 flag1779 flag1780 flag1781 flag1782 flag1783 flag1784 flag1785 flag1786 flag1787 flag1788 flag1789 flag1790 flag1791 flag1792 flag1793 flag1794 flag1795 flag1796 flag1797 flag1798 flag1799 flag1800 flag1801 flag1802 flag1803 flag1804 flag1805 flag1806 flag1807 flag1808 flag1809 flag1810 flag1811 flag1812 flag1813 flag1814 flag1815 flag1816 flag1817 flag1818 flag1819 flag1820 flag1821 flag1822 flag1823 flag1824 flag1825 flag1826 flag1827 flag1828 flag1829 flag1830 flag1831 flag1832 flag1833 flag1834 flag1835 flag1836 flag1837 flag1838 flag1839 flag1840 flag1841 flag1842 flag1843 flag1844 flag1845 flag1846 flag1847 flag1848 flag1849 flag1850 flag1851 flag1852 flag1853 flag1854 flag1855 flag1856 flag1857 flag1858 flag1859 flag1860 flag1861 flag1862 flag1863 flag1864 flag1865 flag1866 flag1867 flag1868 flag1869 flag1870 flag1871 flag1872 flag1873 flag1874 non_numeric_hsym1t non_numeric_etime non_numeric_tropt non_numeric_ecgt non_numeric_reperft non_numeric_aspt non_numeric_warft non_numeric_hept non_numeric_heplmwt non_numeric_plat non_numeric_statt non_numeric_fibrt non_numeric_acet non_numeric_arbst non_numeric_corst non_numeric_antiht non_numeric_nimot non_numeric_antist non_numeric_tedt non_numeric_betat non_numeric_bivalt non_numeric_dist non_numeric_tod dlcyr cfdodyr sd_dob edateyr flagdate sd_currentdate fmcdate_text fmcdatetime2 dae_text daetae2 daedis_text daetaedis2 doh_text dohtoh2 ambcalld_text ambcalldt2 atscnd_text atscndt2 frmscnd_text frmscndt2 hospd_text hospdt2 hsym1d_text hsym1dt2 edate_text eventdt2 tropd_text tropdt2 ecgd_text ecgdt2 reperfd_text reperfdt2 aspd_text aspdt2 warfd_text warfdt2 hepd_text hepdt2 heplmwd_text heplmwdt2 plad_text pladt2 statd_text statdt2 fibrd_text fibrdt2 aced_text acedt2 arbsd_text arbsdt2 corsd_text corsdt2 antihd_text antihdt2 nimod_text nimodt2 antisd_text antisdt2 tedd_text teddt2 betad_text betadt2 bivald_text bivaldt2 disd_text disdt2 dod_text dodtod2 sd_dcyear dd_cleaned dd_duprec dd_elecmatch dd_redcap_event_name dd_event dd_recstatdc dup link_id unique_id redcap_event_name redcap_repeat_instrument redcap_repeat_instance redcap_data_access_group cfadmyr sd_record_id
+drop copycf copydemo copyptm copyeve copyhx copytests copycomp copymeds copydis copyfu1 nohosp___88 nohosp___999 nohosp___9999 absdxs___88 absdxs___999 absdxs___9999 absdxh___88 absdxh___999 absdxh___9999 asp___88 asp___999 asp___9999 warf___88 warf___999 warf___9999 hep___88 hep___999 hep___9999 heplmw___88 heplmw___999 heplmw___9999 pla___88 pla___999 pla___9999 stat___88 stat___999 stat___9999 fibr___88 fibr___999 fibr___9999 ace___88 ace___999 ace___9999 arbs___88 arbs___999 arbs___9999 cors___88 cors___999 cors___9999 antih___88 antih___999 antih___9999 nimo___88 nimo___999 nimo___9999 antis___88 antis___999 antis___9999 ted___88 ted___999 ted___9999 beta___88 beta___999 beta___9999 bival___88 bival___999 bival___9999 disdxs___88 disdxs___999 disdxs___9999 disdxh___88 disdxh___999 disdxh___9999 recdxs___88 recdxs___999 recdxs___9999 recdxh___88 recdxh___999 recdxh___9999 rvetype repinstrument flag1 flag2 flag3 flag4 flag5 flag6 flag7 flag8 flag9 flag10 flag11 flag12 flag13 flag14 flag15 flag16 flag17 flag18 flag19 flag20 flag21 flag22 flag23 flag24 flag25 flag26 flag27 flag28 flag29 flag30 flag31 flag32 flag33 flag34 flag35 flag36 flag37 flag38 flag39 flag40 flag41 flag42 flag43 flag44 flag45 flag46 flag47 flag48 flag49 flag50 flag51 flag52 flag53 flag54 flag55 flag56 flag57 flag58 flag59 flag60 flag61 flag62 flag63 flag64 flag65 flag66 flag67 flag68 flag69 flag70 flag71 flag72 flag73 flag74 flag75 flag76 flag77 flag78 flag79 flag80 flag81 flag82 flag83 flag84 flag85 flag86 flag87 flag88 flag89 flag90 flag91 flag92 flag93 flag94 flag95 flag96 flag97 flag98 flag99 flag100 flag101 flag102 flag103 flag104 flag105 flag106 flag107 flag108 flag109 flag110 flag111 flag112 flag113 flag114 flag115 flag116 flag117 flag118 flag119 flag120 flag121 flag122 flag123 flag124 flag125 flag126 flag127 flag128 flag129 flag130 flag131 flag132 flag133 flag134 flag135 flag136 flag137 flag138 flag139 flag140 flag141 flag142 flag143 flag144 flag145 flag146 flag147 flag148 flag149 flag150 flag151 flag152 flag153 flag154 flag155 flag156 flag157 flag158 flag159 flag160 flag161 flag162 flag163 flag164 flag165 flag166 flag167 flag168 flag169 flag170 flag171 flag172 flag173 flag174 flag175 flag176 flag177 flag178 flag179 flag180 flag181 flag182 flag183 flag184 flag185 flag186 flag187 flag188 flag189 flag190 flag191 flag192 flag193 flag194 flag195 flag196 flag197 flag198 flag199 flag200 flag201 flag202 flag203 flag204 flag205 flag206 flag207 flag208 flag209 flag210 flag211 flag212 flag213 flag214 flag215 flag216 flag217 flag218 flag219 flag220 flag221 flag222 flag223 flag224 flag225 flag226 flag227 flag228 flag229 flag230 flag231 flag232 flag233 flag234 flag235 flag236 flag237 flag238 flag239 flag240 flag241 flag242 flag243 flag244 flag245 flag246 flag247 flag248 flag249 flag250 flag251 flag252 flag253 flag254 flag255 flag256 flag257 flag258 flag259 flag260 flag261 flag262 flag263 flag264 flag265 flag266 flag267 flag268 flag269 flag270 flag271 flag272 flag273 flag274 flag275 flag276 flag277 flag278 flag279 flag280 flag281 flag282 flag283 flag284 flag285 flag286 flag287 flag288 flag289 flag290 flag291 flag292 flag293 flag294 flag295 flag296 flag297 flag298 flag299 flag300 flag301 flag302 flag303 flag304 flag305 flag306 flag307 flag308 flag309 flag310 flag311 flag312 flag313 flag314 flag315 flag316 flag317 flag318 flag319 flag320 flag321 flag322 flag323 flag324 flag325 flag326 flag327 flag328 flag329 flag330 flag331 flag332 flag333 flag334 flag335 flag336 flag337 flag338 flag339 flag340 flag341 flag342 flag343 flag344 flag345 flag346 flag347 flag348 flag349 flag350 flag351 flag352 flag353 flag354 flag355 flag356 flag357 flag358 flag359 flag360 flag361 flag362 flag363 flag364 flag365 flag366 flag367 flag368 flag369 flag370 flag371 flag372 flag373 flag374 flag375 flag376 flag377 flag378 flag379 flag380 flag381 flag382 flag383 flag384 flag385 flag386 flag387 flag388 flag389 flag390 flag391 flag392 flag393 flag394 flag395 flag396 flag397 flag398 flag399 flag400 flag401 flag402 flag403 flag404 flag405 flag406 flag407 flag408 flag409 flag410 flag411 flag412 flag413 flag414 flag415 flag416 flag417 flag418 flag419 flag420 flag421 flag422 flag423 flag424 flag425 flag426 flag427 flag428 flag429 flag430 flag431 flag432 flag433 flag434 flag435 flag436 flag437 flag438 flag439 flag440 flag441 flag442 flag443 flag444 flag445 flag446 flag447 flag448 flag449 flag450 flag451 flag452 flag453 flag454 flag455 flag456 flag457 flag458 flag459 flag460 flag461 flag462 flag463 flag464 flag465 flag466 flag467 flag468 flag469 flag470 flag471 flag472 flag473 flag474 flag475 flag476 flag477 flag478 flag479 flag480 flag481 flag482 flag483 flag484 flag485 flag486 flag487 flag488 flag489 flag490 flag491 flag492 flag493 flag494 flag495 flag496 flag497 flag498 flag499 flag500 flag501 flag502 flag503 flag504 flag505 flag506 flag507 flag508 flag509 flag510 flag511 flag512 flag513 flag514 flag515 flag516 flag517 flag518 flag519 flag520 flag521 flag522 flag523 flag524 flag525 flag526 flag527 flag528 flag529 flag530 flag531 flag532 flag533 flag534 flag535 flag536 flag537 flag538 flag539 flag540 flag541 flag542 flag543 flag544 flag545 flag546 flag547 flag548 flag549 flag550 flag551 flag552 flag553 flag554 flag555 flag556 flag557 flag558 flag559 flag560 flag561 flag562 flag563 flag564 flag565 flag566 flag567 flag568 flag569 flag570 flag571 flag572 flag573 flag574 flag575 flag576 flag577 flag578 flag579 flag580 flag581 flag582 flag583 flag584 flag585 flag586 flag587 flag588 flag589 flag590 flag591 flag592 flag593 flag594 flag595 flag596 flag597 flag598 flag599 flag600 flag601 flag602 flag603 flag604 flag605 flag606 flag607 flag608 flag609 flag610 flag611 flag612 flag613 flag614 flag615 flag616 flag617 flag618 flag619 flag620 flag621 flag622 flag623 flag624 flag625 flag626 flag627 flag628 flag629 flag630 flag631 flag632 flag633 flag634 flag635 flag636 flag637 flag638 flag639 flag640 flag641 flag642 flag643 flag644 flag645 flag646 flag647 flag648 flag649 flag650 flag651 flag652 flag653 flag654 flag655 flag656 flag657 flag658 flag659 flag660 flag661 flag662 flag663 flag664 flag665 flag666 flag667 flag668 flag669 flag670 flag671 flag672 flag673 flag674 flag675 flag676 flag677 flag678 flag679 flag680 flag681 flag682 flag683 flag684 flag685 flag686 flag687 flag688 flag689 flag690 flag691 flag692 flag693 flag694 flag695 flag696 flag697 flag698 flag699 flag700 flag701 flag702 flag703 flag704 flag705 flag706 flag707 flag708 flag709 flag710 flag711 flag712 flag713 flag714 flag715 flag716 flag717 flag718 flag719 flag720 flag721 flag722 flag723 flag724 flag725 flag726 flag727 flag728 flag729 flag730 flag731 flag732 flag733 flag734 flag735 flag736 flag737 flag738 flag739 flag740 flag741 flag742 flag743 flag744 flag745 flag746 flag747 flag748 flag749 flag750 flag751 flag752 flag753 flag754 flag755 flag756 flag757 flag758 flag759 flag760 flag761 flag762 flag763 flag764 flag765 flag766 flag767 flag768 flag769 flag770 flag771 flag772 flag773 flag774 flag775 flag776 flag777 flag778 flag779 flag780 flag781 flag782 flag783 flag784 flag785 flag786 flag787 flag788 flag789 flag790 flag791 flag792 flag793 flag794 flag795 flag796 flag797 flag798 flag799 flag800 flag801 flag802 flag803 flag804 flag805 flag806 flag807 flag808 flag809 flag810 flag811 flag812 flag813 flag814 flag815 flag816 flag817 flag818 flag819 flag820 flag821 flag822 flag823 flag824 flag825 flag826 flag827 flag828 flag829 flag830 flag831 flag832 flag833 flag834 flag835 flag836 flag837 flag838 flag839 flag840 flag841 flag842 flag843 flag844 flag845 flag846 flag847 flag848 flag849 flag850 flag851 flag852 flag853 flag854 flag855 flag856 flag857 flag858 flag859 flag860 flag861 flag862 flag863 flag864 flag865 flag866 flag867 flag868 flag869 flag870 flag871 flag872 flag873 flag874 flag875 flag876 flag877 flag878 flag879 flag880 flag881 flag882 flag883 flag884 flag885 flag886 flag887 flag888 flag889 flag890 flag891 flag892 flag893 flag894 flag895 flag896 flag897 flag898 flag899 flag900 flag901 flag902 flag903 flag904 flag905 flag906 flag907 flag908 flag909 flag910 flag911 flag912 flag913 flag914 flag915 flag916 flag917 flag918 flag919 flag920 flag921 flag922 flag923 flag924 flag925 flag926 flag927 flag928 flag929 flag930 flag931 flag932 flag933 flag934 flag935 flag936 flag937 flag938 flag939 flag940 flag941 flag942 flag943 flag944 flag945 flag946 flag947 flag948 flag949 flag950 flag951 flag952 flag953 flag954 flag955 flag956 flag957 flag958 flag959 flag960 flag961 flag962 flag963 flag964 flag965 flag966 flag967 flag968 flag969 flag970 flag971 flag972 flag973 flag974 flag975 flag976 flag977 flag978 flag979 flag980 flag981 flag982 flag983 flag984 flag985 flag986 flag987 flag988 flag989 flag990 flag991 flag992 flag993 flag994 flag995 flag996 flag997 flag998 flag999 flag1000 flag1001 flag1002 flag1003 flag1004 flag1005 flag1006 flag1007 flag1008 flag1009 flag1010 flag1011 flag1012 flag1013 flag1014 flag1015 flag1016 flag1017 flag1018 flag1019 flag1020 flag1021 flag1022 flag1023 flag1024 flag1025 flag1026 flag1027 flag1028 flag1029 flag1030 flag1031 flag1032 flag1033 flag1034 flag1035 flag1036 flag1037 flag1038 flag1039 flag1040 flag1041 flag1042 flag1043 flag1044 flag1045 flag1046 flag1047 flag1048 flag1049 flag1050 flag1051 flag1052 flag1053 flag1054 flag1055 flag1056 flag1057 flag1058 flag1059 flag1060 flag1061 flag1062 flag1063 flag1064 flag1065 flag1066 flag1067 flag1068 flag1069 flag1070 flag1071 flag1072 flag1073 flag1074 flag1075 flag1076 flag1077 flag1078 flag1079 flag1080 flag1081 flag1082 flag1083 flag1084 flag1085 flag1086 flag1087 flag1088 flag1089 flag1090 flag1091 flag1092 flag1093 flag1094 flag1095 flag1096 flag1097 flag1098 flag1099 flag1100 flag1101 flag1102 flag1103 flag1104 flag1105 flag1106 flag1107 flag1108 flag1109 flag1110 flag1111 flag1112 flag1113 flag1114 flag1115 flag1116 flag1117 flag1118 flag1119 flag1120 flag1121 flag1122 flag1123 flag1124 flag1125 flag1126 flag1127 flag1128 flag1129 flag1130 flag1131 flag1132 flag1133 flag1134 flag1135 flag1136 flag1137 flag1138 flag1139 flag1140 flag1141 flag1142 flag1143 flag1144 flag1145 flag1146 flag1147 flag1148 flag1149 flag1150 flag1151 flag1152 flag1153 flag1154 flag1155 flag1156 flag1157 flag1158 flag1159 flag1160 flag1161 flag1162 flag1163 flag1164 flag1165 flag1166 flag1167 flag1168 flag1169 flag1170 flag1171 flag1172 flag1173 flag1174 flag1175 flag1176 flag1177 flag1178 flag1179 flag1180 flag1181 flag1182 flag1183 flag1184 flag1185 flag1186 flag1187 flag1188 flag1189 flag1190 flag1191 flag1192 flag1193 flag1194 flag1195 flag1196 flag1197 flag1198 flag1199 flag1200 flag1201 flag1202 flag1203 flag1204 flag1205 flag1206 flag1207 flag1208 flag1209 flag1210 flag1211 flag1212 flag1213 flag1214 flag1215 flag1216 flag1217 flag1218 flag1219 flag1220 flag1221 flag1222 flag1223 flag1224 flag1225 flag1226 flag1227 flag1228 flag1229 flag1230 flag1231 flag1232 flag1233 flag1234 flag1235 flag1236 flag1237 flag1238 flag1239 flag1240 flag1241 flag1242 flag1243 flag1244 flag1245 flag1246 flag1247 flag1248 flag1249 flag1250 flag1251 flag1252 flag1253 flag1254 flag1255 flag1256 flag1257 flag1258 flag1259 flag1260 flag1261 flag1262 flag1263 flag1264 flag1265 flag1266 flag1267 flag1268 flag1269 flag1270 flag1271 flag1272 flag1273 flag1274 flag1275 flag1276 flag1277 flag1278 flag1279 flag1280 flag1281 flag1282 flag1283 flag1284 flag1285 flag1286 flag1287 flag1288 flag1289 flag1290 flag1291 flag1292 flag1293 flag1294 flag1295 flag1296 flag1297 flag1298 flag1299 flag1300 flag1301 flag1302 flag1303 flag1304 flag1305 flag1306 flag1307 flag1308 flag1309 flag1310 flag1311 flag1312 flag1313 flag1314 flag1315 flag1316 flag1317 flag1318 flag1319 flag1320 flag1321 flag1322 flag1323 flag1324 flag1325 flag1326 flag1327 flag1328 flag1329 flag1330 flag1331 flag1332 flag1333 flag1334 flag1335 flag1336 flag1337 flag1338 flag1339 flag1340 flag1341 flag1342 flag1343 flag1344 flag1345 flag1346 flag1347 flag1348 flag1349 flag1350 flag1351 flag1352 flag1353 flag1354 flag1355 flag1356 flag1357 flag1358 flag1359 flag1360 flag1361 flag1362 flag1363 flag1364 flag1365 flag1366 flag1367 flag1368 flag1369 flag1370 flag1371 flag1372 flag1373 flag1374 flag1375 flag1376 flag1377 flag1378 flag1379 flag1380 flag1381 flag1382 flag1383 flag1384 flag1385 flag1386 flag1387 flag1388 flag1389 flag1390 flag1391 flag1392 flag1393 flag1394 flag1395 flag1396 flag1397 flag1398 flag1399 flag1400 flag1401 flag1402 flag1403 flag1404 flag1405 flag1406 flag1407 flag1408 flag1409 flag1410 flag1411 flag1412 flag1413 flag1414 flag1415 flag1416 flag1417 flag1418 flag1419 flag1420 flag1421 flag1422 flag1423 flag1424 flag1425 flag1426 flag1427 flag1428 flag1429 flag1430 flag1431 flag1432 flag1433 flag1434 flag1435 flag1436 flag1437 flag1438 flag1439 flag1440 flag1441 flag1442 flag1443 flag1444 flag1445 flag1446 flag1447 flag1448 flag1449 flag1450 flag1451 flag1452 flag1453 flag1454 flag1455 flag1456 flag1457 flag1458 flag1459 flag1460 flag1461 flag1462 flag1463 flag1464 flag1465 flag1466 flag1467 flag1468 flag1469 flag1470 flag1471 flag1472 flag1473 flag1474 flag1475 flag1476 flag1477 flag1478 flag1479 flag1480 flag1481 flag1482 flag1483 flag1484 flag1485 flag1486 flag1487 flag1488 flag1489 flag1490 flag1491 flag1492 flag1493 flag1494 flag1495 flag1496 flag1497 flag1498 flag1499 flag1500 flag1501 flag1502 flag1503 flag1504 flag1505 flag1506 flag1507 flag1508 flag1509 flag1510 flag1511 flag1512 flag1513 flag1514 flag1515 flag1516 flag1517 flag1518 flag1519 flag1520 flag1521 flag1522 flag1523 flag1524 flag1525 flag1526 flag1527 flag1528 flag1529 flag1530 flag1531 flag1532 flag1533 flag1534 flag1535 flag1536 flag1537 flag1538 flag1539 flag1540 flag1541 flag1542 flag1543 flag1544 flag1545 flag1546 flag1547 flag1548 flag1549 flag1550 flag1551 flag1552 flag1553 flag1554 flag1555 flag1556 flag1557 flag1558 flag1559 flag1560 flag1561 flag1562 flag1563 flag1564 flag1565 flag1566 flag1567 flag1568 flag1569 flag1570 flag1571 flag1572 flag1573 flag1574 flag1575 flag1576 flag1577 flag1578 flag1579 flag1580 flag1581 flag1582 flag1583 flag1584 flag1585 flag1586 flag1587 flag1588 flag1589 flag1590 flag1591 flag1592 flag1593 flag1594 flag1595 flag1596 flag1597 flag1598 flag1599 flag1600 flag1601 flag1602 flag1603 flag1604 flag1605 flag1606 flag1607 flag1608 flag1609 flag1610 flag1611 flag1612 flag1613 flag1614 flag1615 flag1616 flag1617 flag1618 flag1619 flag1620 flag1621 flag1622 flag1623 flag1624 flag1625 flag1626 flag1627 flag1628 flag1629 flag1630 flag1631 flag1632 flag1633 flag1634 flag1635 flag1636 flag1637 flag1638 flag1639 flag1640 flag1641 flag1642 flag1643 flag1644 flag1645 flag1646 flag1647 flag1648 flag1649 flag1650 flag1651 flag1652 flag1653 flag1654 flag1655 flag1656 flag1657 flag1658 flag1659 flag1660 flag1661 flag1662 flag1663 flag1664 flag1665 flag1666 flag1667 flag1668 flag1669 flag1670 flag1671 flag1672 flag1673 flag1674 flag1675 flag1676 flag1677 flag1678 flag1679 flag1680 flag1681 flag1682 flag1683 flag1684 flag1685 flag1686 flag1687 flag1688 flag1689 flag1690 flag1691 flag1692 flag1693 flag1694 flag1695 flag1696 flag1697 flag1698 flag1699 flag1700 flag1701 flag1702 flag1703 flag1704 flag1705 flag1706 flag1707 flag1708 flag1709 flag1710 flag1711 flag1712 flag1713 flag1714 flag1715 flag1716 flag1717 flag1718 flag1719 flag1720 flag1721 flag1722 flag1723 flag1724 flag1725 flag1726 flag1727 flag1728 flag1729 flag1730 flag1731 flag1732 flag1733 flag1734 flag1735 flag1736 flag1737 flag1738 flag1739 flag1740 flag1741 flag1742 flag1743 flag1744 flag1745 flag1746 flag1747 flag1748 flag1749 flag1750 flag1751 flag1752 flag1753 flag1754 flag1755 flag1756 flag1757 flag1758 flag1759 flag1760 flag1761 flag1762 flag1763 flag1764 flag1765 flag1766 flag1767 flag1768 flag1769 flag1770 flag1771 flag1772 flag1773 flag1774 flag1775 flag1776 flag1777 flag1778 flag1779 flag1780 flag1781 flag1782 flag1783 flag1784 flag1785 flag1786 flag1787 flag1788 flag1789 flag1790 flag1791 flag1792 flag1793 flag1794 flag1795 flag1796 flag1797 flag1798 flag1799 flag1800 flag1801 flag1802 flag1803 flag1804 flag1805 flag1806 flag1807 flag1808 flag1809 flag1810 flag1811 flag1812 flag1813 flag1814 flag1815 flag1816 flag1817 flag1818 flag1819 flag1820 flag1821 flag1822 flag1823 flag1824 flag1825 flag1826 flag1827 flag1828 flag1829 flag1830 flag1831 flag1832 flag1833 flag1834 flag1835 flag1836 flag1837 flag1838 flag1839 flag1840 flag1841 flag1842 flag1843 flag1844 flag1845 flag1846 flag1847 flag1848 flag1849 flag1850 flag1851 flag1852 flag1853 flag1854 flag1855 flag1856 flag1857 flag1858 flag1859 flag1860 flag1861 flag1862 flag1863 flag1864 flag1865 flag1866 flag1867 flag1868 flag1869 flag1870 flag1871 flag1872 flag1873 flag1874 non_numeric_hsym1t non_numeric_etime non_numeric_tropt non_numeric_ecgt non_numeric_reperft non_numeric_aspt non_numeric_warft non_numeric_hept non_numeric_heplmwt non_numeric_plat non_numeric_statt non_numeric_fibrt non_numeric_acet non_numeric_arbst non_numeric_corst non_numeric_antiht non_numeric_nimot non_numeric_antist non_numeric_tedt non_numeric_betat non_numeric_bivalt non_numeric_dist non_numeric_tod dlcyr cfdodyr sd_dob edateyr flagdate sd_currentdate fmcdate_text fmcdatetime2 dae_text daetae2 daedis_text daetaedis2 doh_text dohtoh2 ambcalld_text ambcalldt2 atscnd_text atscndt2 frmscnd_text frmscndt2 hospd_text hospdt2 hsym1d_text hsym1dt2 edate_text eventdt2 tropd_text tropdt2 ecgd_text ecgdt2 reperfd_text reperfdt2 aspd_text aspdt2 warfd_text warfdt2 hepd_text hepdt2 heplmwd_text heplmwdt2 plad_text pladt2 statd_text statdt2 fibrd_text fibrdt2 aced_text acedt2 arbsd_text arbsdt2 corsd_text corsdt2 antihd_text antihdt2 nimod_text nimodt2 antisd_text antisdt2 tedd_text teddt2 betad_text betadt2 bivald_text bivaldt2 disd_text disdt2 dod_text dodtod2 sd_dcyear dd_cleaned dd_duprec dd_elecmatch dd_redcap_event_name dd_event dd_recstatdc dup link_id unique_id redcap_repeat_instrument redcap_repeat_instance redcap_data_access_group cfadmyr sd_record_id
 
 ** Re-label variables as some have long labels due to export format from REDCap into Stata 
 //JC 14mar2023: after starting relabelling, I now realize I need to relabel only those wherein the label has not fully exported or needs clarifying as there are a large number of variables
@@ -593,23 +623,23 @@ gen sd_admstatus=1 if sd_casetype==1 & doh!=.
 replace sd_admstatus=2 if sd_casetype==1 & dae!=. & doh==.
 replace sd_admstatus=3 if sd_casetype==2
 
-label define sd_admstatus_lab 1 "Admitted to Hospital Ward" 2 "Seen only in A&E" 3 "Not admitted to hospital" ,modify
+label define sd_admstatus_lab 1 "Admitted to Hospital Ward" 2 "Seen only in A&E" 3 "Unknown if admitted to hospital (DCO)" 4 "Community Case" ,modify
 label values sd_admstatus sd_admstatus_lab
 label var sd_admstatus "Stata Derived: Hospital Admission Status"
 
 tab sd_admstatus ,m //47 missing - these are ones that were not fully abstracted and 3 complete abstractions so returned to cleaning dofiles and corrected; now 44 missing are all ones taht were not fully abstracted (i.e. eligible==6)
-/*
- Stata Derived: Admission |
-                   Status |      Freq.     Percent        Cum.
---------------------------+-----------------------------------
-Admitted to Hospital Ward |        549       47.95       47.95
-         Seen only in A&E |        137       11.97       59.91
- Not admitted to hospital |        415       36.24       96.16
-                        . |         44        3.84      100.00
---------------------------+-----------------------------------
-                    Total |      1,145      100.00
 
-					
+/*
+    Stata Derived: Hospital Admission |
+                               Status |      Freq.     Percent        Cum.
+--------------------------------------+-----------------------------------
+            Admitted to Hospital Ward |        549       47.82       47.82
+                     Seen only in A&E |        137       11.93       59.76
+Unknown if admitted to hospital (DCO) |        418       36.41       96.17
+                                    . |         44        3.83      100.00
+--------------------------------------+-----------------------------------
+                                Total |      1,148      100.00
+		
  Stata Derived: Admission |
                    Status |      Freq.     Percent        Cum.
 --------------------------+-----------------------------------
@@ -630,18 +660,19 @@ replace sd_admstatus=2 if sd_admstatus==. & cfsource___22==1 //4 changes
 
 ** 2 records left
 replace sd_admstatus=1 if record_id=="5495" //seen in MedData as having been admitted to ward C5
-replace sd_admstatus=3 if record_id=="5496" //seen in community according to DA's comment in cfcods on CF form
+replace sd_admstatus=4 if record_id=="5496" //seen in community according to DA's comment in cfcods on CF form
 
 tab sd_admstatus ,m
 /*
-  Stata Derived: Hospital |
-         Admission Status |      Freq.     Percent        Cum.
---------------------------+-----------------------------------
-Admitted to Hospital Ward |        588       51.35       51.35
-         Seen only in A&E |        141       12.31       63.67
- Not admitted to hospital |        416       36.33      100.00
---------------------------+-----------------------------------
-                    Total |      1,145      100.00
+    Stata Derived: Hospital Admission |
+                               Status |      Freq.     Percent        Cum.
+--------------------------------------+-----------------------------------
+            Admitted to Hospital Ward |        588       51.17       51.17
+                     Seen only in A&E |        141       12.27       63.45
+Unknown if admitted to hospital (DCO) |        419       36.47       99.91
+                       Community Case |          1        0.09      100.00
+--------------------------------------+-----------------------------------
+                                Total |      1,149      100.00
 */
 
 
@@ -655,22 +686,23 @@ tab cstatus ,m
  Data: CF Case |
         Status |      Freq.     Percent        Cum.
 ---------------+-----------------------------------
-      Eligible |        730       63.76       63.76
-             . |        415       36.24      100.00
+      Eligible |        730       63.53       63.53
+             . |        419       36.47      100.00
 ---------------+-----------------------------------
-         Total |      1,145      100.00
+         Total |      1,149      100.00
 */
 
 tab eligible ,m
 /*
+
    Incidence Data: Case Status-Eligible |      Freq.     Percent        Cum.
 ----------------------------------------+-----------------------------------
                Pending 28-day follow-up |         10        0.87        0.87
-Confirmed but NOT fully abstracted at c |         45        3.93        4.80
-                              Completed |        675       58.95       63.76
-                                      . |        415       36.24      100.00
+Confirmed but NOT fully abstracted at c |         45        3.92        4.79
+                              Completed |        675       58.75       63.53
+                                      . |        419       36.47      100.00
 ----------------------------------------+-----------------------------------
-                                  Total |      1,145      100.00
+                                  Total |      1,149      100.00
 */
 
 gen sd_absstatus=1 if sd_casetype==1 & eligible!=6
@@ -686,11 +718,11 @@ tab sd_absstatus ,m //none missing
       Stata Derived: |
   Abstraction Status |      Freq.     Percent        Cum.
 ---------------------+-----------------------------------
-    Full abstraction |        685       59.83       59.83
- Partial abstraction |         45        3.93       63.76
-No abstraction (DCO) |        415       36.24      100.00
+    Full abstraction |        685       59.62       59.62
+ Partial abstraction |         45        3.92       63.53
+No abstraction (DCO) |        419       36.47      100.00
 ---------------------+-----------------------------------
-               Total |      1,145      100.00
+               Total |      1,149      100.00
 */
 
 
@@ -735,8 +767,8 @@ replace sd_los_ward=sd_dlc-sd_doh if sd_los_ward==. & sd_doh!=. & sd_dlc!=. //39
 label var sd_los_ae "Stata Derived: Length of stay A&E"
 label var sd_los_ward "Stata Derived: Length of stay Ward"
 
-tab sd_los_ae ,m //457 missing; 44 have 0 days
-tab sd_los_ward ,m //557 missing; 9 have 0 days
+tab sd_los_ae ,m //461 missing; 44 have 0 days
+tab sd_los_ward ,m //561 missing; 9 have 0 days
 
 ** Since strokes can be an event-in-evolution, need to add the readmission days but first need to reassign the readmission dates to match with A&E vs Ward dates
 ** Create Stata-derived readmitadm and readmitdis so we can retain original values
@@ -789,10 +821,10 @@ tab sd_etype sd_pstroke ,m
   Derived: |                   stroke?
 Event Type |       Yes         No         99          . |     Total
 -----------+--------------------------------------------+----------
-    Stroke |       111        248        142        189 |       690 
-     Heart |        17        119         49        270 |       455 
+    Stroke |       111        248        142        190 |       691 
+     Heart |        17        119         49        273 |       458 
 -----------+--------------------------------------------+----------
-     Total |       128        367        191        459 |     1,145
+     Total |       128        367        191        463 |     1,149
 */
 tab sd_multievent sd_pstroke if sd_etype==1
 /*
@@ -814,16 +846,49 @@ label define sd_fes_lab 1 "First ever stroke" ,modify
 label values sd_fes sd_fes_lab
 label var sd_fes "Stata Derived: First Ever Stroke"
 
-tab sd_fes ,m //897 missing
+tab sd_fes ,m //901 missing
 /*
    Stata Derived: |
 First Ever Stroke |      Freq.     Percent        Cum.
 ------------------+-----------------------------------
-First ever stroke |        248       21.66       21.66
-                . |        897       78.34      100.00
+First ever stroke |        248       21.58       21.58
+                . |        901       78.42      100.00
 ------------------+-----------------------------------
-            Total |      1,145      100.00
+            Total |      1,149      100.00
 */
+
+******************
+** PREVIOUS AMI **
+******************
+** For analyzing risk factors, the variable pami needs to be updated based on if pt had multiple events and previous AMI = No (already updated pstroke above)
+tab sd_multievent pami ,m
+count if sd_multievent!=. & sd_multievent!=1 & pami!=1 & redcap_event_name=="heart_arm_2" //1
+//list sd_etype record_id dd_deathid fname lname edate sd_multievent pami pamiyr dbchecked pstroke if sd_multievent!=. & sd_multievent!=1 & pami!=1 & redcap_event_name=="heart_arm_2"
+
+** Create Stata-derived pami and pamiyr so we can retain original values
+gen sd_pami=pami
+gen sd_pamiyr=pamiyr
+label var sd_pami "Stata Derived: Any definite previous AMI?"
+label values sd_pami pami pami_
+label var sd_pamiyr "Stata Derived: Enter YEAR of most RECENT previous AMI"
+
+replace sd_pami=1 if record_id=="3774"
+replace sd_pamiyr=2021 if record_id=="3774"
+replace sd_dbchecked=1 if record_id=="3774"
+
+
+******************
+** RISK FACTORS **
+******************
+** For analyzing risk factors, the RF variables that will be analyzed need to = 99 if rfany = 99 due to guideline in dofile 5j_analysis RFs_heart.do and 5k_analysis RFs_stroke.do
+replace smoker=99 if rfany==99
+replace tia=99 if rfany==99 & redcap_event_name=="stroke_arm_1"
+replace htn=99 if rfany==99
+replace diab=99 if rfany==99
+replace alco=99 if rfany==99
+replace mumstroke=99 if famstroke==99
+replace dadstroke=99 if famstroke==99
+replace sibstroke=99 if famstroke==99
 
 
 ***********
@@ -870,16 +935,16 @@ tab sd_etype ,m
    Derived: |
  Event Type |      Freq.     Percent        Cum.
 ------------+-----------------------------------
-     Stroke |        690       60.26       60.26
-      Heart |        455       39.74      100.00
+     Stroke |        691       60.14       60.14
+      Heart |        458       39.86      100.00
 ------------+-----------------------------------
-      Total |      1,145      100.00
+      Total |      1,149      100.00
 */
 
-count if dd_heart==1 & dd_stroke==1 //17
+count if dd_heart==1 & dd_stroke==1 //19
 //Note: the above death records had both heart and stroke CODs so need to re-assign event type when splitting datasets below
 
-count //1145
+count //1149
 
 ** Create identifiable CVD dataset
 label data "BNR-CVD data 2021: Identifiable Dataset (CVD-HEART+STROKE)"
@@ -890,7 +955,8 @@ note: TS This dataset includes all reportable heart and stroke incidence and dea
 
 ** Create identifiable HEART dataset
 preserve
-drop sri srirec evolution ssym1* ssym2* ssym3* ssym4* sign1 sign2 sign3 sign4 sonset sday swalldate swalld* cardmon nihss stype dstroke tia assess assess1 assess2 assess3 assess4 assess7 assess8 assess9 assess10 assess12 assess14 dct dmri dcerangio dcarangio dcarus ct doct doctday doctmonth doctyear stime ctfeat ctinfarct ctsubhaem ctinthaem tdhemi tvdrain huti hfall hhydro hhaemo absdxs_* cors* antih* nimo* antis* ted* duti dfall dhydro dhaemo disdxs_* recdxs_* strunit sunitadmsame astrunitd astrunitdday astrunitdmonth astrunitdyear sunitdissame dstrunitd dstrunitdday dstrunitdmonth dstrunitdyear pstrsit pstrosit rankin* f1rankin* dd_stroke sd_corsdt sd_antihdt sd_nimodt sd_antisdt sd_teddt sd_fes sd_readmitadm_ward sd_readmitdis sd_readmitdays_ward //stroke variables
+drop sri srirec evolution ssym1* ssym2* ssym3* ssym4* sign1 sign2 sign3 sign4 sonset sday swalldate swalld* cardmon nihss stype dstroke tia assess assess1 assess2 assess3 assess4 assess7 assess8 assess9 assess10 assess12 assess14 dct dmri dcerangio dcarangio dcarus ct doct doctday doctmonth doctyear stime ctfeat ctinfarct ctsubhaem ctinthaem tdhemi tvdrain huti hfall hhydro hhaemo absdxs_* cors* antih* nimo* antis* ted* duti dfall dhydro dhaemo disdxs_* recdxs_* strunit sunitadmsame astrunitd astrunitdday astrunitdmonth astrunitdyear sunitdissame dstrunitd dstrunitdday dstrunitdmonth dstrunitdyear pstrsit pstrosit rankin* f1rankin* sd_corsdt sd_antihdt sd_nimodt sd_antisdt sd_teddt sd_fes sd_readmitadm_ward sd_readmitdis sd_readmitdays_ward //stroke variables
+** Add in the heart DCOs
 replace sd_bothevent=2 if dd_deathid==34138
 replace sd_bothevent=2 if record_id=="2915"
 replace sd_bothevent=1 if record_id=="3128"
@@ -899,7 +965,21 @@ replace sd_comments="JC 14mar2023: this case was abstracted as a stroke event bu
 replace sd_comments="JC 14mar2023: this case was abstracted as a heart event but stroke event seen on death certificate." if record_id=="2915" //stroke is DCO
 replace sd_etype=2 if dd_heart==1 & sd_etype!=2 //16 changes
 drop if sd_etype!=2 //674 deleted
-count //471
+** Remove the stroke records whose death record matched with both heart and stroke records
+sort dd_deathid 
+quietly by dd_deathid : gen dup = cond(_N==1,0,_n)
+sort dd_deathid record_id
+count if dup>0 & dd_deathid!=. //20
+//order sd_etype redcap_event_name record_id dd_deathid dd_fname dd_lname dd_heart dd_stroke sd_casetype sd_admstatus sd_absstatus
+drop if record_id=="2682"|record_id=="2138"|record_id=="1833"|record_id=="2322"|(dd_deathid==34481 & record_id=="") //5 deleted
+count if sd_etype==2 & redcap_event_name=="stroke_arm_1" //3 - stroke records 2429, 3128, 3294 with heart DCOs
+** Added back these 3 death records at start of this dofile and now will drop stroke records 2429, 3128, 3294
+drop if record_id=="2429"|record_id=="3128"|record_id=="3294" //3 deleted
+count if sd_casetype==1 & redcap_event_name=="stroke_arm_1" //0
+count if sd_admstatus==1 & redcap_event_name=="stroke_arm_1" //0
+count if sd_absstatus==1 & redcap_event_name=="stroke_arm_1" //0
+drop dd_stroke dup
+count //467
 label data "BNR-CVD data 2021: Identifiable Dataset (HEART)"
 notes _dta :These data prepared from BB national death register and REDCap BNRCVD_CORE database
 save "`datapath'\version03\3-output\2021_prep analysis_identifiable_heart" ,replace
@@ -909,17 +989,9 @@ restore
 
 ** Create de-identified HEART dataset
 preserve
-drop sri srirec evolution ssym1* ssym2* ssym3* ssym4* sign1 sign2 sign3 sign4 sonset sday swalldate swalld* cardmon nihss stype dstroke tia assess assess1 assess2 assess3 assess4 assess7 assess8 assess9 assess10 assess12 assess14 dct dmri dcerangio dcarangio dcarus ct doct doctday doctmonth doctyear stime ctfeat ctinfarct ctsubhaem ctinthaem tdhemi tvdrain huti hfall hhydro hhaemo absdxs_* cors* antih* nimo* antis* ted* duti dfall dhydro dhaemo disdxs_* recdxs_* strunit sunitadmsame astrunitd astrunitdday astrunitdmonth astrunitdyear sunitdissame dstrunitd dstrunitdday dstrunitdmonth dstrunitdyear pstrsit pstrosit rankin* f1rankin* dd_stroke sd_corsdt sd_antihdt sd_nimodt sd_antisdt sd_teddt sd_fes sd_readmitadm_ward sd_readmitdis sd_readmitdays_ward //stroke variables
+use "`datapath'\version03\3-output\2021_prep analysis_identifiable_heart" ,clear
 drop dd_fname dd_lname dd_dob dd_natregno dd_pname fname lname mname dob dobday dobmonth dobyear natregno sd_natregno nrnyear nrnmonth nrnday nrnnum recnum addr parish hometel worktel celltel fnamekin lnamekin sametel homekin workkin cellkin dd_mname dd_regnum dd_nrn dd_address dd_parish //identifiable variables
-replace sd_bothevent=2 if dd_deathid==34138
-replace sd_bothevent=2 if record_id=="2915"
-replace sd_bothevent=1 if record_id=="3128"
-replace sd_casetype=2 if record_id=="3128" //stroke is DCO
-replace sd_comments="JC 14mar2023: this case was abstracted as a stroke event but heart event seen on death certificate." if record_id=="3128" //stroke is DCO
-replace sd_comments="JC 14mar2023: this case was abstracted as a heart event but stroke event seen on death certificate." if record_id=="2915" //stroke is DCO
-replace sd_etype=2 if dd_heart==1 & sd_etype!=2 //16 changes
-drop if sd_etype!=2 //674 deleted
-count //471
+count //467
 label data "BNR-CVD data 2021: De-identified Dataset (HEART)"
 notes _dta :These data prepared from BB national death register and REDCap BNRCVD_CORE database
 save "`datapath'\version03\3-output\2021_prep analysis_deidentified_heart" ,replace
@@ -930,7 +1002,7 @@ restore
 
 ** Create identifiable STROKE dataset
 preserve
-drop hsym1* hsym2* hsym3* hsym4* hsym5* hsym6* hsym7* timi htype cardiac cardiachosp resus sudd pihd pcabg pcorangio bpm o2sat dctcorang dstress ckmbdone astdone tropdone tropcomm tropd* tropt* tropres trop1res trop2res ecg* ischecg oecg* tppv tnippv tdefib tcpr tmech tctcorang tpacetemp tcath hccf hcpang haneur hhypo hblock hafib hcshock hinfarct hrenal hcarest absdxh* beta* bival* dccf dcpang daneur dhypo dblock dafib dcshock dinfarct drenal dcarest disdxh* recdxh* carunit cunitadmsame acarunitd* cunitdissame dcarunitd* dd_heart sd_hsym1dt sd_tropdt sd_ecgdt sd_betadt sd_bivaldt //heart variables
+drop hsym1* hsym2* hsym3* hsym4* hsym5* hsym6* hsym7* timi htype cardiac cardiachosp resus sudd pihd pcabg pcorangio bpm o2sat dctcorang dstress ckmbdone astdone tropdone tropcomm tropd* tropt* tropres trop1res trop2res ecg* ischecg oecg* tppv tnippv tdefib tcpr tmech tctcorang tpacetemp tcath hccf hcpang haneur hhypo hblock hafib hcshock hinfarct hrenal hcarest absdxh* beta* bival* dccf dcpang daneur dhypo dblock dafib dcshock dinfarct drenal dcarest disdxh* recdxh* carunit cunitadmsame acarunitd* cunitdissame dcarunitd* sd_hsym1dt sd_tropdt sd_ecgdt sd_betadt sd_bivaldt //heart variables
 replace sd_bothevent=1 if dd_deathid==34138
 replace sd_bothevent=1 if record_id=="2915"
 replace sd_casetype=2 if record_id=="2915" //stroke is DCO
@@ -961,49 +1033,34 @@ First ever stroke |        251       36.17       36.17
 ------------------+-----------------------------------
             Total |        694      100.00
 */
-count //694
+** Remove the heart records whose death record matched with both heart and stroke records
+sort dd_deathid 
+quietly by dd_deathid : gen dup = cond(_N==1,0,_n)
+sort dd_deathid record_id
+count if dup>0 & dd_deathid!=. //14
+//order sd_etype redcap_event_name record_id dd_deathid dd_fname dd_lname dd_heart dd_stroke sd_casetype sd_admstatus sd_absstatus
+drop if record_id=="1830"|record_id=="3290"|record_id=="3318"|(dd_deathid==36642 & record_id=="") //4 deleted
+count if sd_etype==1 & redcap_event_name=="heart_arm_2" //1 - heart record 2915 with stroke DCO (deathid 34481)DCOs
+** Added back the 1 death record at start of this dofile and now will drop heart record 2915
+drop if record_id=="2915" //1 deleted
+count if sd_casetype==1 & redcap_event_name=="heart_arm_2" //0
+count if sd_admstatus==1 & redcap_event_name=="heart_arm_2" //0
+count if sd_absstatus==1 & redcap_event_name=="heart_arm_2" //0
+drop dd_heart dup
+count //691
 label data "BNR-CVD data 2021: Identifiable Dataset (STROKE)"
 notes _dta :These data prepared from BB national death register and REDCap BNRCVD_CORE database
 save "`datapath'\version03\3-output\2021_prep analysis_identifiable_stroke" ,replace
 note: TS This dataset is used for cross-checking identifiable data with REDCap database
 note: TS This dataset includes all reportable stroke incidence and death data
+erase "`datapath'\version03\2-working\heartstroke_DCOs.dta"
 restore
 
 ** Create de-identified STROKE dataset
 preserve
-drop hsym1* hsym2* hsym3* hsym4* hsym5* hsym6* hsym7* timi htype cardiac cardiachosp resus sudd pihd pcabg pcorangio bpm o2sat dctcorang dstress ckmbdone astdone tropdone tropcomm tropd* tropt* tropres trop1res trop2res ecg* ischecg oecg* tppv tnippv tdefib tcpr tmech tctcorang tpacetemp tcath hccf hcpang haneur hhypo hblock hafib hcshock hinfarct hrenal hcarest absdxh* beta* bival* dccf dcpang daneur dhypo dblock dafib dcshock dinfarct drenal dcarest disdxh* recdxh* carunit cunitadmsame acarunitd* cunitdissame dcarunitd* dd_heart sd_hsym1dt sd_tropdt sd_ecgdt sd_betadt sd_bivaldt //heart variables
+use "`datapath'\version03\3-output\2021_prep analysis_identifiable_stroke" ,clear
 drop dd_fname dd_lname dd_dob dd_natregno dd_pname fname lname mname dob dobday dobmonth dobyear natregno sd_natregno nrnyear nrnmonth nrnday nrnnum recnum addr parish hometel worktel celltel fnamekin lnamekin sametel homekin workkin cellkin dd_mname dd_regnum dd_nrn dd_address dd_parish //identifiable variables
-replace sd_bothevent=1 if dd_deathid==34138
-replace sd_bothevent=1 if record_id=="2915"
-replace sd_casetype=2 if record_id=="2915" //stroke is DCO
-replace sd_comments="JC 14mar2023: this case was abstracted as a heart event but stroke event seen on death certificate." if record_id=="2915" //stroke is DCO
-replace sd_bothevent=2 if record_id=="3128"
-replace sd_comments="JC 14mar2023: this case was abstracted as a stroke event but heart event seen on death certificate." if record_id=="3128" //stroke is DCO
-replace sd_bothevent=2 if dd_deathid==34602
-replace sd_bothevent=2 if dd_deathid==35389
-replace sd_bothevent=2 if dd_deathid==36156
-replace sd_bothevent=2 if dd_deathid==36192
-replace sd_bothevent=2 if dd_deathid==36438
-replace sd_bothevent=2 if dd_deathid==36731
-replace sd_bothevent=2 if dd_deathid==36738
-replace sd_bothevent=2 if dd_deathid==37287
-replace sd_etype=1 if dd_stroke==1 & sd_etype!=1 //4 changes
-drop if sd_etype!=1 //451 deleted
-tab sd_fes ,m //for the 4 DCO records
-count if sd_pstroke==2 & sd_fes!=1 //3
-//list sd_etype record_id dd_deathid sd_fes sd_multievent sd_pstroke pstroke if sd_pstroke==2 & sd_fes!=1
-replace sd_fes=1 if sd_pstroke==2 & sd_fes!=1 //3 changes
-tab sd_fes ,m
-/*
-   Stata Derived: |
-First Ever Stroke |      Freq.     Percent        Cum.
-------------------+-----------------------------------
-First ever stroke |        251       36.17       36.17
-                . |        443       63.83      100.00
-------------------+-----------------------------------
-            Total |        694      100.00
-*/
-count //694
+count //691
 label data "BNR-CVD data 2021: De-identified Dataset (STROKE)"
 notes _dta :These data prepared from BB national death register and REDCap BNRCVD_CORE database
 save "`datapath'\version03\3-output\2021_prep analysis_deidentified_stroke" ,replace
