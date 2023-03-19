@@ -1090,13 +1090,36 @@ count if sd_disdt!=. & sd_ambcalldt!=. & sd_disdt<sd_ambcalldt //0
 //list sd_etype record_id ambcalld ambcallt atscnd atscnt frmscnd frmscnt hospd hospt dae tae if arrival==1
 //order sd_etype record_id ambcalld ambcallt atscnd atscnt frmscnd frmscnt sameadm hospd hospt dae tae
 
+
+************************************************
+** A&E, ECG, Reperfusion + Ambulance DateTime **
+************************************************
 count if dae<frmscnd & dae!=. & frmscnd!=. //0
 //list record_id dae frmscnd if dae<frmscnd & dae!=. & frmscnd!=.
-count if sd_daetae<sd_frmscndt & sd_daetae!=. & sd_frmscndt!=. //11 - heart record 3227 has corresponding stroke record 4088 which has correct A&E time so corrected below
-list sd_etype record_id fname lname frmscnd frmscnt dae tae if sd_daetae<sd_frmscndt & sd_daetae!=. & sd_frmscndt!=.
+count if sd_daetae<sd_frmscndt & sd_daetae!=. & sd_frmscndt!=. //11 - heart record 3227 has corresponding stroke record 4088 which has correct A&E time so corrected below; stroke records 2872 + 3268 also corrected below; the rest couldn't be corrected so added a note in comments and CVD DM Re-engineer OneNote bk.
+//list sd_etype record_id fname lname frmscnd frmscnt dae tae sd_bothevent if sd_daetae<sd_frmscndt & sd_daetae!=. & sd_frmscndt!=.
 
-STOP review 11 above and then perform other checks on notified/at/from scene/at hosp to admission; admission to ecg; admission to reperfusion; event to reperfusion
-Create corrections list for these cases below
+count if sd_daetae<sd_atscndt & sd_daetae!=. & sd_atscndt!=. //8 - same as above
+//list sd_etype record_id fname lname atscnd atscnt dae tae sd_bothevent if sd_daetae<sd_atscndt & sd_daetae!=. & sd_atscndt!=.
+
+count if sd_daetae<sd_hospdt & sd_daetae!=. & sd_hospdt!=. //15 - same as above + stroke records 1821, 2633, 2726, 2816 and heart record 2723 couldn't be corrected so added a note in comments and CVD DM Re-engineer OneNote bk.
+//list sd_etype record_id fname lname hospd hospt dae tae sd_bothevent if sd_daetae<sd_hospdt & sd_daetae!=. & sd_hospdt!=.
+
+count if sd_daetae<sd_ambcalldt & sd_daetae!=. & sd_ambcalldt!=. //4 - same as above
+//list sd_etype record_id fname lname ambcalld ambcallt dae tae sd_bothevent if sd_daetae<sd_ambcalldt & sd_daetae!=. & sd_ambcalldt!=.
+
+count if sd_daetae>sd_ecgdt & sd_daetae!=. & sd_ecgdt!=. //35 - record 3318 already corrected above so can ignore; record 4173 corrected below; heart records 1975 + 3610 incorrect but cannot confirm correct times so note added in comments and CVD DM Re-engineer OneNote bk; 31 records with ECG done at FMC prior to A&E were dropped from heart PM 3 analysis as noted in comments below and OneNote bk.
+//list sd_etype record_id fname lname dae tae ecgd ecgt sd_bothevent inhosp fmc if sd_daetae>sd_ecgdt & sd_daetae!=. & sd_ecgdt!=.
+
+count if sd_daetae>sd_reperfdt & sd_daetae!=. & sd_reperfdt!=. //1 - heart record 2052 corrected below
+//list sd_etype record_id fname lname dae tae reperfd reperft sd_bothevent inhosp fmc if sd_daetae>sd_reperfdt & sd_daetae!=. & sd_reperfdt!=.
+
+count if sd_fibrdt!=sd_reperfdt & sd_fibrdt!=. & sd_reperfdt!=. //1 - same as above
+
+count if sd_eventdt>sd_reperfdt & sd_eventdt!=. & sd_reperfdt!=. //0
+
+** JC 19mar2023: there are possibly more inconsistencies with other datetimes that need correcting but due to deadline to finish cleaning and analysis I only performed the above checks as it relates to annual report analyses.
+
 
 ****************
 ** Event Type **
@@ -1112,45 +1135,52 @@ count if dd_heart==1 & dd_stroke==1 & sd_casetype==2 //9
 
 
 ** Corrections from above checks
-destring flag117 ,replace
-destring flag1042 ,replace
-destring flag257 ,replace
-destring flag1182 ,replace
-destring flag343 ,replace
-destring flag1268 ,replace
-destring flag349 ,replace
-destring flag1274 ,replace
-destring flag350 ,replace
-destring flag1275 ,replace
-destring flag351 ,replace
-destring flag1276 ,replace
-destring flag407 ,replace
-destring flag1332 ,replace
-destring flag531 ,replace
-destring flag1456 ,replace
-destring flag534 ,replace
-destring flag1459 ,replace
-format flag117 flag1042 flag343 flag1268 %dM_d,_CY
+destring flag135 ,replace
+destring flag1060 ,replace
+destring flag136 ,replace
+destring flag1061 ,replace
+destring flag143 ,replace
+destring flag1068 ,replace
+destring flag483 ,replace
+destring flag1408 ,replace
 
-
-replace flag117=dae if record_id==""
-replace dae=dae-1 if record_id=="" //see above
-replace flag1042=dae if record_id==""
+format flag136 flag1061 flag143 flag1068 flag483 flag1408 %dM_d,_CY
 
 
 replace flag118=tae if record_id=="3227"
 replace tae=subinstr(tae,"13","23",.) if record_id=="3227" //see above
 replace flag1043=tae if record_id=="3227"
 
+replace flag135=atscene if record_id=="2872"|record_id=="3268"
+replace atscene=2 if record_id=="2872"|record_id=="3268" //see above
+replace flag1060=atscene if record_id=="2872"|record_id=="3268"
 
-replace flag269=etime if record_id==""
-replace etime=subinstr(etime,"19","07",.) if record_id=="" //see above
-replace flag1194=etime if record_id==""
+replace flag136=atscnd if record_id=="2872"|record_id=="3268"
+replace atscnd=ambcalld if record_id=="2872"|record_id=="3268" //see above
+replace flag1061=atscnd if record_id=="2872"|record_id=="3268"
 
+replace flag143=frmscnd if record_id=="2872"|record_id=="3268"
+replace frmscnd=ambcalld if record_id=="2872"|record_id=="3268" //see above
+replace flag1068=frmscnd if record_id=="2872"|record_id=="3268"
+
+replace comments="JC 19mar2023: A&E admission time is possibly incorrect when checked against ambulance times but couldn't confirm correct time via MedData so if future timing analyses to be done then you may have to drop this case." if record_id=="2042"|record_id=="2306"|record_id=="2442"|record_id=="2793"|record_id=="2840"|record_id=="3093"|record_id=="3191"|record_id=="3364"|record_id=="1821"|record_id=="2633"|record_id=="2726"|record_id=="2816"|record_id=="2723"
+
+replace comments="JC 19mar2023: ECG time is possibly incorrect when checked against admission times but couldn't confirm correct time so if future timing analyses to be done then you may have to drop this case. Case dropped when performing heart performance measure 3 (median time from admission to ECG) for 2021 annual report." if record_id=="1975"|record_id=="3610"
+
+replace comments="JC 19mar2023: ECG done at first medical contact (FMC) prior to arrival at A&E so ECG datetime is from FMC. Case dropped when performing heart performance measure 3 (median time from admission to ECG) for 2021 annual report." if sd_daetae>sd_ecgdt & sd_daetae!=. & sd_ecgdt!=. & fmc==1 //31 changes
+
+
+replace flag371=ecgt if record_id=="4173"
+replace ecgt=subinstr(ecgt,"09","21",.) if record_id=="4173" //see above
+replace flag1296=ecgt if record_id=="4173"
+
+replace flag483=reperfd if record_id=="2052"
+replace reperfd=fibrd if record_id=="2052" //see above
+replace flag1408=reperfd if record_id=="2052"
 
 
 ** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
-replace flagdate=sd_currentdate if record_id=="3227"
+replace flagdate=sd_currentdate if record_id=="3227"|record_id=="4173"|record_id=="2872"|record_id=="3268"|record_id=="2052"
 
 
 
@@ -1162,17 +1192,17 @@ preserve
 sort record_id
 
 ** Format the date flags so they are exported as dates not numbers
-format flag117 flag1042 flag343 flag1268 %dM_d,_CY
+format flag136 flag1061 flag143 flag1068 flag483 flag1408 %dM_d,_CY
 
 ** Create excel errors list before deleting incorrect records
 ** Use below code to automate file names using current date
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-capture export_excel record_id sd_etype flag117 flag118 flag257 flag258 flag269 flag343 flag349 flag350 flag351 flag407 flag531 flag534 if ///
-		(flag117!=. | flag118!="" | flag257!=. | flag258!=. | flag269!="" | flag343!=. | flag349!=. | flag350!=. | flag351!=. | flag407!=. | flag531!=. | flag534!=.) & flagdate!=. ///
-using "`datapath'\version03\3-output\CVDCleaning2021_FINAL2_`listdate'.xlsx", sheet("ERRORS") firstrow(varlabels)
-capture export_excel record_id sd_etype flag1042 flag1043 flag1182 flag1183 flag1194 flag1268 flag1274 flag1275 flag1276 flag1332 flag1456 flag1459 if ///
-		 (flag1042!=. | flag1043!="" | flag1182!=. | flag1183!=. | flag1194!="" | flag1268!=. | flag1274!=. | flag1275!=. | flag1276!=. | flag1332!=. | flag1456!=. | flag1459!=.) & flagdate!=. ///
-using "`datapath'\version03\3-output\CVDCleaning2021_FINAL2_`listdate'.xlsx", sheet("CORRECTIONS") firstrow(varlabels)
+capture export_excel record_id sd_etype flag118 flag135 flag136 flag143 flag371 flag483 if ///
+		record_id=="3227"|record_id=="4173"|record_id=="2872"|record_id=="3268"|record_id=="2052" ///
+using "`datapath'\version03\3-output\CVDCleaning2021_FINAL3_`listdate'.xlsx", sheet("ERRORS") firstrow(varlabels)
+capture export_excel record_id sd_etype flag1043 flag1060 flag1061 flag1068 flag1296 flag1408 if ///
+		 record_id=="3227"|record_id=="4173"|record_id=="2872"|record_id=="3268"|record_id=="2052" ///
+using "`datapath'\version03\3-output\CVDCleaning2021_FINAL3_`listdate'.xlsx", sheet("CORRECTIONS") firstrow(varlabels)
 restore
 */
 
