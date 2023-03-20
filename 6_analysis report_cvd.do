@@ -4,7 +4,7 @@
     //  project:                BNR-CVD
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      16-MAR-2023
-    // 	date last modified      19-MAR-2023
+    // 	date last modified      20-MAR-2023
     //  algorithm task          Creating MS Word document with 2021 statistical + figure outputs for 2021 annual report
     //  status                  Pending
     //  objective               To have methods, tables, figures and text in an easy-to-use format for the report writer
@@ -1324,7 +1324,7 @@ use "`datapath'\version03\2-working\pm5_asppla_heart", clear
 putdocx clear
 putdocx begin
 
-putdocx pagebreak
+//putdocx pagebreak
 putdocx paragraph, style(Heading2)
 putdocx text ("AMI: PM 5-Documented aspirin prescribed at discharge (Dofile: 5n_analysis PMs_heart.do)"), bold
 putdocx paragraph, halign(center)
@@ -1355,7 +1355,7 @@ use "`datapath'\version03\2-working\pm6_statin_heart", clear
 putdocx clear
 putdocx begin
 
-putdocx pagebreak
+//putdocx pagebreak
 putdocx paragraph, style(Heading2)
 putdocx text ("AMI: PM 6-Documented statins prescribed at discharge (Dofile: 5n_analysis PMs_heart.do)"), bold
 putdocx paragraph, halign(center)
@@ -1374,7 +1374,7 @@ restore
 
 clear
 
-STOP
+
 ***************************************************** STROKE *************************************************************
 
 preserve
@@ -1892,7 +1892,7 @@ restore
 
 clear
 
-/*
+
 preserve
 use "`datapath'\version03\2-working\pm1_stroke", clear
 
@@ -1901,28 +1901,17 @@ putdocx begin
 
 putdocx pagebreak
 putdocx paragraph, style(Heading1)
-putdocx text ("Stroke: Performance measures, 2020"), bold
+putdocx text ("Stroke: Performance measures, 2021"), bold
 putdocx paragraph, style(Heading2)
-putdocx text ("Stroke: Performance measures for acute care (Dofile: 1.3_stroke_cvd_analysis.do)"), bold
+putdocx text ("Stroke: Performance measures for acute care (Dofile: 5o_analysis PMs_stroke.do)"), bold
 putdocx paragraph, halign(center)
 putdocx text ("PM 1: Proportion of patients receiving reperfusion"), bold font(Helvetica,10,"blue")
 
 putdocx paragraph
-putdocx text ("With the opening of the Stroke Unit in 2015, the Queen Elizabeth Hospital was able to offer IV TPA (a 'clot busting' drug – see Appendix B) to patients arriving within 2 hours of onset of symptoms.")
-putdocx paragraph
-putdocx text ("Below tables use the syntax: tab reperf year if stype == 1, col")
+putdocx text ("Below table uses the syntax: tab reperf if stype == 1, col")
 putdocx paragraph, halign(center)
-putdocx text ("2017"), bold font(Helvetica,10,"blue")
-tab2docx reperf if stype==1 & year==2017
-putdocx paragraph, halign(center)
-putdocx text ("2018"), bold font(Helvetica,10,"blue")
-tab2docx reperf if stype==1 & year==2018
-putdocx paragraph, halign(center)
-putdocx text ("2019"), bold font(Helvetica,10,"blue")
-tab2docx reperf if stype==1 & year==2019
-putdocx paragraph, halign(center)
-putdocx text ("2020"), bold font(Helvetica,10,"blue")
-tab2docx reperf if stype==1 & year==2020
+putdocx text ("2021"), bold font(Helvetica,10,"blue")
+tab2docx reperf if stype==1
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
 putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
@@ -1940,7 +1929,7 @@ putdocx clear
 putdocx begin
 
 putdocx paragraph, style(Heading2)
-putdocx text ("Stroke: PM 2-Proportion of patients with ischaemic stroke who receive anti-thrombotic therapy by the end of hospital stay (Dofile: 1.3_stroke_cvd_analysis.do)"), bold
+putdocx text ("Stroke: PM 2-Proportion of patients with ischaemic stroke who receive anti-thrombotic therapy by the end of hospital stay (Dofile: 5o_analysis PMs_stroke.do)"), bold
 putdocx paragraph, halign(center)
 putdocx text ("Table 2.6. Proportion of persons with acute ischaemic events receiving anti- thrombotic therapy by year"), bold font(Helvetica,10,"blue")
 
@@ -1967,7 +1956,7 @@ putdocx clear
 putdocx begin
 
 putdocx paragraph, style(Heading2)
-putdocx text ("Stroke: PM 3-Percent of patients with an ischaemic stroke prescribed anti-thrombotic therapy at discharge (Dofile: 1.3_stroke_cvd_analysis.do)"), bold
+putdocx text ("Stroke: PM 3-Percent of patients with an ischaemic stroke prescribed anti-thrombotic therapy at discharge (Dofile: 5o_analysis PMs_stroke.do)"), bold
 putdocx paragraph, halign(center)
 putdocx text ("Table 2.7. Proportion of ischaemic stroke cases receiving appropriate medications (Anti-thrombotics) at discharge"), bold font(Helvetica,10,"blue")
 
@@ -1994,7 +1983,7 @@ putdocx clear
 putdocx begin
 
 putdocx paragraph, style(Heading2)
-putdocx text ("Stroke: PM 4-Statin Prescribed at Discharge: Percent of ischaemic stroke who are discharged on Statin medication (Dofile: 1.3_stroke_cvd_analysis.do)"), bold
+putdocx text ("Stroke: PM 4-Statin Prescribed at Discharge: Percent of ischaemic stroke who are discharged on Statin medication (Dofile: 5o_analysis PMs_stroke.do)"), bold
 putdocx paragraph, halign(center)
 putdocx text ("Table 2.7. Proportion of ischaemic stroke cases receiving appropriate medications (Statins) at discharge"), bold font(Helvetica,10,"blue")
 
@@ -2021,13 +2010,13 @@ sort registry
 putdocx clear
 putdocx begin
 
-putdocx pagebreak
+//putdocx pagebreak
 putdocx paragraph, style(Heading1)
 putdocx text ("AMI & Stroke: Additional Analyses"), bold
 putdocx paragraph, style(Heading2)
-putdocx text ("AMI & Stroke: % CTs for those discharged alive + % persons <70 with AMI and Stroke (Dofile: 1.3_stroke_cvd_analysis.do)"), bold
+putdocx text ("AMI & Stroke: % CTs for those discharged alive with Stroke + % persons <70 with AMI and Stroke (Dofile: 5n_analysis PMs_heart.do + 5o_analysis PMs_stroke.do)"), bold
 putdocx paragraph, halign(center)
-putdocx text ("Table: % CTs for those discharged alive, AMI and Stroke, Barbados, 2020"), bold font(Helvetica,10,"blue")
+putdocx text ("Table: % CTs for those discharged alive with Stroke, Barbados, 2021"), bold font(Helvetica,10,"blue")
 
 putdocx table tbl1 = data(registry category year ct total_alive ct_percent), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
@@ -2053,10 +2042,8 @@ putdocx clear
 putdocx begin
 
 //putdocx pagebreak
-putdocx paragraph, style(Heading2)
-putdocx text ("AMI & Stroke: % CTs for those discharged alive + % persons <70 with AMI and Stroke (Dofile: 1.3_stroke_cvd_analysis.do)"), bold
 putdocx paragraph, halign(center)
-putdocx text ("Table: % persons <70 with AMI and Stroke, Barbados, 2020"), bold font(Helvetica,10,"blue")
+putdocx text ("Table: % persons <70 with AMI and Stroke, Barbados, 2021"), bold font(Helvetica,10,"blue")
 
 rename totagecases under70_cases
 rename totcases total_cases
