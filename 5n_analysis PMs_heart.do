@@ -4,7 +4,7 @@
     //  project:                BNR-CVD
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      17-MAR-2023
-    // 	date last modified      17-MAR-2023
+    // 	date last modified      19-MAR-2023
     //  algorithm task          Performing analysis on 2021 heart data for 2021 CVD Annual Report
     //  status                  Completed
     //  objective               To analyse data relating to performance measures
@@ -403,9 +403,8 @@ drop percent_total
 rename totstemi stemi_total
 
 save "`datapath'\version03\2-working\pm2_stemi_heart" ,replace
-clear
+restore
 
-STOP
 
 
 ***********************************************
@@ -413,86 +412,57 @@ STOP
 ***********************************************
 
 
-****************************************
-** Time from scene to arrival at A&E  **  
-****************************************
-//preserve
-** Check for and remove cases wherein AMI occurred after admission to hospital
-count if edate>dae //7 - in-hospital AMIs
-list record_id dae edate inhosp arrival if edate>dae
-drop if edate>dae //7 deleted
+**********************************************
+** 2021: Time from scene to arrival at A&E  **  
+**********************************************
+preserve
+** Check for and remove cases wherein AMI occurred after admission to hospital, i.e. in-hospital events
+count if edate>dae & inhosp==1 //7 - in-hospital AMIs
+//list record_id dae edate inhosp arrival if edate>dae
+drop if edate>dae & inhosp==1 //7 deleted
 
 ** Check for and remove cases that were not abstracted
 tab sd_absstatus ,m //282 partially abs + DCOs
 drop if sd_absstatus!=1 //282 deleted
 
-** Create variable to assess timing
-** JC 17mar2022 using a different method from AH for this as it's best to use datetime variable instead of time variable only when calculating timing
-** JC 17mar2022 cleaning check for if admission date after at scene or from scene dates as error noted from below minutes variable
-count if dae<frmscnd & dae!=. & frmscnd!=. //0
-//list record_id dae frmscnd if dae<frmscnd & dae!=. & frmscnd!=.
-count if sd_daetae<sd_frmscndt & sd_daetae!=. & sd_frmscndt!=. //3
-list record_id frmscnd frmscnt dae tae sd_comments if sd_daetae<sd_frmscndt & sd_daetae!=. & sd_frmscndt!=.
+** Check timings wherein time ambulance from scene is AFTER arrival to A&E
+** JC 19mar2023: although these were checked during cleaning, some could not be corrected as timings could not be confirmed via MedData
+count if sd_daetae<sd_frmscndt & sd_daetae!=. & sd_frmscndt!=. //2 - records 2840 + 2442 I could not confirm correct times so need to drop so it does not skew median time for this PM
+//list record_id frmscnd frmscnt dae tae sd_comments if sd_daetae<sd_frmscndt & sd_daetae!=. & sd_frmscndt!=.
+drop if record_id=="2840"|record_id=="2442" //2 deleted
 
-STOP
-** First check if admission time and time from scene have not been mistakenly switched at abstraction
-count if tae<frmscnt & tae!=. & frmscnt!=. & dae==frmscnd //3
-list anon_pid record_id org_id tae frmscnt dae frmscnd if tae<frmscnt & tae!=. & frmscnt!=. & dae==frmscnd
-di clock("13:55:00.000", "hms") //50100000
-replace tae=50100000 if anon_pid==1935|record_id=="2020896"
-swapval tae t_hosp if anon_pid==2924|record_id=="2020211"
-replace tae=t_hosp if anon_pid==1468|record_id=="2020706"
 
+** Check if admission time and time from scene have not been mistakenly switched at abstraction
+gen double tae_pm3 = clock(tae, "hm") 
+format tae_pm3 %tc_HH:MM
+gen double frmscnt_pm3 = clock(frmscnt, "hm") 
+format frmscnt_pm3 %tc_HH:MM
+count if tae_pm3<frmscnt_pm3 & tae_pm3!=. & frmscnt_pm3!=. & dae==frmscnd //0
 
 ** Check if admission time and time from scene have not been mistakenly assigned as AM and PM, respectively, at abstraction
-generate double tae_pm3=hms(hh(tae), mm(tae), ss(tae))
-format tae_pm3 %tcHH:MM:SS
-generate double frmscnt_pm3=hms(hh(frmscnt), mm(frmscnt), ss(frmscnt))
-format frmscnt_pm3 %tcHH:MM:SS
-count if tae_pm3<frmscnt_pm3 & tae!=. & frmscnt!=. & dae==frmscnd //0
-list anon_pid record_id tae frmscnt if tae_pm3<frmscnt_pm3 & tae!=. & frmscnt!=. & dae==frmscnd
-
-/*
-** JC 12apr2022 below copied from 2019 code above - kept in for historical purposes.
-di clock("09:35:00.000", "hms") //34500000
-di clock("21:35:00.000", "hms") //77700000
-di clock("21:07:00.000", "hms") //76020000
-replace tae=77700000 if anon_pid==544|record_id=="20191083"
-replace t_hosp=77700000 if anon_pid==544|record_id=="20191083"
-replace ambcallt=76020000 if anon_pid==544|record_id=="20191083"
-*/
+count if tae_pm3<frmscnt_pm3 & tae_pm3!=. & frmscnt_pm3!=. & dae==frmscnd //0
 
 ** Check if datetime variables for 'from scene' and 'admission' are not missing
-count if daetae==. & dae!=. & tae!=. //5
-list record_id dae tae daetae if daetae==. & dae!=. & tae!=.
-gen double daetae_pm3 = dhms(dae,hh(tae),mm(tae),ss(tae))
-format daetae_pm3 %tcNN/DD/CCYY_HH:MM:SS
-//format daetae_pm3 %tCDDmonCCYY_HH:MM:SS - when using this is changes the mm:ss part of the time
-//list record_id daetae_pm3 dae tae if daetae_pm3!=.
+count if sd_daetae==. & dae!=. & tae_pm3!=. //0
+count if sd_frmscndt==. & frmscnd!=. & frmscnt_pm3!=. //0
 
-count if frmscnt_dtime==. & frmscnd!=. & frmscnt!=. //0
-gen double frmscndt_pm3 = dhms(frmscnd,hh(frmscnt),mm(frmscnt),ss(frmscnt))
-format frmscndt_pm3 %tcNN/DD/CCYY_HH:MM:SS
-//list record_id frmscndt_pm3 frmscnd frmscnt if frmscndt_pm3!=.
-
-count if daetae_pm3==. //10
-count if frmscndt_pm3==. //108
+count if sd_daetae==. //13
+count if sd_frmscndt==. //89
+count if sd_daetae==. & sd_frmscndt==. //5
 
 
 ** Create variables to assess timing
-gen mins_scn2door=round(minutes(round(daetae_pm3-frmscndt_pm3))) if (daetae_pm3!=. & frmscndt_pm3!=.)
-replace mins_scn2door=round(minutes(round(t_hosp-frmscnt))) if mins_scn2door==. & (t_hosp!=. & frmscnt!=.) //0 changes
+gen mins_scn2door=round(minutes(round(sd_daetae-sd_frmscndt))) if (sd_daetae!=. & sd_frmscndt!=.)
+replace mins_scn2door=round(minutes(round(tae_pm3-frmscnt_pm3))) if mins_scn2door==. & (tae_pm3!=. & frmscnt_pm3!=.) //0 changes
 count if mins_scn2door<0 //0 - checking to ensure this has been correctly generated
-count if mins_scn2door==. //110 - ask NS if to drop these before calculating minutes for PM3 Timing since these are missing datetime so will automatically be missing
-drop if mins_scn2door==. //JC 12apr2022: Timing still calculated the same as not removing the missing datetimes so doesn't matter if they're removed
+count if mins_scn2door==. //97 - ask NS if to drop these before calculating minutes for PM3 Timing since these are missing datetime so will automatically be missing
+drop if mins_scn2door==. //97 deleted; JC 12apr2022: Timing still calculated the same as not removing the missing datetimes so doesn't matter if they're removed
 gen hrs_scn2door=(mins_scn2door/60)
 label var mins_scn2door "Total minutes from patient pickup to hospital" 
 label var hrs_scn2door "Total hours from patient pickup to hospital"
 
-tab mins_scn2door if year==2020 ,miss
-tab hrs_scn2door if year==2020 ,miss
-
-save "`datapath'\version03\2-working\pm3_scn2door_heart_2020" ,replace
+tab mins_scn2door ,m
+tab hrs_scn2door ,m
 
 gen k=1
 
@@ -502,124 +472,48 @@ ameans hrs_scn2door
 ** This code will run in Stata 17
 table k, stat(q2 mins_scn2door) stat(q1 mins_scn2door) stat(q3 mins_scn2door) stat(min mins_scn2door) stat(max mins_scn2door)
 table k, stat(q2 hrs_scn2door) stat(q1 hrs_scn2door) stat(q3 hrs_scn2door) stat(min hrs_scn2door) stat(max hrs_scn2door)
-restore
 
 
-** JC update: Save these 'p50' results as a dataset for reporting Table 1.7
-preserve
+** Save these 'p50' results as a dataset for reporting Table 1.7
 
-use "`datapath'\version03\2-working\pm3_scn2door_heart_2018" ,clear
-append using "`datapath'\version03\2-working\pm3_scn2door_heart_2019"
-append using "`datapath'\version03\2-working\pm3_scn2door_heart_2020"
-
-drop mins_scn2door hrs_scn2door
-gen mins_scn2door=round(minutes(round(daetae_pm3-frmscndt_pm3))) if year==2020 & (daetae_pm3!=. & frmscndt_pm3!=.) // changes
-replace mins_scn2door=round(minutes(round(daetae_pm3-frmscndt_pm3))) if year==2020 & mins_scn2door==. & (t_hosp!=. & frmscnt!=.) // changes
-
-replace mins_scn2door=round(minutes(round(dohtoh_pm3-frmscndt_pm3))) if year==2019 & (dohtoh_pm3!=. & frmscndt_pm3!=.) // changes
-replace mins_scn2door=round(minutes(round(t_hosp-frmscnt))) if year==2019 & mins_scn2door==. & (t_hosp!=. & frmscnt!=.) // changes
-
-replace mins_scn2door=round(minutes(round(dohtoh_pm3-frmscndt_pm3))) if year==2018 & (dohtoh_pm3!=. & frmscndt_pm3!=.) // changes
-replace mins_scn2door=round(minutes(round(t_hosp-frmscnt))) if year==2018 & mins_scn2door==. & (t_hosp!=. & frmscnt!=.) // changes
-
-gen hrs_scn2door=(mins_scn2door/60) // changes
-label var mins_scn2door "Total minutes from patient pickup to hospital (scene-to-door)"
-label var hrs_scn2door "Total hours from patient pickup to hospital (scene-to-door)"
-
-gen k=1
-
-table k, stat(q2 mins_scn2door) stat(q1 mins_scn2door) stat(q3 mins_scn2door) stat(min mins_scn2door) stat(max mins_scn2door), if year==2020
-table k, stat(q2 hrs_scn2door) stat(q1 hrs_scn2door) stat(q3 hrs_scn2door) stat(min hrs_scn2door) stat(max hrs_scn2door), if year==2020
-
-table k, stat(q2 mins_scn2door) stat(q1 mins_scn2door) stat(q3 mins_scn2door) stat(min mins_scn2door) stat(max mins_scn2door), if year==2019
-table k, stat(q2 hrs_scn2door) stat(q1 hrs_scn2door) stat(q3 hrs_scn2door) stat(min hrs_scn2door) stat(max hrs_scn2door), if year==2019
-
-table k, stat(q2 mins_scn2door) stat(q1 mins_scn2door) stat(q3 mins_scn2door) stat(min mins_scn2door) stat(max mins_scn2door), if year==2018
-table k, stat(q2 hrs_scn2door) stat(q1 hrs_scn2door) stat(q3 hrs_scn2door) stat(min hrs_scn2door) stat(max hrs_scn2door), if year==2018
-
-drop if year<2018
-drop if k!=1
+drop if k!=1 //0 deleted
 
 save "`datapath'\version03\2-working\pm3_scn2door_heart_ar" ,replace
 
-sum mins_scn2door if year==2020
-sum mins_scn2door ,detail, if year==2020
-gen mins_scn2door_2020=r(p50) if year==2020
+sum mins_scn2door
+sum mins_scn2door ,detail
+gen mins_scn2door_2021=r(p50)
 
-tostring mins_scn2door_2020 ,replace
-replace mins_scn2door_2020=mins_scn2door_2020+" "+"minutes"
-
-
-sum mins_scn2door if year==2019
-sum mins_scn2door ,detail, if year==2019
-gen mins_scn2door_2019=r(p50) if year==2019
-
-tostring mins_scn2door_2019 ,replace
-replace mins_scn2door_2019=mins_scn2door_2019+" "+"minutes"
+tostring mins_scn2door_2021 ,replace
+replace mins_scn2door_2021=mins_scn2door_2021+" "+"minutes"
 
 
-sum mins_scn2door if year==2018
-sum mins_scn2door ,detail, if year==2018
-gen mins_scn2door_2018=r(p50) if year==2018
+replace mins_scn2door_2021="" if mins_scn2door_2021==". minutes"
+fillmissing mins_scn2door_2021
 
-tostring mins_scn2door_2018 ,replace
-replace mins_scn2door_2018=mins_scn2door_2018+" "+"minutes"
-
-replace mins_scn2door_2018="" if mins_scn2door_2018==". minutes"
-replace mins_scn2door_2019="" if mins_scn2door_2019==". minutes"
-replace mins_scn2door_2020="" if mins_scn2door_2020==". minutes"
-fillmissing mins_scn2door_2018 mins_scn2door_2019 mins_scn2door_2020
-
-keep mins_scn2door_2018 mins_scn2door_2019 mins_scn2door_2020
-order mins_scn2door_2018 mins_scn2door_2019 mins_scn2door_2020
+keep mins_scn2door_2021
+order mins_scn2door_2021
 save "`datapath'\version03\2-working\pm3_scn2door_heart" ,replace
 
 use "`datapath'\version03\2-working\pm3_scn2door_heart_ar" ,clear
 
-sum hrs_scn2door if year==2020
-sum hrs_scn2door ,detail, if year==2020
-gen hours_2020=r(p50) if year==2020
+sum hrs_scn2door
+sum hrs_scn2door ,detail
+gen hours_2021=r(p50)
 
-sum hrs_scn2door if year==2019
-sum hrs_scn2door ,detail, if year==2019
-gen hours_2019=r(p50) if year==2019
-
-sum hrs_scn2door if year==2018
-sum hrs_scn2door ,detail, if year==2018
-gen hours_2018=r(p50) if year==2018
-
-collapse hours_2018 hours_2019 hours_2020
-
-gen double fullhour_2018=int(hours_2018)
-gen double fraction_2018=hours_2018-fullhour_2018
-gen minutes_2018=round(fraction_2018*60,1)
-
-tostring fullhour_2018 ,replace
-tostring minutes_2018 ,replace
-replace fullhour_2018=minutes_2018+" "+"minutes"
-rename fullhour_2018 hrs_scn2door_2018
+collapse hours_2021
 
 
-gen double fullhour_2019=int(hours_2019)
-gen double fraction_2019=hours_2019-fullhour_2019
-gen minutes_2019=round(fraction_2019*60,1)
+gen double fullhour_2021=int(hours_2021)
+gen double fraction_2021=hours_2021-fullhour_2021
+gen minutes_2021=round(fraction_2021*60,1)
 
-tostring fullhour_2019 ,replace
-tostring minutes_2019 ,replace
-replace fullhour_2019=minutes_2019+" "+"minutes"
-rename fullhour_2019 hrs_scn2door_2019
+tostring fullhour_2021 ,replace
+tostring minutes_2021 ,replace
+replace fullhour_2021=minutes_2021+" "+"minutes"
+rename fullhour_2021 hrs_scn2door_2021
 
-
-gen double fullhour_2020=int(hours_2020)
-gen double fraction_2020=hours_2020-fullhour_2020
-gen minutes_2020=round(fraction_2020*60,1)
-
-tostring fullhour_2020 ,replace
-tostring minutes_2020 ,replace
-replace fullhour_2020=minutes_2020+" "+"minutes"
-rename fullhour_2020 hrs_scn2door_2020
-
-keep hrs_scn2door_2018 hrs_scn2door_2019 hrs_scn2door_2020
+keep hrs_scn2door_2021
 
 append using "`datapath'\version03\2-working\pm3_scn2door_heart"
 
@@ -627,10 +521,8 @@ fillmissing mins_scn2door*
 gen id=_n
 drop if id>1 
 drop id
-gen median_2018=mins_scn2door_2018
-gen median_2019=mins_scn2door_2019
-gen median_2020=mins_scn2door_2020
-keep median_2018 median_2019 median_2020
+gen median_2021=mins_scn2door_2021
+keep median_2021
 gen pm3_category=1
 
 label var pm3_category "PM3 Category"
@@ -638,7 +530,7 @@ label define pm3_category_lab 1 "Median time from scene to arrival at A&E" 2 "Me
 							  3 "Median time from admission to fibrinolysis" 4 "Median time from onset to fibrinolysis" , modify
 label values pm3_category pm3_category_lab
 
-order pm3_category median_2018 median_2019 median_2020
+order pm3_category median_2021
 erase "`datapath'\version03\2-working\pm3_scn2door_heart_ar.dta"
 save "`datapath'\version03\2-working\pm3_scn2door_heart" ,replace
 restore
@@ -647,59 +539,57 @@ restore
 ** PM3: Time from admission to first ECG ** 
 *******************************************
 
-****************************************
-** 2020 Time from admission to first ECG
-****************************************
+********************************************
+** 2021: Time from admission to first ECG **
+********************************************
 preserve
-** Use corrected 2020 dataset from above (scene-to-door)
-use "`datapath'\version03\2-working\pm3_scn2door_heart_2020" ,clear
+** Check for and remove cases wherein AMI occurred after admission to hospital, i.e. in-hospital events
+count if edate>dae & inhosp==1 //7 - in-hospital AMIs
+//list record_id dae edate inhosp arrival if edate>dae
+drop if edate>dae & inhosp==1 //7 deleted
 
-** Remove non-2020 cases
-drop if year!=2020 //0 deleted
+** Check for and remove cases that were not abstracted
+tab sd_absstatus ,m //282 partially abs + DCOs
+drop if sd_absstatus!=1 //282 deleted
 
-** Check for and remove cases wherein ECG was performed before admission to hospital (different day)
-count if year==2020 & dae>ecgd //3
-list record_id ecgd ecgt dae tae ambulance if year==2020 & dae>ecgd
-list record_id if year==2020 & dae>ecgd
-drop if year==2020 & dae>ecgd //3 deleted
+** Check timings wherein ECG time is BEFORE arrival to A&E
+** JC 19mar2023: although these were checked during cleaning, some could not be corrected as timings could not be confirmed via MedData
+count if sd_ecgdt<sd_daetae & sd_daetae!=. & sd_ecgdt!=. //32 - ECG done at FMC prior to arrival to A&E so need to drop so it does not skew median time for this PM
+//list record_id dae tae ecgd ecgt sd_comments if sd_ecgdt<sd_daetae & sd_daetae!=. & sd_ecgdt!=. ,string(30)
+drop if sd_ecgdt<sd_daetae & sd_daetae!=. & sd_ecgdt!=. //32 deleted
 
-** Check if datetime variables for 'from scene' and 'admission' are not missing
-count if ecgdt==. & ecgd!=. & ecgt!=. //5
-list record_id ecgd ecgt ecgdt if ecgdt==. & ecgd!=. & ecgt!=.
-gen double ecgdt_pm3 = dhms(ecgd,hh(ecgt),mm(ecgt),ss(ecgt))
-format ecgdt_pm3 %tcNN/DD/CCYY_HH:MM:SS
-//format ecgdtae_pm3 %tCDDmonCCYY_HH:MM:SS - when using this is changes the mm:ss part of the time
-//list record_id ecgdtae_pm3 ecgd tae if ecgdtae_pm3!=.
 
-count if daetae==. & dae!=. & tae!=. //5 - already corrected in this dataset
-//gen double daetae_pm3 = dhms(dae,hh(tae),mm(tae),ss(tae))
-//format daetae_pm3 %tcNN/DD/CCYY_HH:MM:SS
-//list record_id daetae_pm3 frmscnd tae if daetae_pm3!=.
+** Check if admission time and ECG time are consistent
+gen double tae_pm3 = clock(tae, "hm") 
+format tae_pm3 %tc_HH:MM
+gen double ecgt_pm3 = clock(ecgt, "hm") 
+format ecgt_pm3 %tc_HH:MM
+count if tae_pm3>ecgt_pm3 & tae_pm3!=. & ecgt_pm3!=. & dae==ecgd //0
 
-count if ecgdt_pm3==. //75
-count if daetae_pm3==. //0
+** Check if admission time and ECG time have not been mistakenly assigned as AM and PM, respectively, at abstraction
+count if tae_pm3>ecgt_pm3 & tae_pm3!=. & ecgt_pm3!=. & dae==ecgd //0
 
-** Check for and remove cases wherein ECG was performed before admission to hospital (same day different time)
-count if daetae_pm3>ecgdt_pm3 //18
-list record_id ecgd ecgt dae tae ambulance if daetae_pm3>ecgdt_pm3
-drop if daetae_pm3>ecgdt_pm3 //18 deleted
+** Check if datetime variables for 'ecg' and 'admission' are not missing
+count if sd_daetae==. & dae!=. & tae_pm3!=. //0
+count if sd_ecgdt==. & ecgd!=. & ecgt_pm3!=. //0
 
+count if sd_daetae==. //13
+count if sd_ecgdt==. //39
+count if sd_daetae==. & sd_ecgdt==. //5
 
 ** Create variables to assess timing
-gen mins_door2ecg=round(minutes(round(ecgdt_pm3-daetae_pm3))) if (ecgdt_pm3!=. & daetae_pm3!=.)
-replace mins_door2ecg=round(minutes(round(ecgt-tae))) if mins_door2ecg==. & (ecgt!=. & tae!=.) //0 changes
+gen mins_door2ecg=round(minutes(round(sd_ecgdt-sd_daetae))) if (sd_ecgdt!=. & sd_daetae!=.)
+replace mins_door2ecg=round(minutes(round(ecgt_pm3-tae_pm3))) if mins_door2ecg==. & (ecgt_pm3!=. & tae_pm3!=.) //0 changes
 count if mins_door2ecg<0 //0 - checking to ensure this has been correctly generated
-count if mins_door2ecg==. //75 - ask NS if to drop these before calculating minutes for PM3 Timing since these are missing datetime so will automatically be missing
-drop if mins_door2ecg==. //JC 12apr2022: Timing still calculated the same as not removing the missing datetimes so doesn't matter if they're removed
+count if mins_door2ecg==. //47 - ask NS if to drop these before calculating minutes for PM3 Timing since these are missing datetime so will automatically be missing
+drop if mins_door2ecg==. //47 deleted; JC 12apr2022: Timing still calculated the same as not removing the missing datetimes so doesn't matter if they're removed
 gen hrs_door2ecg=(mins_door2ecg/60)
 label var mins_door2ecg "Total minutes from hospital admission to ECG" 
 label var hrs_door2ecg "Total hours from hospital admission to ECG"
 
-tab mins_door2ecg if year==2020 & ambulance==1 ,miss
-tab hrs_door2ecg if year==2020 & ambulance==1,miss
+tab mins_door2ecg ,m
+tab hrs_door2ecg ,m
 
-save "`datapath'\version03\2-working\pm3_door2ecg_heart_2020" ,replace
- 
 gen k=1
 
 ameans mins_door2ecg
@@ -708,123 +598,47 @@ ameans hrs_door2ecg
 ** This code will run in Stata 17
 table k, stat(q2 mins_door2ecg) stat(q1 mins_door2ecg) stat(q3 mins_door2ecg) stat(min mins_door2ecg) stat(max mins_door2ecg)
 table k, stat(q2 hrs_door2ecg) stat(q1 hrs_door2ecg) stat(q3 hrs_door2ecg) stat(min hrs_door2ecg) stat(max hrs_door2ecg)
-restore
 
+** Save these 'p50' results as a dataset for reporting Table 1.7
 
-** JC update: Save these 'p50' results as a dataset for reporting Table 1.7
-preserve
-use "`datapath'\version03\2-working\pm3_door2ecg_heart_2018" ,clear
-append using "`datapath'\version03\2-working\pm3_door2ecg_heart_2019"
-append using "`datapath'\version03\2-working\pm3_door2ecg_heart_2020"
-
-drop mins_door2ecg hrs_door2ecg
-gen mins_door2ecg=round(minutes(round(ecgdt_pm3-daetae_pm3))) if year==2020 & (ecgdt_pm3!=. & daetae_pm3!=.) // changes
-replace mins_door2ecg=round(minutes(round(ecgt-tae))) if year==2020 & mins_door2ecg==. & (ecgt!=. & tae!=.) // changes
-
-replace mins_door2ecg=round(minutes(round(ecgdt_pm3-dohtoh_pm3))) if year==2019 & (ecgdt_pm3!=. & dohtoh_pm3!=.) // changes
-replace mins_door2ecg=round(minutes(round(ecgt-toh))) if year==2019 & mins_door2ecg==. & (ecgt!=. & toh!=.) // changes
-
-replace mins_door2ecg=round(minutes(round(ecgdt_pm3-dohtoh_pm3))) if year==2018 & (ecgdt_pm3!=. & dohtoh_pm3!=.) // changes
-replace mins_door2ecg=round(minutes(round(ecgt-toh))) if year==2018 & mins_door2ecg==. & (ecgt!=. & toh!=.)  // changes
-
-gen hrs_door2ecg=(mins_door2ecg/60) // changes
-label var mins_door2ecg "Total minutes from hospital admission to ECG (door-to-ecg)"
-label var hrs_door2ecg "Total hours from hospital admission to ECG (door-to-ecg)"
-
-gen k=1
-
-table k, stat(q2 mins_door2ecg) stat(q1 mins_door2ecg) stat(q3 mins_door2ecg) stat(min mins_door2ecg) stat(max mins_door2ecg), if year==2020
-table k, stat(q2 hrs_door2ecg) stat(q1 hrs_door2ecg) stat(q3 hrs_door2ecg) stat(min hrs_door2ecg) stat(max hrs_door2ecg), if year==2020
-
-table k, stat(q2 mins_door2ecg) stat(q1 mins_door2ecg) stat(q3 mins_door2ecg) stat(min mins_door2ecg) stat(max mins_door2ecg), if year==2019
-table k, stat(q2 hrs_door2ecg) stat(q1 hrs_door2ecg) stat(q3 hrs_door2ecg) stat(min hrs_door2ecg) stat(max hrs_door2ecg), if year==2019
-
-table k, stat(q2 mins_door2ecg) stat(q1 mins_door2ecg) stat(q3 mins_door2ecg) stat(min mins_door2ecg) stat(max mins_door2ecg), if year==2018
-table k, stat(q2 hrs_door2ecg) stat(q1 hrs_door2ecg) stat(q3 hrs_door2ecg) stat(min hrs_door2ecg) stat(max hrs_door2ecg), if year==2018
-
-drop if year<2018
 drop if k!=1
 
 save "`datapath'\version03\2-working\pm3_door2ecg_heart_ar" ,replace
 
-sum mins_door2ecg if year==2020
-sum mins_door2ecg ,detail, if year==2020
-gen mins_door2ecg_2020=r(p50) if year==2020
+sum mins_door2ecg
+sum mins_door2ecg ,detail
+gen mins_door2ecg_2021=r(p50)
 
-tostring mins_door2ecg_2020 ,replace
-replace mins_door2ecg_2020=mins_door2ecg_2020+" "+"minutes"
-
-
-sum mins_door2ecg if year==2019
-sum mins_door2ecg ,detail, if year==2019
-gen mins_door2ecg_2019=r(p50) if year==2019
-
-tostring mins_door2ecg_2019 ,replace
-replace mins_door2ecg_2019=mins_door2ecg_2019+" "+"minutes"
+tostring mins_door2ecg_2021 ,replace
+replace mins_door2ecg_2021=mins_door2ecg_2021+" "+"minutes"
 
 
-sum mins_door2ecg if year==2018
-sum mins_door2ecg ,detail, if year==2018
-gen mins_door2ecg_2018=r(p50) if year==2018
+replace mins_door2ecg_2021="" if mins_door2ecg_2021==". minutes"
+fillmissing mins_door2ecg_2021
 
-tostring mins_door2ecg_2018 ,replace
-replace mins_door2ecg_2018=mins_door2ecg_2018+" "+"minutes"
-
-replace mins_door2ecg_2018="" if mins_door2ecg_2018==". minutes"
-replace mins_door2ecg_2019="" if mins_door2ecg_2019==". minutes"
-replace mins_door2ecg_2020="" if mins_door2ecg_2020==". minutes"
-fillmissing mins_door2ecg_2018 mins_door2ecg_2019 mins_door2ecg_2020
-
-keep mins_door2ecg_2018 mins_door2ecg_2019 mins_door2ecg_2020
-order mins_door2ecg_2018 mins_door2ecg_2019 mins_door2ecg_2020
+keep mins_door2ecg_2021
+order mins_door2ecg_2021
 save "`datapath'\version03\2-working\pm3_door2ecg_heart" ,replace
 
 use "`datapath'\version03\2-working\pm3_door2ecg_heart_ar" ,clear
 
-sum hrs_door2ecg if year==2020
-sum hrs_door2ecg ,detail, if year==2020
-gen hours_2020=r(p50) if year==2020
+sum hrs_door2ecg
+sum hrs_door2ecg ,detail
+gen hours_2021=r(p50)
 
-sum hrs_door2ecg if year==2019
-sum hrs_door2ecg ,detail, if year==2019
-gen hours_2019=r(p50) if year==2019
-
-sum hrs_door2ecg if year==2018
-sum hrs_door2ecg ,detail, if year==2018
-gen hours_2018=r(p50) if year==2018
-
-collapse hours_2018 hours_2019 hours_2020
-
-gen double fullhour_2018=int(hours_2018)
-gen double fraction_2018=hours_2018-fullhour_2018
-gen minutes_2018=round(fraction_2018*60,1)
-
-tostring fullhour_2018 ,replace
-tostring minutes_2018 ,replace
-replace fullhour_2018=minutes_2018+" "+"minutes"
-rename fullhour_2018 hrs_door2ecg_2018
+collapse hours_2021
 
 
-gen double fullhour_2019=int(hours_2019)
-gen double fraction_2019=hours_2019-fullhour_2019
-gen minutes_2019=round(fraction_2019*60,1)
+gen double fullhour_2021=int(hours_2021)
+gen double fraction_2021=hours_2021-fullhour_2021
+gen minutes_2021=round(fraction_2021*60,1)
 
-tostring fullhour_2019 ,replace
-tostring minutes_2019 ,replace
-replace fullhour_2019=minutes_2019+" "+"minutes"
-rename fullhour_2019 hrs_door2ecg_2019
+tostring fullhour_2021 ,replace
+tostring minutes_2021 ,replace
+replace fullhour_2021=fullhour_2021+" "+"hour"+" "+minutes_2021+" "+"minutes"
+rename fullhour_2021 hrs_door2ecg_2021
 
-
-gen double fullhour_2020=int(hours_2020)
-gen double fraction_2020=hours_2020-fullhour_2020
-gen minutes_2020=round(fraction_2020*60,1)
-
-tostring fullhour_2020 ,replace
-tostring minutes_2020 ,replace
-replace fullhour_2020=fullhour_2020+" "+"hour"+" "+minutes_2020+" "+"minutes"
-rename fullhour_2020 hrs_door2ecg_2020
-
-keep hrs_door2ecg_2018 hrs_door2ecg_2019 hrs_door2ecg_2020
+keep hrs_door2ecg_2021
 
 append using "`datapath'\version03\2-working\pm3_door2ecg_heart"
 
@@ -832,10 +646,8 @@ fillmissing mins_door2ecg*
 gen id=_n
 drop if id>1 
 drop id
-gen median_2018=mins_door2ecg_2018
-gen median_2019=mins_door2ecg_2019
-gen median_2020=mins_door2ecg_2020+" "+"or"+" "+hrs_door2ecg_2020
-keep median_2018 median_2019 median_2020
+gen median_2021=mins_door2ecg_2021+" "+"or"+" "+hrs_door2ecg_2021
+keep median_2021
 gen pm3_category=2
 
 label var pm3_category "PM3 Category"
@@ -843,50 +655,70 @@ label define pm3_category_lab 1 "Median time from scene to arrival at A&E" 2 "Me
 							  3 "Median time from admission to fibrinolysis" 4 "Median time from onset to fibrinolysis" , modify
 label values pm3_category pm3_category_lab
 
-order pm3_category median_2018 median_2019 median_2020
+order pm3_category median_2021
+
 erase "`datapath'\version03\2-working\pm3_door2ecg_heart_ar.dta"
 save "`datapath'\version03\2-working\pm3_door2ecg_heart" ,replace
 restore
 
 
-** JC 17mar2022: Below was the only code for PM3 in the 2020 analysis dofile
-
 *********************************************************************
 ** PM3: STEMI pts door2needle time for those who were thrombolysed **
 *********************************************************************
-tab reperf if year==2017,m // 40 pts had reperf
-tab reperf if year==2018,m // 42 pts had reperf
-tab reperf if year==2019,m // 44 pts had reperf
-tab reperf if year==2020,m // 51 pts had reperf
+
+***********************************************
+** 2021: Time from admission to thrombolysis **
+***********************************************
+tab reperf ,m //29 pts had reperf
+tab reperf htype ,m //all 29 were STEMI; only 29 of 76 STEMI were thrombolysed
 
 preserve
+** Check for and remove cases wherein AMI occurred after admission to hospital, i.e. in-hospital events
+count if edate>dae & inhosp==1 //7 - in-hospital AMIs
+//list record_id dae edate inhosp arrival if edate>dae
+drop if edate>dae & inhosp==1 //7 deleted
 
-drop if  record_id=="20202380" | record_id=="202096" // case missing daetae - case ecg before admission.
+** Check for and remove cases that were not abstracted
+tab sd_absstatus ,m //282 partially abs + DCOs
+drop if sd_absstatus!=1 //282 deleted
 
-*******************************************************************************************************
-** Added by JC 10mar2022 - totals differ from AH's comments below (maybe a copy and paste error?)
-count if year==2020 & reperfdt !=. //47
-list record_id frmscnt dohtoh daetae reperfdt if year==2020 & reperfdt !=.
-count if year==2020 & daetae!=. & reperfdt !=. //44
-********************************************************************************************************
+** Check timings wherein reperfusion time is BEFORE arrival to A&E
+** JC 19mar2023: although these were checked during cleaning, some could not be corrected as timings could not be confirmed via MedData
+count if sd_reperfdt<sd_daetae & sd_daetae!=. & sd_reperfdt!=. //0
+drop if sd_reperfdt<sd_daetae & sd_daetae!=. & sd_reperfdt!=. //0 deleted
 
-list reperfdt if year==2020 & reperfdt !=.
-list record_id frmscnt doh toh daetae reperfdt if year==2020 & reperfdt !=.
-** This shows that only 41 had times recorded for BOTH hosp arrival and TPA
-** So we calculate door-to-needle time for 31 patients
-gen mins_door2needle=round(minutes(round(reperfdt-daetae))) if year==2020 & (daetae!=. & reperfdt!=.) //44 changes
-replace mins_door2needle=round(minutes(round(reperfdt-frmscnt_dtime))) if year==2020 & (frmscnt_dtime!=. & daetae==. & reperfdt!=.) //2 changes
 
-gen hrs_door2needle=(mins_door2needle/60) //46 changes
-label var mins_door2needle "Total minutes from arrival at hospital to thrombolysis (door-to-needle)"
+** Check if admission time and reperfusion time are consistent
+gen double tae_pm3 = clock(tae, "hm") 
+format tae_pm3 %tc_HH:MM
+gen double reperft_pm3 = clock(reperft, "hm") 
+format reperft_pm3 %tc_HH:MM
+count if tae_pm3>reperft_pm3 & tae_pm3!=. & reperft_pm3!=. & dae==reperfd //0
+
+** Check if admission time and reperfusion time have not been mistakenly assigned as AM and PM, respectively, at abstraction
+count if tae_pm3>reperft_pm3 & tae_pm3!=. & reperft_pm3!=. & dae==reperfd //0
+
+** Check if datetime variables for 'from scene' and 'admission' are not missing
+count if sd_daetae==. & dae!=. & tae_pm3!=. //0
+count if sd_reperfdt==. & reperfd!=. & reperft_pm3!=. //0
+
+count if sd_daetae==. //13
+count if sd_reperfdt==. //149
+count if sd_daetae==. & sd_reperfdt==. //12
+
+
+** Create variables to assess timing
+gen mins_door2needle=round(minutes(round(sd_reperfdt-sd_daetae))) if (sd_reperfdt!=. & sd_daetae!=.)
+replace mins_door2needle=round(minutes(round(reperft_pm3-tae_pm3))) if mins_door2needle==. & (reperft_pm3!=. & tae_pm3!=.) //0 changes
+count if mins_door2needle<0 //0 - checking to ensure this has been correctly generated
+count if mins_door2needle==. //150 - ask NS if to drop these before calculating minutes for PM3 Timing since these are missing datetime so will automatically be missing
+drop if mins_door2needle==. //150 deleted; JC 12apr2022: Timing still calculated the same as not removing the missing datetimes so doesn't matter if they're removed
+gen hrs_door2needle=(mins_door2needle/60)
+label var mins_door2needle "Total minutes from arrival at hospital to thrombolysis (door-to-needle)" 
 label var hrs_door2needle "Total hours from arrival at hospital to thrombolysis (door-to-needle)"
 
-tab mins_door2needle 
-tab hrs_door2needle 
-list record_id gidcf reperfdt daetae daetae mins_door2needle hrs_door2needle if mins_door2needle<0
-
-list record_id if year==2020 & hrs_door2needle<0
-list record_id frmscnt doh toh daetae reperfdt mins_door2needle hrs_door2needle if year==2020 & hrs_door2needle<0
+tab mins_door2needle ,m
+tab hrs_door2needle ,m
 
 gen k=1
 
@@ -897,133 +729,45 @@ ameans hrs_door2needle
 table k, stat(q2 mins_door2needle) stat(q1 mins_door2needle) stat(q3 mins_door2needle) stat(min mins_door2needle) stat(max mins_door2needle)
 table k, stat(q2 hrs_door2needle) stat(q1 hrs_door2needle) stat(q3 hrs_door2needle) stat(min hrs_door2needle) stat(max hrs_door2needle)
 
-restore
+** Save these 'p50' results as a dataset for reporting Table 1.7
 
-
-** JC update: Save these 'p50' results as a dataset for reporting Table 1.7
-preserve
-
-drop if  record_id=="20202380" | record_id=="202096" // case missing daetae - case ecg before admission.
-
-count if year==2018 & reperfdt !=. //40
-list record_id frmscnt dohtoh daetae reperfdt if year==2018 & reperfdt !=.
-count if year==2018 & dohtoh!=. & reperfdt !=. //37
-
-count if year==2019 & reperfdt !=. //41
-list record_id frmscnt dohtoh daetae reperfdt if year==2019 & reperfdt !=.
-count if year==2019 & dohtoh!=. & reperfdt !=. //39
-
-count if year==2020 & reperfdt !=. //47
-list record_id frmscnt dohtoh daetae reperfdt if year==2020 & reperfdt !=.
-count if year==2020 & daetae!=. & reperfdt !=. //44
-
-gen mins_door2needle=round(minutes(round(reperfdt-daetae))) if year==2020 & (daetae!=. & reperfdt!=.) //44 changes
-replace mins_door2needle=round(minutes(round(reperfdt-frmscnt_dtime))) if year==2020 & (frmscnt_dtime!=. & daetae==. & reperfdt!=.) //2 changes
-
-replace mins_door2needle=round(minutes(round(reperfdt-dohtoh))) if year==2019 & (dohtoh!=. & reperfdt!=.) // changes
-replace mins_door2needle=round(minutes(round(reperfdt-frmscnt_dtime))) if year==2019 & (frmscnt_dtime!=. & dohtoh==. & reperfdt!=.) // changes
-
-replace mins_door2needle=round(minutes(round(reperfdt-dohtoh))) if year==2018 & (dohtoh!=. & reperfdt!=.) // changes
-replace mins_door2needle=round(minutes(round(reperfdt-frmscnt_dtime))) if year==2018 & (frmscnt_dtime!=. & dohtoh==. & reperfdt!=.) // changes
-
-gen hrs_door2needle=(mins_door2needle/60) //46 changes
-label var mins_door2needle "Total minutes from arrival at hospital to thrombolysis (door-to-needle)"
-label var hrs_door2needle "Total hours from arrival at hospital to thrombolysis (door-to-needle)"
-
-gen k=1
-
-table k, stat(q2 mins_door2needle) stat(q1 mins_door2needle) stat(q3 mins_door2needle) stat(min mins_door2needle) stat(max mins_door2needle), if year==2020
-table k, stat(q2 hrs_door2needle) stat(q1 hrs_door2needle) stat(q3 hrs_door2needle) stat(min hrs_door2needle) stat(max hrs_door2needle), if year==2020
-
-table k, stat(q2 mins_door2needle) stat(q1 mins_door2needle) stat(q3 mins_door2needle) stat(min mins_door2needle) stat(max mins_door2needle), if year==2019
-table k, stat(q2 hrs_door2needle) stat(q1 hrs_door2needle) stat(q3 hrs_door2needle) stat(min hrs_door2needle) stat(max hrs_door2needle), if year==2019
-
-table k, stat(q2 mins_door2needle) stat(q1 mins_door2needle) stat(q3 mins_door2needle) stat(min mins_door2needle) stat(max mins_door2needle), if year==2018
-table k, stat(q2 hrs_door2needle) stat(q1 hrs_door2needle) stat(q3 hrs_door2needle) stat(min hrs_door2needle) stat(max hrs_door2needle), if year==2018
-
-drop if year<2018
 drop if k!=1
 
 save "`datapath'\version03\2-working\pm3_door2needle_heart_ar" ,replace
 
-sum mins_door2needle if year==2020
-sum mins_door2needle ,detail, if year==2020
-gen mins_door2needle_2020=r(p50) if year==2020
+sum mins_door2needle
+sum mins_door2needle ,detail
+gen mins_door2needle_2021=r(p50)
 
-tostring mins_door2needle_2020 ,replace
-replace mins_door2needle_2020=mins_door2needle_2020+" "+"minutes"
-
-
-sum mins_door2needle if year==2019
-sum mins_door2needle ,detail, if year==2019
-gen mins_door2needle_2019=r(p50) if year==2019
-
-tostring mins_door2needle_2019 ,replace
-replace mins_door2needle_2019=mins_door2needle_2019+" "+"minutes"
+tostring mins_door2needle_2021 ,replace
+replace mins_door2needle_2021=mins_door2needle_2021+" "+"minutes"
 
 
-sum mins_door2needle if year==2018
-sum mins_door2needle ,detail, if year==2018
-gen mins_door2needle_2018=r(p50) if year==2018
+replace mins_door2needle_2021="" if mins_door2needle_2021==". minutes"
+fillmissing mins_door2needle_2021
 
-tostring mins_door2needle_2018 ,replace
-replace mins_door2needle_2018=mins_door2needle_2018+" "+"minutes"
-
-replace mins_door2needle_2018="" if mins_door2needle_2018==". minutes"
-replace mins_door2needle_2019="" if mins_door2needle_2019==". minutes"
-replace mins_door2needle_2020="" if mins_door2needle_2020==". minutes"
-fillmissing mins_door2needle_2018 mins_door2needle_2019 mins_door2needle_2020
-
-keep mins_door2needle_2018 mins_door2needle_2019 mins_door2needle_2020
-order mins_door2needle_2018 mins_door2needle_2019 mins_door2needle_2020
+keep mins_door2needle_2021
+order mins_door2needle_2021
 save "`datapath'\version03\2-working\pm3_door2needle_heart" ,replace
 
 use "`datapath'\version03\2-working\pm3_door2needle_heart_ar" ,clear
 
-sum hrs_door2needle if year==2020
-sum hrs_door2needle ,detail, if year==2020
-gen hours_2020=r(p50) if year==2020
+sum hrs_door2needle
+sum hrs_door2needle ,detail
+gen hours_2021=r(p50)
 
-sum hrs_door2needle if year==2019
-sum hrs_door2needle ,detail, if year==2019
-gen hours_2019=r(p50) if year==2019
+collapse hours_2021
 
-sum hrs_door2needle if year==2018
-sum hrs_door2needle ,detail, if year==2018
-gen hours_2018=r(p50) if year==2018
+gen double fullhour_2021=int(hours_2021)
+gen double fraction_2021=hours_2021-fullhour_2021
+gen minutes_2021=round(fraction_2021*60,1)
 
-collapse hours_2018 hours_2019 hours_2020
+tostring fullhour_2021 ,replace
+tostring minutes_2021 ,replace
+replace fullhour_2021=fullhour_2021+" "+"hour"+" "+minutes_2021+" "+"minutes"
+rename fullhour_2021 hrs_door2needle_2021
 
-gen double fullhour_2018=int(hours_2018)
-gen double fraction_2018=hours_2018-fullhour_2018
-gen minutes_2018=round(fraction_2018*60,1)
-
-tostring fullhour_2018 ,replace
-tostring minutes_2018 ,replace
-replace fullhour_2018=fullhour_2018+" "+"hour"+" "+minutes_2018+" "+"minutes"
-rename fullhour_2018 hrs_door2needle_2018
-
-
-gen double fullhour_2019=int(hours_2019)
-gen double fraction_2019=hours_2019-fullhour_2019
-gen minutes_2019=round(fraction_2019*60,1)
-
-tostring fullhour_2019 ,replace
-tostring minutes_2019 ,replace
-replace fullhour_2019=fullhour_2019+" "+"hours"+" "+minutes_2019+" "+"minutes"
-rename fullhour_2019 hrs_door2needle_2019
-
-
-gen double fullhour_2020=int(hours_2020)
-gen double fraction_2020=hours_2020-fullhour_2020
-gen minutes_2020=round(fraction_2020*60,1)
-
-tostring fullhour_2020 ,replace
-tostring minutes_2020 ,replace
-replace fullhour_2020=fullhour_2020+" "+"hour"+" "+minutes_2020+" "+"minutes"
-rename fullhour_2020 hrs_door2needle_2020
-
-keep hrs_door2needle_2018 hrs_door2needle_2019 hrs_door2needle_2020
+keep hrs_door2needle_2021
 
 append using "`datapath'\version03\2-working\pm3_door2needle_heart"
 
@@ -1031,10 +775,8 @@ fillmissing mins_door2needle*
 gen id=_n
 drop if id>1 
 drop id
-gen median_2018=mins_door2needle_2018+" "+"or"+" "+hrs_door2needle_2018
-gen median_2019=mins_door2needle_2019+" "+"or"+" "+hrs_door2needle_2019
-gen median_2020=mins_door2needle_2020+" "+"or"+" "+hrs_door2needle_2020
-keep median_2018 median_2019 median_2020
+gen median_2021=mins_door2needle_2021+" "+"or"+" "+hrs_door2needle_2021
+keep median_2021
 gen pm3_category=3
 
 label var pm3_category "PM3 Category"
@@ -1042,12 +784,10 @@ label define pm3_category_lab 1 "Median time from scene to arrival at A&E" 2 "Me
 							  3 "Median time from admission to fibrinolysis" 4 "Median time from onset to fibrinolysis" , modify
 label values pm3_category pm3_category_lab
 
-order pm3_category median_2018 median_2019 median_2020
-
+order pm3_category median_2021
 
 erase "`datapath'\version03\2-working\pm3_door2needle_heart_ar.dta"
 save "`datapath'\version03\2-working\pm3_door2needle_heart" ,replace
-
 restore
 
 
@@ -1055,96 +795,61 @@ restore
 ** PM3: STEMI pts onset2needle time for those who were thrombolysed **
 **********************************************************************
 
-**********************************
-** 2020 from Onset to Thrombolysis
-**********************************
+**************************************
+** 2021: from Onset to Thrombolysis **
+**************************************
+tab reperf ,m //29 pts had reperf
+tab reperf htype ,m //all 29 were STEMI; only 29 of 76 STEMI were thrombolysed
+
 preserve
-** Use corrected 2018 dataset from above (scene-to-door)
-use "`datapath'\version03\2-working\pm3_scn2door_heart_2020" ,clear
+** Check for and remove cases wherein AMI occurred after admission to hospital, i.e. in-hospital events
+count if edate>dae & inhosp==1 //7 - in-hospital AMIs
+//list record_id dae edate inhosp arrival if edate>dae
+//drop if edate>dae & inhosp==1 //7 deleted
+//DO NOT remove in-hospital AMIs as these can be applicable for timing of this performance measure
 
-** Time of chest pain (too) created to match 2018, 2019
-gen too_pm3=hsym1t if hsym1t!="" & hsym1t!="88" & hsym1t!="99"
-gen too_pm3_am="January 1,1960"+" "+too_pm3+" "+"am" if substr(too_pm3, 1, 2) < "12" & too_pm3!=""
+** Check for and remove cases that were not abstracted
+tab sd_absstatus ,m //282 partially abs + DCOs
+drop if sd_absstatus!=1 //282 deleted
 
-generate double numtime = clock(too_pm3_am, "MDYhm")
-format numtime %tc_HH:MM:SS
-drop too_pm3_am
-rename numtime too_pm3_am
+** Check timings wherein reperfusion time is BEFORE onset/event
+** JC 19mar2023: although these were checked during cleaning, some could not be corrected as timings could not be confirmed via MedData
+count if sd_reperfdt<sd_eventdt & sd_eventdt!=. & sd_reperfdt!=. //0
+drop if sd_reperfdt<sd_eventdt & sd_eventdt!=. & sd_reperfdt!=. //0 deleted
 
-gen too_pm3_pm="January 1,1960"+" "+too_pm3+" "+"am" if substr(too_pm3, 1, 2) > "12" & too_pm3!=""
 
-generate double numtime = clock(too_pm3_pm, "MDYhm")
-format numtime %tc_HH:MM:SS
-drop too_pm3_pm
-rename numtime too_pm3_pm
-replace too_pm3_am=too_pm3_pm if too_pm3_am==.
-drop too_pm3 too_pm3_pm
-rename too_pm3_am too_pm3
+** Check if event time and reperfusion time are consistent
+gen double etime_pm3 = clock(etime, "hm") 
+format etime_pm3 %tc_HH:MM
+gen double reperft_pm3 = clock(reperft, "hm") 
+format reperft_pm3 %tc_HH:MM
+count if etime_pm3>reperft_pm3 & etime_pm3!=. & reperft_pm3!=. & edate==reperfd //0
 
-** Time of AMI (tom) is datetime variable (dom + tom) - create var that contains only time (below code kept for reference/historical value)
-count if too!=. & tom==. //0
-list anon_pid record_id doo too sob_date vom_date dizzy_date palp_date sweat_date dom tom if too!=. & tom==.
-
-generate double tom_pm3=hms(hhC(tom), mmC(tom), ssC(tom)) if tom!=.
-format tom_pm3 %tc_HH:MM:SS
-
-list tom tom_pm3
-
-** Remove non-2020 cases
-drop if year!=2020 //0 deleted
-
-** Check for and remove cases wherein reperf was performed before admission to hospital (different day)
-count if year==2020 & dom>reperfd //0
-list record_id reperfd reperft dom tom ambulance if year==2020 & dom>reperfd
-list record_id if year==2020 & dom>reperfd
-drop if year==2020 & dom>reperfd //0 deleted
+** Check if event time and reperfusion time have not been mistakenly assigned as AM and PM, respectively, at abstraction
+count if etime_pm3>reperft_pm3 & etime_pm3!=. & reperft_pm3!=. & edate==reperfd //0
 
 ** Check if datetime variables for 'from scene' and 'admission' are not missing
-count if reperfdt==. & reperfd!=. & reperft!=. //0
-list record_id reperfd reperft reperfdt if reperfdt==. & reperfd!=. & reperft!=.
-gen double reperfdt_pm3 = dhms(reperfd,hh(reperft),mm(reperft),ss(reperft))
-format reperfdt_pm3 %tcNN/DD/CCYY_HH:MM:SS
-//format reperfdtom_pm3 %tCDDmonCCYY_HH:MM:SS - when using this is changes the mm:ss part of the time
-//list record_id reperfdtom_pm3 reperfd tom if reperfdtom_pm3!=.
+count if sd_eventdt==. & edate!=. & etime_pm3!=. //0
+count if sd_reperfdt==. & reperfd!=. & reperft_pm3!=. //0
 
-//count if domtom==. & dom!=. & tom!=. //7 - already corrected in this dataset
-gen double domtom_pm3 = dhms(dom,hh(tom_pm3),mm(tom_pm3),ss(tom_pm3))
-format domtom_pm3 %tcNN/DD/CCYY_HH:MM:SS
-count if domtom_pm3==. & tom!=. //0
-//list record_id domtom_pm3 reperfdt tom if domtom_pm3!=.
-
-count if reperfdt_pm3==. //131
-count if domtom_pm3==. //47
-
-** Check for and remove cases wherein reperf was performed before admission to hospital (same day different time)
-count if domtom_pm3>reperfdt_pm3 //3
-list anon_pid record_id reperfd reperft dom tom tom_pm3 domtom_pm3 reperfdt_pm3 if domtom_pm3>reperfdt_pm3
-count if domtom_pm3>reperfdt_pm3 & domtom_pm3!=. & reperfdt_pm3!=. //1
-list anon_pid record_id reperfd reperft dom tom tom_pm3 domtom_pm3 reperfdt_pm3 if domtom_pm3>reperfdt_pm3 & domtom_pm3!=. & reperfdt_pm3!=.
-di %tc clock("12mar2020 14:58:00.000", "dmyhms")
-di clock("14:58:00.000", "hms") //
-replace reperft=53880000 if anon_pid==3944|record_id=="20202407"
-replace reperfdt=dhms(reperfd,hhC(reperft),mmC(reperft),ssC(reperft)) if anon_pid==3944|record_id=="20202407"
-replace reperfdt_pm3=reperfdt if anon_pid==3944|record_id=="20202407"
-
-drop if domtom_pm3>reperfdt_pm3 //2 deleted
+count if sd_eventdt==. //73
+count if sd_reperfdt==. //156
+count if sd_eventdt==. & sd_reperfdt==. //70
 
 
 ** Create variables to assess timing
-gen mins_onset2needle=round(minutes(round(reperfdt_pm3-domtom_pm3))) if (reperfdt_pm3!=. & domtom_pm3!=.)
-replace mins_onset2needle=round(minutes(round(reperft-tom_pm3))) if mins_onset2needle==. & (reperft!=. & tom_pm3!=.) //0 changes
+gen mins_onset2needle=round(minutes(round(sd_reperfdt-sd_eventdt))) if (sd_reperfdt!=. & sd_eventdt!=.)
+replace mins_onset2needle=round(minutes(round(reperft_pm3-etime_pm3))) if mins_onset2needle==. & (reperft_pm3!=. & etime_pm3!=.) //0 changes
 count if mins_onset2needle<0 //0 - checking to ensure this has been correctly generated
-count if mins_onset2needle==. //131 - ask NS if to drop these before calculating minutes for PM3 Timing since these are missing datetime so will automatically be missing
-drop if mins_onset2needle==. //JC 12apr2022: Timing still calculated the same as not removing the missing datetimes so doesn't matter if they're removed
+count if mins_onset2needle==. //159 - ask NS if to drop these before calculating minutes for PM3 Timing since these are missing datetime so will automatically be missing
+drop if mins_onset2needle==. //159 deleted; JC 12apr2022: Timing still calculated the same as not removing the missing datetimes so doesn't matter if they're removed
 gen hrs_onset2needle=(mins_onset2needle/60)
 label var mins_onset2needle "Total minutes from onset to thrombolysis (onset-to-needle)" 
 label var hrs_onset2needle "Total hours from onset to thrombolysis (onset-to-needle)"
 
-tab mins_onset2needle if year==2020 ,miss
-tab hrs_onset2needle if year==2020 ,miss
+tab mins_onset2needle ,m
+tab hrs_onset2needle ,m
 
-save "`datapath'\version03\2-working\pm3_onset2needle_heart_2020" ,replace
- 
 gen k=1
 
 ameans mins_onset2needle
@@ -1153,123 +858,45 @@ ameans hrs_onset2needle
 ** This code will run in Stata 17
 table k, stat(q2 mins_onset2needle) stat(q1 mins_onset2needle) stat(q3 mins_onset2needle) stat(min mins_onset2needle) stat(max mins_onset2needle)
 table k, stat(q2 hrs_onset2needle) stat(q1 hrs_onset2needle) stat(q3 hrs_onset2needle) stat(min hrs_onset2needle) stat(max hrs_onset2needle)
-restore
 
-
-** JC update: Save these 'p50' results as a dataset for reporting Table 1.7
-preserve
-use "`datapath'\version03\2-working\pm3_onset2needle_heart_2018" ,clear
-append using "`datapath'\version03\2-working\pm3_onset2needle_heart_2019"
-append using "`datapath'\version03\2-working\pm3_onset2needle_heart_2020"
-
-drop mins_onset2needle hrs_onset2needle
-gen mins_onset2needle=round(minutes(round(reperfdt_pm3-domtom_pm3))) if year==2020 & (reperfdt_pm3!=. & domtom_pm3!=.) // changes
-replace mins_onset2needle=round(minutes(round(reperft-tom_pm3))) if year==2020 & mins_onset2needle==. & (reperft!=. & tom_pm3!=.) // changes
-
-replace mins_onset2needle=round(minutes(round(reperfdt_pm3-domtom_pm3))) if year==2019 & (reperfdt_pm3!=. & domtom_pm3!=.) // changes
-replace mins_onset2needle=round(minutes(round(reperft-tom_pm3))) if year==2019 & mins_onset2needle==. & (reperft!=. & tom_pm3!=.) // changes
-
-replace mins_onset2needle=round(minutes(round(reperfdt_pm3-domtom_pm3))) if year==2018 & (reperfdt_pm3!=. & domtom_pm3!=.) // changes
-replace mins_onset2needle=round(minutes(round(reperft-tom_pm3))) if year==2018 & mins_onset2needle==. & (reperft!=. & tom_pm3!=.)  // changes
-
-gen hrs_onset2needle=(mins_onset2needle/60) // changes
-label var mins_onset2needle "Total minutes from onset to thrombolysis (onset-to-needle)"
-label var hrs_onset2needle "Total hours from onset to thrombolysis (onset-to-needle)"
-
-gen k=1
-
-table k, stat(q2 mins_onset2needle) stat(q1 mins_onset2needle) stat(q3 mins_onset2needle) stat(min mins_onset2needle) stat(max mins_onset2needle), if year==2020
-table k, stat(q2 hrs_onset2needle) stat(q1 hrs_onset2needle) stat(q3 hrs_onset2needle) stat(min hrs_onset2needle) stat(max hrs_onset2needle), if year==2020
-
-table k, stat(q2 mins_onset2needle) stat(q1 mins_onset2needle) stat(q3 mins_onset2needle) stat(min mins_onset2needle) stat(max mins_onset2needle), if year==2019
-table k, stat(q2 hrs_onset2needle) stat(q1 hrs_onset2needle) stat(q3 hrs_onset2needle) stat(min hrs_onset2needle) stat(max hrs_onset2needle), if year==2019
-
-table k, stat(q2 mins_onset2needle) stat(q1 mins_onset2needle) stat(q3 mins_onset2needle) stat(min mins_onset2needle) stat(max mins_onset2needle), if year==2018
-table k, stat(q2 hrs_onset2needle) stat(q1 hrs_onset2needle) stat(q3 hrs_onset2needle) stat(min hrs_onset2needle) stat(max hrs_onset2needle), if year==2018
-
-drop if year<2018
+** Save these 'p50' results as a dataset for reporting Table 1.7
 drop if k!=1
 
 save "`datapath'\version03\2-working\pm3_onset2needle_heart_ar" ,replace
 
-sum mins_onset2needle if year==2020
-sum mins_onset2needle ,detail, if year==2020
-gen mins_onset2needle_2020=r(p50) if year==2020
+sum mins_onset2needle
+sum mins_onset2needle ,detail
+gen mins_onset2needle_2021=r(p50)
 
-tostring mins_onset2needle_2020 ,replace
-replace mins_onset2needle_2020=mins_onset2needle_2020+" "+"minutes"
+tostring mins_onset2needle_2021 ,replace
+replace mins_onset2needle_2021=mins_onset2needle_2021+" "+"minutes"
 
+replace mins_onset2needle_2021="" if mins_onset2needle_2021==". minutes"
+fillmissing mins_onset2needle_2021
 
-sum mins_onset2needle if year==2019
-sum mins_onset2needle ,detail, if year==2019
-gen mins_onset2needle_2019=r(p50) if year==2019
-
-tostring mins_onset2needle_2019 ,replace
-replace mins_onset2needle_2019=mins_onset2needle_2019+" "+"minutes"
-
-
-sum mins_onset2needle if year==2018
-sum mins_onset2needle ,detail, if year==2018
-gen mins_onset2needle_2018=r(p50) if year==2018
-
-tostring mins_onset2needle_2018 ,replace
-replace mins_onset2needle_2018=mins_onset2needle_2018+" "+"minutes"
-
-replace mins_onset2needle_2018="" if mins_onset2needle_2018==". minutes"
-replace mins_onset2needle_2019="" if mins_onset2needle_2019==". minutes"
-replace mins_onset2needle_2020="" if mins_onset2needle_2020==". minutes"
-fillmissing mins_onset2needle_2018 mins_onset2needle_2019 mins_onset2needle_2020
-
-keep mins_onset2needle_2018 mins_onset2needle_2019 mins_onset2needle_2020
-order mins_onset2needle_2018 mins_onset2needle_2019 mins_onset2needle_2020
+keep mins_onset2needle_2021
+order mins_onset2needle_2021
 save "`datapath'\version03\2-working\pm3_onset2needle_heart" ,replace
 
 use "`datapath'\version03\2-working\pm3_onset2needle_heart_ar" ,clear
 
-sum hrs_onset2needle if year==2020
-sum hrs_onset2needle ,detail, if year==2020
-gen hours_2020=r(p50) if year==2020
+sum hrs_onset2needle
+sum hrs_onset2needle ,detail
+gen hours_2021=r(p50)
 
-sum hrs_onset2needle if year==2019
-sum hrs_onset2needle ,detail, if year==2019
-gen hours_2019=r(p50) if year==2019
-
-sum hrs_onset2needle if year==2018
-sum hrs_onset2needle ,detail, if year==2018
-gen hours_2018=r(p50) if year==2018
-
-collapse hours_2018 hours_2019 hours_2020
-
-gen double fullhour_2018=int(hours_2018)
-gen double fraction_2018=hours_2018-fullhour_2018
-gen minutes_2018=round(fraction_2018*60,1)
-
-tostring fullhour_2018 ,replace
-tostring minutes_2018 ,replace
-replace fullhour_2018=fullhour_2018+" "+"hours"+" "+minutes_2018+" "+"minutes"
-rename fullhour_2018 hrs_onset2needle_2018
+collapse hours_2021
 
 
-gen double fullhour_2019=int(hours_2019)
-gen double fraction_2019=hours_2019-fullhour_2019
-gen minutes_2019=round(fraction_2019*60,1)
+gen double fullhour_2021=int(hours_2021)
+gen double fraction_2021=hours_2021-fullhour_2021
+gen minutes_2021=round(fraction_2021*60,1)
 
-tostring fullhour_2019 ,replace
-tostring minutes_2019 ,replace
-replace fullhour_2019=fullhour_2019+" "+"hours"+" "+minutes_2019+" "+"minutes"
-rename fullhour_2019 hrs_onset2needle_2019
+tostring fullhour_2021 ,replace
+tostring minutes_2021 ,replace
+replace fullhour_2021=fullhour_2021+" "+"hours"+" "+minutes_2021+" "+"minutes"
+rename fullhour_2021 hrs_onset2needle_2021
 
-
-gen double fullhour_2020=int(hours_2020)
-gen double fraction_2020=hours_2020-fullhour_2020
-gen minutes_2020=round(fraction_2020*60,1)
-
-tostring fullhour_2020 ,replace
-tostring minutes_2020 ,replace
-replace fullhour_2020=fullhour_2020+" "+"hours"+" "+minutes_2020+" "+"minutes"
-rename fullhour_2020 hrs_onset2needle_2020
-
-keep hrs_onset2needle_2018 hrs_onset2needle_2019 hrs_onset2needle_2020
+keep hrs_onset2needle_2021
 
 append using "`datapath'\version03\2-working\pm3_onset2needle_heart"
 
@@ -1277,10 +904,8 @@ fillmissing mins_onset2needle*
 gen id=_n
 drop if id>1 
 drop id
-gen median_2018=mins_onset2needle_2018+" "+"or"+" "+hrs_onset2needle_2018
-gen median_2019=mins_onset2needle_2019+" "+"or"+" "+hrs_onset2needle_2019
-gen median_2020=mins_onset2needle_2020+" "+"or"+" "+hrs_onset2needle_2020
-keep median_2018 median_2019 median_2020
+gen median_2021=mins_onset2needle_2021+" "+"or"+" "+hrs_onset2needle_2021
+keep median_2021
 gen pm3_category=4
 
 label var pm3_category "PM3 Category"
@@ -1288,7 +913,7 @@ label define pm3_category_lab 1 "Median time from scene to arrival at A&E" 2 "Me
 							  3 "Median time from admission to fibrinolysis" 4 "Median time from onset to fibrinolysis" , modify
 label values pm3_category pm3_category_lab
 
-order pm3_category median_2018 median_2019 median_2020
+order pm3_category median_2021
 
 append using "`datapath'\version03\2-working\pm3_scn2door_heart"
 append using "`datapath'\version03\2-working\pm3_door2ecg_heart"
@@ -1297,15 +922,6 @@ append using "`datapath'\version03\2-working\pm3_door2needle_heart"
 sort pm3_category
 rename pm3_category category
 
-erase "`datapath'\version03\2-working\pm3_scn2door_heart_2018.dta"
-erase "`datapath'\version03\2-working\pm3_scn2door_heart_2019.dta"
-erase "`datapath'\version03\2-working\pm3_scn2door_heart_2020.dta"
-erase "`datapath'\version03\2-working\pm3_door2ecg_heart_2018.dta"
-erase "`datapath'\version03\2-working\pm3_door2ecg_heart_2019.dta"
-erase "`datapath'\version03\2-working\pm3_door2ecg_heart_2020.dta"
-erase "`datapath'\version03\2-working\pm3_onset2needle_heart_2018.dta"
-erase "`datapath'\version03\2-working\pm3_onset2needle_heart_2019.dta"
-erase "`datapath'\version03\2-working\pm3_onset2needle_heart_2020.dta"
 erase "`datapath'\version03\2-working\pm3_onset2needle_heart_ar.dta"
 erase "`datapath'\version03\2-working\pm3_scn2door_heart.dta"
 erase "`datapath'\version03\2-working\pm3_door2ecg_heart.dta"
@@ -1318,33 +934,80 @@ restore
 *************************************************
 ** PM4: PTs who received ECHO before discharge **
 *************************************************
-tab decho year
-tab decho sex if year==2011
-tab decho sex if year==2012
-tab decho sex if year==2013
-tab decho sex if year==2014
-tab decho sex if year==2015
-tab decho sex if year==2016
-tab decho sex if year==2017
-tab decho sex if year==2018
-tab decho sex if year==2019
-tab decho sex if year==2020
-tab decho if year==2019
-tab decho if year==2020
+tab decho ,m
+/*
+        ECHO |
+(Transthorac |
+     ic echo |
+cardiography |
+           ) |      Freq.     Percent        Cum.
+-------------+-----------------------------------
+         Yes |         57       12.21       12.21
+          No |          1        0.21       12.42
+Referred for |         65       13.92       26.34
+          99 |         42        8.99       35.33
+           . |        302       64.67      100.00
+-------------+-----------------------------------
+       Total |        467      100.00
+*/
 
+tab decho sex ,m
+/*
+        ECHO |
+(Transthorac |
+     ic echo |
+cardiography |  Incidence Data: Sex
+           ) |    Female       Male |     Total
+-------------+----------------------+----------
+         Yes |        25         32 |        57 
+          No |         1          0 |         1 
+Referred for |        24         41 |        65 
+          99 |        22         20 |        42 
+           . |       150        152 |       302 
+-------------+----------------------+----------
+       Total |       222        245 |       467
+*/
 
-** JC update: Save these results as a dataset for reporting Table 1.8
+tab decho sd_absstatus ,m
+
+** Save these results as a dataset for reporting Table 1.8
 preserve
-save "`datapath'\version03\2-working\pm4_ecg_heart_ar" ,replace
-
-drop if year!=2020
-
-/* JC 14mar2022: testing out below code to output to Word using asdoc command
-cd "`datapath'\version03\3-output"
-asdoc tabulate decho sex , nokey row column replace
+drop if sd_absstatus!=1 //282 deleted - DCOs and partial abstractions
+tab decho vstatus ,m
+/*
+        ECHO |
+(Transthorac |
+     ic echo |    Vital Status at
+cardiography |       discharge
+           ) |     Alive   Deceased |     Total
+-------------+----------------------+----------
+         Yes |        45         12 |        57 
+          No |         1          0 |         1 
+Referred for |        54         11 |        65 
+          99 |        23         19 |        42 
+           . |         0         20 |        20 
+-------------+----------------------+----------
+       Total |       123         62 |       185
+*/
+tab decho sex ,m
+/*
+        ECHO |
+(Transthorac |
+     ic echo |
+cardiography |  Incidence Data: Sex
+           ) |    Female       Male |     Total
+-------------+----------------------+----------
+         Yes |        25         32 |        57 
+          No |         1          0 |         1 
+Referred for |        24         41 |        65 
+          99 |        22         20 |        42 
+           . |        11          9 |        20 
+-------------+----------------------+----------
+       Total |        83        102 |       185
 */
 
 contract decho sex
+
 drop if decho==.
 rename _freq number
 egen disecho=total(number) if decho==1
@@ -1394,127 +1057,64 @@ replace male_percent=round(male_percent,1.0)
 replace total_percent=round(total_percent,1.0)
 
 save "`datapath'\version03\2-working\pm4_ecg_heart" ,replace
-/* 
-	JC 20jul2022: Simon Anderson's query from 2020 annual report review: Can we do this by NSTEMI and STEMI? Particularly the latter…
-	So I added the below code to create a separate table from the above to differentiate by heart type
-
-use "`datapath'\version03\2-working\pm4_ecg_heart_ar" ,clear
-STOP - need to ask NS how best to do this as in other code, e.g. PM2 + PM3, the heart type variable [htype] is not used but the ECG variable denoting STEMI [ecgste] is used to identify STEMI cases; So how do I identify NSTEMI cases? Do I use [htype]? However, [htype] has less NSTEMI cases than when [ecgstd] and [ecgtwv] are used...
-tab ecgste if year==2020
-tab htype if year==2020
-
-** STEMI
-by year,sort:tab decho ecgste, m row col
-by year sex,sort:tab decho ecgste, m row col //use this for STEMI
-
-by year sex,sort:tab decho ecgstd, m row col
-by year sex,sort:tab decho ecgtwv, m row col
-
-by year sex,sort:tab decho htype, m row col
-tab decho htype if year==2020 & sex==2
-tab decho ecgstd if year==2020 & sex==2
-tab decho ecgtwv if year==2020 & sex==2
-** 
-tab decho sex if year==2020 
-
-drop if year!=2020
-...
-*/
-erase "`datapath'\version03\2-working\pm4_ecg_heart_ar.dta"
 restore
 
 **********************************************
 ** PM5: PTs prescribed Aspirin at discharge **
 **********************************************
-tab aspdis year
-tab aspdis sex if year==2011
-tab aspdis sex if year==2012
-tab aspdis sex if year==2013
-tab aspdis sex if year==2014
-tab aspdis sex if year==2015
-tab aspdis sex if year==2016
-tab aspdis sex if year==2017
-tab aspdis sex if year==2018
-tab aspdis sex if year==2019
-tab aspdis sex if year==2020
-tab aspdis if year==2019
-tab vstatus if  abstracted==1 & year==2019
-tab aspdis if year==2019 & vstatus==1
-tab aspdis if year==2020
-tab vstatus if  abstracted==1 & year==2020
-** Of those discharged( 222), 184 had aspirin at discharge.
+tab aspdis if sd_absstatus==1 ,m
+tab aspdis sex if sd_absstatus==1 ,m
+tab vstatus if sd_absstatus==1 ,m
+tab aspdis if sd_absstatus==1 ,m
+tab aspdis if sd_absstatus==1 & vstatus==1 ,m
+** Of those discharged(123), 101 had aspirin at discharge //2021
+dis 101/123  //82%
+** Of those discharged(222), 184 had aspirin at discharge //2020
 dis 184/222  //83%
 
 ** JC 17mar2022: per discussion with NS, check for cases wherein [aspdis]!=yes/at discharge but antiplatelets [pladis]=yes/at discharge and same for aspirin used chronically [aspchr]
-bysort year :tab pladis if aspdis==99|aspdis==2
-bysort year :tab aspchr if aspdis==99|aspdis==2
-bysort year :tab aspchr if (aspdis==99|aspdis==2) & (pladis==99|pladis==2)
-bysort year :tab aspdis pladis
-bysort year :tab aspdis aspchr
+tab pladis if aspdis==99 //3
+tab asp___2 if aspdis==99 //7
+tab asp___2 if aspdis==99 & pladis==99 //7
+tab aspdis pladis
+tab aspdis asp___2
 
-tab pladis if year==2020 & (aspdis==99|aspdis==2)
-tab aspchr if year==2020 & (aspdis==99|aspdis==2)
-tab aspdis pladis if year==2020
-tab aspdis aspchr if year==2020
+bysort asp___2 :tab aspdis pladis if sd_absstatus==1
+bysort sd_absstatus :tab aspdis pladis if asp___2!=1
+bysort sd_absstatus :tab aspdis pladis if asp___2!=1 & vstatus==1
 
-bysort aspchr :tab aspdis pladis if year==2019
-bysort year :tab aspdis pladis if aspchr!=1
-bysort year :tab aspdis pladis if aspchr!=1 & vstatus==1
+tabulate aspdis pladis if sd_absstatus==1 & vstatus==1, nokey row column 
 
-tab aspdis if vstatus==1 & year==2019 //77%
-tab aspdis if abstracted==1 & year==2019 //59%
-tab aspdis if vstatus==1 & year==2019 & pladis==1
-tabulate aspdis pladis if year==2019, nokey row column 
-
-** JC update: Save these results as a dataset for reporting PM5 "Documented aspirin prescribed at discharge"
+** Save these results as a dataset for reporting PM5 "Documented aspirin prescribed at discharge"
 preserve
-tab vstatus aspdis if abstracted==1 & year==2020
+tab vstatus aspdis if sd_absstatus==1
 save "`datapath'\version03\2-working\pm5_asp_heart" ,replace
 restore
 
 ** JC 09jun2022: NS requested combining aspirin and antiplatelets into one group called 'Aspirin/Antiplatelet therapy' which would include those not discharged on aspirin but discharged on antiplatelets and those chronically on aspirin
 preserve
-bysort year :tab vstatus
-tab aspdis year if aspdis==1, matcell(foo)
+bysort sd_eyear :tab vstatus
+tab aspdis sd_eyear if aspdis==1, matcell(foo)
 mat li foo
-svmat foo, names(year)
-egen total_alive_2020=total(vstatus) if vstatus==1 & year==2020
-egen total_alive_2019=total(vstatus) if vstatus==1 & year==2019
-egen total_alive_2018=total(vstatus) if vstatus==1 & year==2018
-egen total_alive_2017=total(vstatus) if vstatus==1 & year==2017
+svmat foo, names(sd_eyear)
+egen total_alive_2021=total(vstatus) if vstatus==1 & sd_eyear==2021
 fillmissing total_alive*
 
 gen id=_n
-keep id year9-year12 total_alive*
+keep id sd_eyear1 total_alive*
 
 drop if id!=1
 gen category="aspirin"
 drop id
-expand 4 in 1
-gen id=_n
 
-gen year=1 if id==1
-replace year=2 if id==2
-replace year=3 if id==3
-replace year=4 if id==4
-rename year9 aspdis_2017
-rename year10 aspdis_2018
-rename year11 aspdis_2019
-rename year12 aspdis_2020
-reshape wide aspdis_*, i(id)  j(year)
+rename sd_eyear1 aspdis
+//reshape wide aspdis_*, i(id)  j(year)
 
-replace aspdis_20171=aspdis_20182 if id==2
-replace aspdis_20171=aspdis_20193 if id==3
-replace aspdis_20171=aspdis_20204 if id==4
-rename id year
-rename aspdis_20171 aspdis
-rename total_alive_2020 total_alive
-replace total_alive=total_alive_2017 if year==1
-replace total_alive=total_alive_2018 if year==2
-replace total_alive=total_alive_2019 if year==3
+rename total_alive_2021 total_alive
+gen year=5
 keep year aspdis total_alive
 
-label define year_lab 1 "2017" 2 "2018" 3 "2019" 4 "2020" ,modify
+label define year_lab 1 "2017" 2 "2018" 3 "2019" 4 "2020" 5 "2021" ,modify
 label values year year_lab
 label var year "Year"
 
@@ -1522,36 +1122,24 @@ save "`datapath'\version03\2-working\pm5_asppla_heart" ,replace
 restore
 
 preserve
-tab pladis year if pladis==1 & (aspdis==99|aspdis==2), matcell(foo)
+tab pladis sd_eyear if pladis==1 & aspdis==99, matcell(foo)
 mat li foo
-svmat foo, names(year)
+svmat foo, names(sd_eyear)
 gen id=_n
-keep id year7-year10
+
+keep id sd_eyear1
 
 drop if id!=1
 gen category="antiplatelets"
 drop id
-expand 4 in 1
-gen id=_n
 
-gen year=1 if id==1
-replace year=2 if id==2
-replace year=3 if id==3
-replace year=4 if id==4
-rename year7 pladis_2017
-rename year8 pladis_2018
-rename year9 pladis_2019
-rename year10 pladis_2020
-reshape wide pladis_*, i(id)  j(year)
+//reshape wide pladis_*, i(id)  j(year)
 
-replace pladis_20171=pladis_20182 if id==2
-replace pladis_20171=pladis_20193 if id==3
-replace pladis_20171=pladis_20204 if id==4
-rename id year
-rename pladis_20171 pladis
+gen year=5
+rename sd_eyear1 pladis
 keep year pladis
 
-label define year_lab 1 "2017" 2 "2018" 3 "2019" 4 "2020" ,modify
+label define year_lab 1 "2017" 2 "2018" 3 "2019" 4 "2020" 5 "2021" ,modify
 label values year year_lab
 label var year "Year"
 
@@ -1562,38 +1150,24 @@ save "`datapath'\version03\2-working\pm5_asppla_heart" ,replace
 restore
 
 preserve
-tab aspchr year if aspchr==1 & (aspdis==99|aspdis==2)
-tab aspchr year if aspchr==1 & (aspdis==99|aspdis==2) & (pladis==99|pladis==2)
-tab aspchr year if aspchr==1 & (aspdis==99|aspdis==2) & (pladis==99|pladis==2), matcell(foo)
+tab asp___2 sd_eyear if asp___2==1 & aspdis==99
+tab asp___2 sd_eyear if asp___2==1 & aspdis==99 & pladis==99
+tab asp___2 sd_eyear if asp___2==1 & aspdis==99 & pladis==99, matcell(foo)
 mat li foo
-svmat foo, names(year)
+svmat foo, names(sd_eyear)
 gen id=_n
-keep id year7-year10
+
+keep id sd_eyear1
 
 drop if id!=1
 gen category="chronic aspirin"
 drop id
-expand 4 in 1
-gen id=_n
 
-gen year=1 if id==1
-replace year=2 if id==2
-replace year=3 if id==3
-replace year=4 if id==4
-rename year7 aspchr_2017
-rename year8 aspchr_2018
-rename year9 aspchr_2019
-rename year10 aspchr_2020
-reshape wide aspchr_*, i(id)  j(year)
-
-replace aspchr_20171=aspchr_20182 if id==2
-replace aspchr_20171=aspchr_20193 if id==3
-replace aspchr_20171=aspchr_20204 if id==4
-rename id year
-rename aspchr_20171 aspchr
+gen year=5
+rename sd_eyear1 aspchr
 keep year aspchr
 
-label define year_lab 1 "2017" 2 "2018" 3 "2019" 4 "2020" ,modify
+label define year_lab 1 "2017" 2 "2018" 3 "2019" 4 "2020" 5 "2021" ,modify
 label values year year_lab
 label var year "Year"
 
@@ -1605,6 +1179,7 @@ gen asppla_percent=asppla/total_alive*100
 replace asppla_percent=round(asppla_percent,1.0)
 
 order year aspchr pladis aspdis asppla total_alive asppla_percent
+drop aspchr pladis
 save "`datapath'\version03\2-working\pm5_asppla_heart" ,replace
 restore
 
@@ -1612,87 +1187,37 @@ restore
 *********************************************
 ** PM6: PTs prescribed Statin at discharge **
 *********************************************
-tab statdis year
-tab statdis sex if year==2011
-tab statdis sex if year==2012
-tab statdis sex if year==2013
-tab statdis sex if year==2014
-tab statdis sex if year==2015
-tab statdis sex if year==2016
-tab statdis sex if year==2017
-tab statdis sex if year==2018
-tab statdis sex if year==2019
-tab statdis sex if year==2020
-tab statdis if year==2020
-tab vstatus if abstracted==1 & year==2020
-** Of those discharged( 222), 181 had statin at discharge.
+tab statdis ,m
+tab statdis if sd_absstatus==1 ,m
+tab vstatus if sd_absstatus==1 ,m
+tab statdis if sd_absstatus==1 & vstatus==1 ,m
+** Of those discharged(123), 95 had statin at discharge //2021
+dis 95/123  //77%
+** Of those discharged(222), 181 had statin at discharge //2020
 dis 181/222  //82%
 
 ** JC update: Save these results as a dataset for reporting PM6 "Documented statins prescribed at discharge"
 preserve
-tab vstatus statdis if abstracted==1 & year==2020
+tab vstatus statdis if sd_absstatus==1
 save "`datapath'\version03\2-working\pm6_statin_heart" ,replace
 restore
 
-
-
-***********************************************************
-** Additional Analyses: % CTs for those discharged alive **
-***********************************************************
-** Requested by SF via email on 20may2022
-
-tab ct ,m
-tab ct year
-tab vstatus ct
-tab ct year if vstatus==1
-tab vstatus if abstracted==1
-tab vstatus ct if abstracted==1 & year==2020
-
-
-** JC update: Save these results as a dataset for reporting Figure 1.4 
-preserve
-tab year if ct==1 & vstatus==1 & abstracted==1 ,m matcell(foo)
-mat li foo
-svmat foo
-egen total_alive=total(vstatus) if vstatus==1 & abstracted==1 & year==2020
-fillmissing total_alive
-drop if foo==.
-keep foo total_alive
-
-gen id=1
-gen registry="heart"
-gen category=1
-gen year=2020
-
-rename foo ct
-
-order id registry category year ct total_alive
-gen ct_percent=ct/total_alive*100
-replace ct_percent=round(ct_percent,1.0)
-
-
-label define category_lab 1 "CT for those alive at discharge" 2 "Under age 70" ,modify
-label values category category_lab
-label var category "Additional Analyses Category"
-
-save "`datapath'\version03\2-working\addanalyses_ct" ,replace
-restore
 
 
 *************************************************
 ** Additional Analyses: % persons <70 with AMI **
 *************************************************
 ** Requested by SF via email on 20may2022
-count if age<70 & year==2020 //all cases
-count if age<70 & year==2020 & abstracted==1 //cases abstracted by BNR
-count if year==2020
-count if year==2020 & abstracted==1
+count if age<70 //all cases
+count if age<70 & sd_absstatus==1 //cases abstracted by BNR
+count if sd_eyear==2021
+count if sd_eyear==2021 & sd_absstatus==1
 
 preserve
-egen totcases=count(year) if year==2020
-egen totabs=count(year) if year==2020 & abstracted==1
-egen totagecases=count(year) if age<70 & year==2020
-egen totageabs=count(year) if age<70 & year==2020 & abstracted==1
+egen totcases=count(sd_etype) if sd_etype!=.
+egen totabs=count(sd_etype) if sd_absstatus==1
+egen totagecases=count(sd_etype) if age<70
+egen totageabs=count(sd_etype) if age<70 & sd_absstatus==1
 fillmissing totcases totabs totagecases totageabs
 gen id=_n
 drop if id!=1
@@ -1705,7 +1230,7 @@ replace totageabs_percent=round(totageabs_percent,1.0)
 gen id=2
 gen registry="heart"
 gen category=2
-gen year=2020
+gen year=2021
 
 order id registry category year totagecases totcases totagecases_percent totageabs totabs totageabs_percent
 

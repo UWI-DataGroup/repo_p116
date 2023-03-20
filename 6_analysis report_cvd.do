@@ -4,7 +4,7 @@
     //  project:                BNR-CVD
     //  analysts:               Jacqueline CAMPBELL
     //  date first created      16-MAR-2023
-    // 	date last modified      17-MAR-2023
+    // 	date last modified      19-MAR-2023
     //  algorithm task          Creating MS Word document with 2021 statistical + figure outputs for 2021 annual report
     //  status                  Pending
     //  objective               To have methods, tables, figures and text in an easy-to-use format for the report writer
@@ -558,6 +558,7 @@ merge 1:1 id using "`datapath'\version03\3-output\summstats_heart"
 drop _merge
 merge 1:1 id using "`datapath'\version03\3-output\summstats_stroke_all"
 drop _merge id
+
 order Title Myocardial_Infarction Stroke_all Stroke_first_ever
 
 ** Remove datasets to save on SharePoint storage space
@@ -581,7 +582,7 @@ putdocx pagenumber
 putdocx paragraph, style(Title)
 putdocx text ("CVD 2021 Annual Report: Stata Results"), bold
 putdocx textblock begin
-Date First Prepared + Last Updated: 16-MAR-2023 + 17-MAR-2023, respectively
+Date First Prepared + Last Updated: 16-MAR-2023 + 20-MAR-2023, respectively
 putdocx textblock end
 putdocx textblock begin
 Prepared by: JC using Stata 17.0
@@ -1261,47 +1262,7 @@ restore
 
 clear
 
-STOP
-/*
-preserve
-use "`datapath'\version03\2-working\pm2_stemi_heart_ar", clear
 
-putdocx clear
-putdocx begin
-
-//putdocx pagebreak
-putdocx paragraph, style(Heading2)
-putdocx text ("AMI: PM 2-Proportion of STEMI patients who received reperfusion via fibrinolysis (Dofile: 1.3_heart_cvd_analysis.do)"), bold
-putdocx paragraph, halign(center)
-putdocx text ("Table 1.6. Number of STEMI cases and proportion reperfused by gender"), bold font(Helvetica,10,"blue")
-putdocx paragraph
-putdocx text ("In '2020AnnualReportStatsV15_20220413.docx' NS requested to see the total number of MALE/FEMALE stemi.")
-
-putdocx paragraph, halign(center)
-putdocx text ("2018: Female"), bold font(Helvetica,10,"blue")
-tab2docx ecgste if sex==1 & year==2018 & diagnosis==2
-putdocx paragraph, halign(center)
-putdocx text ("2018: Male"), bold font(Helvetica,10,"blue")
-tab2docx ecgste if sex==2 & year==2018 & diagnosis==2
-putdocx paragraph, halign(center)
-putdocx text ("2019: Female"), bold font(Helvetica,10,"blue")
-tab2docx ecgste if sex==1 & year==2019 & diagnosis==2
-putdocx paragraph, halign(center)
-putdocx text ("2019: Male"), bold font(Helvetica,10,"blue")
-tab2docx ecgste if sex==2 & year==2019 & diagnosis==2
-putdocx paragraph, halign(center)
-putdocx text ("2020: Female"), bold font(Helvetica,10,"blue")
-tab2docx ecgste if sex==1 & year==2020 & diagnosis==2
-putdocx paragraph, halign(center)
-putdocx text ("2020: Male"), bold font(Helvetica,10,"blue")
-tab2docx ecgste if sex==2 & year==2020 & diagnosis==2
-
-local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
-putdocx clear
-restore
-
-clear
 
 preserve
 use "`datapath'\version03\2-working\pm3_heart", clear
@@ -1310,11 +1271,11 @@ putdocx clear
 putdocx begin
 
 putdocx paragraph, style(Heading2)
-putdocx text ("AMI: PM 3-Median time to reperfusion for STEMI (Dofile: 1.3_heart_cvd_analysis.do)"), bold
+putdocx text ("AMI: PM 3-Median time to reperfusion for STEMI (Dofile: 5n_analysis PMs_heart.do)"), bold
 putdocx paragraph, halign(center)
-putdocx text ("Table 1.7. 'Door to needle' times for hospitalised patients, 2018 - 2020"), bold font(Helvetica,10,"blue")
+putdocx text ("Table 1.7. 'Door to needle' times for hospitalised patients, 2021"), bold font(Helvetica,10,"blue")
 
-putdocx table tbl1 = data(category median_2018 median_2019 median_2021), halign(center) varnames
+putdocx table tbl1 = data(category median_2021), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
 putdocx table tbl1(1,2), bold shading(lightgray)
 putdocx table tbl1(1,3), bold shading(lightgray)
@@ -1331,15 +1292,14 @@ clear
 preserve
 use "`datapath'\version03\2-working\pm4_ecg_heart", clear
 
-//drop if year!=2020
 
 putdocx clear
 putdocx begin
 
 putdocx paragraph, style(Heading2)
-putdocx text ("AMI: PM 4-Proportion of patients receiving an echocardiogram before discharge (Dofile: 1.3_heart_cvd_analysis.do)"), bold
+putdocx text ("AMI: PM 4-Proportion of patients receiving an echocardiogram before discharge (Dofile: 5n_analysis PMs_heart.do)"), bold
 putdocx paragraph, halign(center)
-putdocx text ("Table 1.8. Proportion of patients receiving echocardiogram, 2020"), bold font(Helvetica,10,"blue")
+putdocx text ("Table 1.8. Proportion of patients receiving echocardiogram, 2021"), bold font(Helvetica,10,"blue")
 
 putdocx table tbl1 = data(Timing female_num female_percent male_num male_percent total_num total_percent), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
@@ -1350,14 +1310,6 @@ putdocx table tbl1(1,5), bold shading(lightgray)
 putdocx table tbl1(1,6), bold shading(lightgray)
 putdocx table tbl1(1,7), bold shading(lightgray)
 
-/* JC 14mar2022 Testing out below code using year drop code above + dataset: "`datapath'\version03\2-working\pm4_ecg_heart_ar"
-tab2docx decho if sex==1 //female
-tab2docx decho if sex==2 //male
-tab2docx decho if sex==1 & (decho==1|decho==3)
-tab2docx decho if sex==2 & (decho==1|decho==3)
-tab2docx decho if (sex==1 | sex==2) & decho==1
-*/
-
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
 putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
@@ -1365,71 +1317,6 @@ putdocx clear
 restore
 
 clear
-
-preserve
-use "`datapath'\version03\2-working\pm5_asp_heart", clear
-
-putdocx clear
-putdocx begin
-
-putdocx pagebreak
-putdocx paragraph, style(Heading2)
-putdocx text ("AMI: PM 5-Documented aspirin prescribed at discharge (Dofile: 1.3_heart_cvd_analysis.do)"), bold
-putdocx paragraph, halign(center)
-putdocx text ("Proportion of patients receiving aspirin at discharge, 2017-2020"), bold font(Helvetica,10,"blue")
-putdocx paragraph
-putdocx text ("2019 annual report for this PM states: 'Aspirin which is critical for secondary prevention was prescribed to 78% of patients in 2019. This is a reduction from previous years 2017 and 2018 of 85%.' This differs from the proportions in the 2020 heart dofile: 1.3_heart_cvd_analysis.do, as noted below. The proportion is calculated as 'Aspirin at discharge (of alive pts)/Total*100' according to comments by AH in this dofile.")
-
-putdocx paragraph, halign(center)
-putdocx text ("2017"), bold font(Helvetica,10,"blue")
-tab2docx aspdis if vstatus==1 & year==2017
-putdocx paragraph, halign(center)
-putdocx text ("2018"), bold font(Helvetica,10,"blue")
-tab2docx aspdis if vstatus==1 & year==2018
-putdocx paragraph, halign(center)
-putdocx text ("2019"), bold font(Helvetica,10,"blue")
-tab2docx aspdis if vstatus==1 & year==2019
-putdocx paragraph, halign(center)
-putdocx text ("2020"), bold font(Helvetica,10,"blue")
-tab2docx aspdis if vstatus==1 & year==2020
-
-putdocx paragraph
-putdocx text ("Below tables use the variable [aspdis] + [pladis] + [aspchr] to check for cases wherein [aspdis]!=yes/at discharge but antiplatelets [pladis]=yes/at discharge and same for aspirin used chronically [aspchr], as per discussion with NS.")
-//putdocx pagebreak
-putdocx paragraph, halign(center)
-putdocx text ("2017-Antiplatelets"), bold font(Helvetica,10,"blue")
-tab2docx pladis if year==2017 & (aspdis==99|aspdis==2)
-putdocx paragraph, halign(center)
-putdocx text ("2018-Antiplatelets"), bold font(Helvetica,10,"blue")
-tab2docx pladis if year==2018 & (aspdis==99|aspdis==2)
-putdocx paragraph, halign(center)
-putdocx text ("2019-Antiplatelets"), bold font(Helvetica,10,"blue")
-tab2docx pladis if year==2019 & (aspdis==99|aspdis==2)
-putdocx paragraph, halign(center)
-putdocx text ("2020-Antiplatelets"), bold font(Helvetica,10,"blue")
-tab2docx pladis if year==2020 & (aspdis==99|aspdis==2)
-
-putdocx paragraph, halign(center)
-putdocx text ("2017-Chronic Aspirin"), bold font(Helvetica,10,"blue")
-tab2docx aspchr if year==2017 & (aspdis==99|aspdis==2)
-putdocx paragraph, halign(center)
-putdocx text ("2018-Chronic Aspirin"), bold font(Helvetica,10,"blue")
-tab2docx aspchr if year==2018 & (aspdis==99|aspdis==2)
-putdocx paragraph, halign(center)
-putdocx text ("2019-Chronic Aspirin"), bold font(Helvetica,10,"blue")
-tab2docx aspchr if year==2019 & (aspdis==99|aspdis==2)
-putdocx paragraph, halign(center)
-putdocx text ("2020-Chronic Aspirin"), bold font(Helvetica,10,"blue")
-tab2docx aspchr if year==2020 & (aspdis==99|aspdis==2)
-
-
-local listdate = string( d(`c(current_date)'), "%dCYND" )
-putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
-putdocx clear
-restore
-
-clear
-
 
 preserve
 use "`datapath'\version03\2-working\pm5_asppla_heart", clear
@@ -1437,23 +1324,22 @@ use "`datapath'\version03\2-working\pm5_asppla_heart", clear
 putdocx clear
 putdocx begin
 
-//putdocx pagebreak
-
+putdocx pagebreak
+putdocx paragraph, style(Heading2)
+putdocx text ("AMI: PM 5-Documented aspirin prescribed at discharge (Dofile: 5n_analysis PMs_heart.do)"), bold
 putdocx paragraph, halign(center)
-putdocx text ("Proportion of patients receiving Aspirin/Antiplatelet Therapy at discharge, 2017-2020"), bold font(Helvetica,10,"blue")
+putdocx text ("Proportion of patients receiving Aspirin/Antiplatelet Therapy at discharge, 2021"), bold font(Helvetica,10,"blue")
 putdocx paragraph
-putdocx text ("Below tables created a variable called 'Aspirin/Antiplatelet therapy' using the variable [aspdis] + [pladis] + [aspchr] to check for cases wherein [aspdis]!=yes/at discharge but antiplatelets [pladis]=yes/at discharge and same for aspirin used chronically [aspchr], as per comment from NS in '2020AnnualReportStatsV15_20220413.docx'.")
+putdocx text ("Below tables created a variable called 'Aspirin/Antiplatelet therapy' using the variable [aspdis] + [pladis] + [asp___2] to check for cases wherein [aspdis]!=yes/at discharge but antiplatelets [pladis]=yes/at discharge and same for aspirin used chronically [asp___2].")
 
 rename asppla aspirin_antiplatelet
 rename asppla_percent therapy_percent
-putdocx table tbl1 = data(year aspchr pladis aspdis aspirin_antiplatelet total_alive therapy_percent), halign(center) varnames
+putdocx table tbl1 = data(year aspdis aspirin_antiplatelet total_alive therapy_percent), halign(center) varnames
 putdocx table tbl1(1,1), bold shading(lightgray)
 putdocx table tbl1(1,2), bold shading(lightgray)
 putdocx table tbl1(1,3), bold shading(lightgray)
 putdocx table tbl1(1,4), bold shading(lightgray)
 putdocx table tbl1(1,5), bold shading(lightgray)
-putdocx table tbl1(1,6), bold shading(lightgray)
-putdocx table tbl1(1,7), bold shading(lightgray)
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
 putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
@@ -1471,18 +1357,15 @@ putdocx begin
 
 putdocx pagebreak
 putdocx paragraph, style(Heading2)
-putdocx text ("AMI: PM 6-Documented statins prescribed at discharge (Dofile: 1.3_heart_cvd_analysis.do)"), bold
+putdocx text ("AMI: PM 6-Documented statins prescribed at discharge (Dofile: 5n_analysis PMs_heart.do)"), bold
 putdocx paragraph, halign(center)
-putdocx text ("Proportion of patients receiving statins at discharge, 2019 & 2020"), bold font(Helvetica,10,"blue")
+putdocx text ("Proportion of patients receiving statins at discharge, 2021"), bold font(Helvetica,10,"blue")
 putdocx paragraph
-putdocx text ("2019 annual report for this PM states: 'There were 71% of patients discharged home on a statin in 2019.' This matches the proportions in the 2020 heart dofile: 1.3_heart_cvd_analysis.do, as noted below. The proportion is calculated as 'Statins at discharge (of alive pts)/Total*100' according to comments by AH in this dofile.")
+putdocx text ("The 'Statins at discharge (of alive pts)'.")
 
 putdocx paragraph, halign(center)
-putdocx text ("2019"), bold font(Helvetica,10,"blue")
-tab2docx statdis if vstatus==1 & year==2019
-putdocx paragraph, halign(center)
-putdocx text ("2020"), bold font(Helvetica,10,"blue")
-tab2docx statdis if vstatus==1 & year==2020
+putdocx text ("2021"), bold font(Helvetica,10,"blue")
+tab2docx statdis if vstatus==1
 
 local listdate = string( d(`c(current_date)'), "%dCYND" )
 putdocx save "`datapath'\version03\3-output\2021AnnualReportStatsV1_`listdate'.docx", append
@@ -1490,8 +1373,8 @@ putdocx clear
 restore
 
 clear
-*/
 
+STOP
 ***************************************************** STROKE *************************************************************
 
 preserve
