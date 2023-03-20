@@ -1102,8 +1102,8 @@ count if sd_daetae<sd_frmscndt & sd_daetae!=. & sd_frmscndt!=. //11 - heart reco
 count if sd_daetae<sd_atscndt & sd_daetae!=. & sd_atscndt!=. //8 - same as above
 //list sd_etype record_id fname lname atscnd atscnt dae tae sd_bothevent if sd_daetae<sd_atscndt & sd_daetae!=. & sd_atscndt!=.
 
-count if sd_daetae<sd_hospdt & sd_daetae!=. & sd_hospdt!=. //15 - same as above + stroke records 1821, 2633, 2726, 2816 and heart record 2723 couldn't be corrected so added a note in comments and CVD DM Re-engineer OneNote bk.
-//list sd_etype record_id fname lname hospd hospt dae tae sd_bothevent if sd_daetae<sd_hospdt & sd_daetae!=. & sd_hospdt!=.
+count if sd_daetae<sd_hospdt & sd_daetae!=. & sd_hospdt!=. //15 - same as above + stroke records 1821, 2633, 2726, 2816 and heart record 2723 corrected below.
+//list sd_etype record_id fname lname frmscnd frmscnt hospd hospt dae tae sd_bothevent if sd_daetae<sd_hospdt & sd_daetae!=. & sd_hospdt!=.
 
 count if sd_daetae<sd_ambcalldt & sd_daetae!=. & sd_ambcalldt!=. //4 - same as above
 //list sd_etype record_id fname lname ambcalld ambcallt dae tae sd_bothevent if sd_daetae<sd_ambcalldt & sd_daetae!=. & sd_ambcalldt!=.
@@ -1151,6 +1151,12 @@ replace flag118=tae if record_id=="3227"
 replace tae=subinstr(tae,"13","23",.) if record_id=="3227" //see above
 replace flag1043=tae if record_id=="3227"
 
+replace flag118=tae if record_id=="1821"|record_id=="2633"|record_id=="2726"|record_id=="2816"|record_id=="2723"
+replace flag154=hospt if record_id=="1821"|record_id=="2633"|record_id=="2726"|record_id=="2816"|record_id=="2723"
+swapval hospt tae if record_id=="1821"|record_id=="2633"|record_id=="2726"|record_id=="2816"|record_id=="2723" //see above
+replace flag1079=hospt if record_id=="1821"|record_id=="2633"|record_id=="2726"|record_id=="2816"|record_id=="2723"
+replace flag1043=tae if record_id=="1821"|record_id=="2633"|record_id=="2726"|record_id=="2816"|record_id=="2723"
+
 replace flag135=atscene if record_id=="2872"|record_id=="3268"
 replace atscene=2 if record_id=="2872"|record_id=="3268" //see above
 replace flag1060=atscene if record_id=="2872"|record_id=="3268"
@@ -1180,7 +1186,7 @@ replace flag1408=reperfd if record_id=="2052"
 
 
 ** JC 09feb2023: Now realized that records already flagged and exported to a previous excel will recur as they still exist in the dataset so need to date each flagged record in this dofile
-replace flagdate=sd_currentdate if record_id=="3227"|record_id=="4173"|record_id=="2872"|record_id=="3268"|record_id=="2052"
+replace flagdate=sd_currentdate if record_id=="3227"|record_id=="4173"|record_id=="2872"|record_id=="3268"|record_id=="2052"|record_id=="1821"|record_id=="2633"|record_id=="2726"|record_id=="2816"|record_id=="2723"
 
 
 
@@ -1197,11 +1203,11 @@ format flag136 flag1061 flag143 flag1068 flag483 flag1408 %dM_d,_CY
 ** Create excel errors list before deleting incorrect records
 ** Use below code to automate file names using current date
 local listdate = string( d(`c(current_date)'), "%dCYND" )
-capture export_excel record_id sd_etype flag118 flag135 flag136 flag143 flag371 flag483 if ///
-		record_id=="3227"|record_id=="4173"|record_id=="2872"|record_id=="3268"|record_id=="2052" ///
+capture export_excel record_id sd_etype flag118 flag135 flag136 flag143 flag154 flag371 flag483 if ///
+		record_id=="3227"|record_id=="4173"|record_id=="2872"|record_id=="3268"|record_id=="2052"|record_id=="1821"|record_id=="2633"|record_id=="2726"|record_id=="2816"|record_id=="2723" ///
 using "`datapath'\version03\3-output\CVDCleaning2021_FINAL3_`listdate'.xlsx", sheet("ERRORS") firstrow(varlabels)
-capture export_excel record_id sd_etype flag1043 flag1060 flag1061 flag1068 flag1296 flag1408 if ///
-		 record_id=="3227"|record_id=="4173"|record_id=="2872"|record_id=="3268"|record_id=="2052" ///
+capture export_excel record_id sd_etype flag1043 flag1060 flag1061 flag1068 flag1079 flag1296 flag1408 if ///
+		 record_id=="3227"|record_id=="4173"|record_id=="2872"|record_id=="3268"|record_id=="2052"|record_id=="1821"|record_id=="2633"|record_id=="2726"|record_id=="2816"|record_id=="2723" ///
 using "`datapath'\version03\3-output\CVDCleaning2021_FINAL3_`listdate'.xlsx", sheet("CORRECTIONS") firstrow(varlabels)
 restore
 */
