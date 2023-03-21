@@ -155,43 +155,59 @@
 *		* Creates datasets for 'length of stay' to output to MS Word
 *	
 *	4. 5c_analysis summ_stroke.do
-*		* Displays results for Summary Statistics table for annual report
+*		* Analyses data for Summary Statistics table for annual report
 *		* Creates datasets for 'length of stay' to output to MS Word
 *	
 *	5. 5d_analysis IRs_heart.do
-*		* Displays results for Number of cases, crude + age standardised incidence rates tables for annual report
+*		* Analyses data for Number of cases, crude + age standardised incidence rates tables for annual report
 *		* Creates datasets for outputing results to MS Word
 *	
 *	6. 5e_analysis IRs_stroke.do
-*		* Displays results for Number of cases, crude + age standardised incidence rates tables for annual report
+*		* Analyses data for Number of cases, crude + age standardised incidence rates tables for annual report
 *		* Creates datasets for outputing results to MS Word
 *	
 *	7. 5f_analysis MRs_heart.do
-*		* Displays results for Number of deaths + age standardised mortality rates table for annual report
+*		* Analyses data for Number of deaths + age standardised mortality rates table for annual report
 *		* Creates datasets for outputing results to MS Word
 *	
 *	8. 5g_analysis MRs_stroke.do
-*		* Displays results for Number of deaths + age standardised mortality rates table for annual report
+*		* Analyses data for Number of deaths + age standardised mortality rates table for annual report
 *		* Creates datasets for outputing results to MS Word
 *	
 *	9. 5h_analysis sym_heart.do
-*		* Displays results for symptoms table for annual report
+*		* Analyses data for symptoms table for annual report
 *		* Creates datasets for outputing results to MS Word
 *	
 *	10. 5i_analysis sym_stroke.do
-*		* Displays results for sub-type and symptoms table for annual report
+*		* Analyses data for sub-type and symptoms table for annual report
 *		* Creates datasets for outputing results to MS Word
 *	
 *	11. 5j_analysis RFs_heart.do
-*		* Displays results for risk factors table for annual report
+*		* Analyses data for risk factors table for annual report
 *		* Creates datasets for outputing results to MS Word
 *	
 *	12. 5k_analysis RFs_stroke.do
-*		* Displays results for risk factors table for annual report
+*		* Analyses data for risk factors table for annual report
 *		* Creates datasets for outputing results to MS Word
 *	
-*	20. 6_analysis report_cvd.do
-*		* Creates datasets for outputting analysed results for 2021 to MS Word and Excel
+*	13. 5l_analysis CFRs_heart.do
+*		* Analyses data for mortality trends and in-hospital outcomes for annual report
+*		* Creates datasets for outputing results to MS Word
+*	
+*	14. 5m_analysis CFRs_stroke.do
+*		* Analyses data for mortality trends and in-hospital outcomes for annual report
+*		* Creates datasets for outputing results to MS Word
+*	
+*	15. 5n_analysis PMs_heart.do
+*		* Analyses data for performance measures (key performance indicators) for annual report
+*		* Creates datasets for outputing results to MS Word
+*	
+*	16. 5o_analysis PMs_stroke.do
+*		* Analyses data for performance measures (key performance indicators) for annual report
+*		* Creates datasets for outputing results to MS Word
+*	
+*	17. 6_analysis report_cvd.do
+*		* Documents methods and outputs analysed results for annual report (only 2021 data) to MS Word
 *   
 *********************************************************************************************************************
 
