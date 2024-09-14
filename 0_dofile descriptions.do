@@ -1,5 +1,5 @@
 *********************************************************************************************************************
-*	BNR-CVD 2021 ANNUAL REPORT DOFILE GUIDE (format for this dofile taken from Christina Howitt's p120)
+*	BNR-CVD 2023 ANNUAL REPORT DOFILE GUIDE (format for this dofile taken from Christina Howitt's p120)
 *********************************************************************************************************************
 
 * NOTE1: to differentiate between data missing from patient notes (i.e. 99, 999 or 9999) VS 
@@ -207,7 +207,7 @@
 *		* Creates datasets for outputing results to MS Word
 *	
 *	17. 6_analysis report_cvd.do
-*		* Documents methods and outputs analysed results for annual report (only 2021 data) to MS Word
+*		* Documents methods and outputs analysed results for annual report (only 2023 data) to MS Word
 *   
 *********************************************************************************************************************
 
